@@ -1,0 +1,35 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-10: Lọc theo danh mục
+
+actor "Khách hàng" as User
+boundary "Filter_UI" as UI
+control "Filter_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Tương tác với bộ lọc danh mục
+activate User
+activate UI
+
+UI -> Ctrl: 2. Gửi trạng thái bộ lọc mới
+activate Ctrl
+
+alt [x Khách hàng tích chọn thêm bộ lọc]
+    Ctrl -> Ctrl: 3. Xử lý thêm điều kiện lọc
+else [x Khách hàng bỏ tích bộ lọc]
+    Ctrl -> Ctrl: 4. Xử lý gỡ bỏ điều kiện lọc
+end
+
+Ctrl -> DB: 5. getProductsByCategory(filterData)
+activate DB
+
+DB --> Ctrl: 6. Phản hồi danh sách sản phẩm
+Ctrl --> UI: 7. Trả về danh sách sản phẩm đã lọc
+UI --> User: 8. Cập nhật hiển thị danh sách sản phẩm mới
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-04: Cập nhật thông tin cá nhân
+
+|Khách hàng|
+start
+:1. Chọn chức năng chỉnh sửa thông tin;
+
+|Hệ thống|
+:2. Hiển thị form thông tin hiện tại;
+
+|Khách hàng|
+:3. Sửa Tên, Số điện thoại và nhấn lưu;
+
+|Hệ thống|
+:4. Yêu cầu xác nhận lưu;
+
+if (Xác nhận lưu?) then (Đồng ý)
+   :5. Kiểm tra tính hợp lệ của dữ liệu;
+   if (Dữ liệu hợp lệ?) then (Hợp lệ)
+       :6. Cập nhật thông tin vào CSDL;
+       :7. Thông báo cập nhật thành công;
+   else (Không hợp lệ)
+       :8. Cảnh báo lỗi dữ liệu không hợp lệ;
+   endif
+else (Từ chối)
+   :9. Hủy thao tác cập nhật;
+endif
+
+|Khách hàng|
+stop
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-10: Lọc theo danh mục
+
+|Khách hàng|
+start
+:1. Tương tác với bộ lọc danh mục (Tích chọn hoặc Bỏ tích);
+
+|Hệ thống|
+if (Loại tương tác?) then (Tích chọn thêm)
+    :2. Xử lý thêm điều kiện lọc;
+else (Bỏ tích)
+    :3. Xử lý gỡ bỏ điều kiện lọc;
+endif
+
+:4. Truy xuất sản phẩm khớp với điều kiện hiện tại;
+:5. Cập nhật danh sách sản phẩm trên giao diện;
+
+|Khách hàng|
+stop
+@enduml

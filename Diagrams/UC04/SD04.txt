@@ -1,0 +1,52 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+
+actor "Khách hàng" as User
+boundary "Profile_UI" as UI
+control "Profile_Controller" as Ctrl
+database "DB" as DB
+
+title UC-04: Cập nhật thông tin cá nhân
+
+User -> UI: 1. Chọn chức năng chỉnh sửa thông tin
+activate User
+activate UI
+
+UI -> Ctrl: 2. Yêu cầu lấy thông tin hiện tại
+activate Ctrl
+
+Ctrl -> DB: 3. getProfileData(userID)
+activate DB
+
+DB --> Ctrl: 4. Trả về thông tin cá nhân
+Ctrl --> UI: 5. Hiển thị form dữ liệu hiện tại
+
+User -> UI: 6. Nhập thông tin mới và nhấn lưu
+UI --> User: 7. Hiển thị yêu cầu xác nhận lưu
+
+alt [x Khách hàng từ chối]
+   User -> UI: 8. Nhấn hủy thao tác
+   UI --> User: 9. Phản hồi hủy thao tác và dừng luồng
+else [x Khách hàng đồng ý]
+   User -> UI: 10. Nhấn xác nhận
+   UI -> Ctrl: 11. Gửi yêu cầu cập nhật thông tin
+   
+   Ctrl -> Ctrl: 12. validateData()
+   
+   alt [x Dữ liệu không hợp lệ]
+       Ctrl --> UI: 13. Phản hồi lỗi dữ liệu không hợp lệ
+       UI --> User: 14. Hiển thị cảnh báo lỗi dữ liệu
+   else [x Dữ liệu hợp lệ]
+       Ctrl -> DB: 15. updateProfile(data)
+       DB --> Ctrl: 16. success
+       Ctrl --> UI: 17. Phản hồi cập nhật thành công
+       UI --> User: 18. Hiển thị thông tin mới trên giao diện
+   end
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-07: Cập nhật địa chỉ mặc định
+
+actor "Khách hàng" as User
+boundary "Address_UI" as UI
+control "Address_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Nhấn chọn chỉnh sửa địa chỉ mặc định
+activate User
+activate UI
+
+UI -> Ctrl: 2. Yêu cầu dữ liệu địa chỉ hiện tại
+activate Ctrl
+
+Ctrl -> DB: 3. getAddressDetails(addressID)
+activate DB
+
+DB --> Ctrl: 4. Phản hồi chi tiết địa chỉ
+Ctrl --> UI: 5. Trả về dữ liệu hiện tại
+UI --> User: 6. Hiển thị biểu mẫu với dữ liệu sẵn có
+
+User -> UI: 7. Sửa đổi thông tin và nhấn lưu
+UI -> Ctrl: 8. Gửi yêu cầu cập nhật địa chỉ
+
+Ctrl -> Ctrl: 9. validateAddressData(data)
+
+alt [x Dữ liệu không hợp lệ]
+    Ctrl --> UI: 10. Phản hồi lỗi dữ liệu không hợp lệ
+    UI --> User: 11. Hiển thị thông báo lỗi định dạng
+else [x Dữ liệu hợp lệ]
+    Ctrl -> DB: 12. updateAddress(addressID, data)
+    DB --> Ctrl: 13. Phản hồi cập nhật thành công
+    
+    Ctrl --> UI: 14. Phản hồi kết quả thành công
+    UI --> User: 15. Hiển thị thông báo cập nhật thành công
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

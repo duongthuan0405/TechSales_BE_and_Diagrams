@@ -1,0 +1,27 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-15: Thay đổi số lượng trong giỏ
+
+|Khách hàng|
+start
+:1. Thay đổi số lượng sản phẩm;
+
+|Hệ thống|
+:2. Xác thực định dạng dữ liệu;
+
+if (Dữ liệu hợp lệ?) then (Không)
+    :3. Thông báo lỗi định dạng và khôi phục số lượng cũ;
+else (Có)
+    :4. Kiểm tra số lượng với tồn kho;
+    if (Đủ hàng tồn kho?) then (Không)
+        :5. Thông báo vượt tồn kho và cập nhật về mức tối đa;
+    else (Có)
+        :6. Cập nhật số lượng mới vào CSDL;
+        :7. Tính toán lại tổng tiền giỏ hàng;
+    endif
+endif
+
+|Khách hàng|
+stop
+@enduml

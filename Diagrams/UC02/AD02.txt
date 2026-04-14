@@ -1,0 +1,41 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-02: Đăng nhập (Sign In)
+
+|Khách hàng|
+start
+:1. Nhấn nút "Sign In";
+
+|Hệ thống|
+:2. Hiển thị màn hình đăng nhập;
+
+|Khách hàng|
+:3. Nhập email, mật khẩu và xác nhận;
+
+|Hệ thống|
+:4. Kiểm tra định dạng dữ liệu đầu vào;
+
+if (Dữ liệu hợp lệ?) then (Đúng)
+    :5. Kiểm tra thông tin đăng nhập trong CSDL;
+    if (Thông tin chính xác?) then (Đúng)
+        :6. Thông báo đăng nhập thành công và chuyển hướng;
+        |Khách hàng|
+        :7. Truy cập hệ thống tại trang chủ;
+    else (Sai)
+        |Hệ thống|
+        if (Sai quá 5 lần?) then (Có)
+            :8. Thông báo khóa tài khoản tạm thời;
+        else (Không)
+            |Hệ thống|
+            :9. Thông báo lỗi tài khoản hoặc mật khẩu;
+        endif
+    endif
+else (Sai)
+    |Hệ thống|
+    :10. Thông báo lỗi định dạng không hợp lệ;
+endif
+
+|Khách hàng|
+stop
+@enduml

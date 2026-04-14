@@ -1,0 +1,28 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-07: Cập nhật địa chỉ mặc định
+
+|Khách hàng|
+start
+:1. Nhấn "Edit" trên địa chỉ mặc định;
+
+|Hệ thống|
+:2. Hiển thị biểu mẫu điền sẵn dữ liệu hiện tại;
+
+|Khách hàng|
+:3. Sửa đổi các chi tiết và nhấn "Save";
+
+|Hệ thống|
+:4. Kiểm tra định dạng dữ liệu đầu vào;
+
+if (Dữ liệu hợp lệ?) then (Đúng)
+    :5. Lưu địa chỉ đã cập nhật vào CSDL;
+    :6. Thông báo cập nhật địa chỉ thành công;
+else (Sai)
+    :7. Thông báo lỗi dữ liệu không hợp lệ;
+endif
+
+|Khách hàng|
+stop
+@enduml

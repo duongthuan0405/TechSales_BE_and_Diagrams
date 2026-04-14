@@ -1,0 +1,26 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-16: Xóa sản phẩm khỏi giỏ hàng
+
+|Khách hàng|
+start
+:1. Nhấn biểu tượng xóa sản phẩm;
+
+|Hệ thống|
+:2. Hiển thị hộp thoại yêu cầu xác nhận;
+
+|Khách hàng|
+if (Xác nhận xóa?) then (Có)
+    |Hệ thống|
+    :3. Xóa dữ liệu sản phẩm trong CSDL;
+    :4. Tính toán lại tổng tiền giỏ hàng;
+    :5. Thông báo xóa sản phẩm thành công;
+else (Không)
+    |Hệ thống|
+    :6. Đóng hộp thoại và giữ nguyên giỏ hàng;
+endif
+
+|Khách hàng|
+stop
+@enduml

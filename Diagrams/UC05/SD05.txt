@@ -1,0 +1,54 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-05: Chủ động đổi mật khẩu
+
+actor "Khách hàng" as User
+boundary "Password_UI" as UI
+control "Password_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Chọn chức năng "Change Password"
+activate User
+activate UI
+
+UI --> User: 2. Hiển thị form cập nhật mật khẩu
+
+alt [x Khách hàng hủy thao tác]
+    User -> UI: 3. Nhấn "Cancel" hoặc đóng màn hình
+    UI --> User: 4. Phản hồi kết thúc thao tác
+else [x Khách hàng nhấn "Update"]
+    User -> UI: 5. Nhập mật khẩu hiện tại, mật khẩu mới và nhấn "Update"
+    UI -> Ctrl: 6. Gửi yêu cầu đổi mật khẩu
+    activate Ctrl
+    
+    Ctrl -> DB: 7. checkCurrentPassword(userID, oldPass)
+    activate DB
+    
+    alt [x Mật khẩu hiện tại không chính xác]
+        DB --> Ctrl: 8. Phản hồi kết quả xác thực sai
+        Ctrl --> UI: 9. Báo lỗi mật khẩu hiện tại không chính xác
+        UI --> User: 10. Hiển thị thông báo lỗi mật khẩu hiện tại
+    else [x Mật khẩu hiện tại chính xác]
+        DB --> Ctrl: 11. Phản hồi kết quả xác thực đúng
+        
+        Ctrl -> Ctrl: 12. validateNewPassword(newPass)
+        
+        alt [x Mật khẩu mới không hợp lệ]
+            Ctrl --> UI: 13. Báo lỗi mật khẩu mới không hợp lệ hoặc trùng mật khẩu cũ
+            UI --> User: 14. Hiển thị cảnh báo lỗi mật khẩu mới
+        else [x Mật khẩu mới hợp lệ]
+            Ctrl -> DB: 15. updatePassword(userID, encryptedNewPass)
+            DB --> Ctrl: 16. Phản hồi cập nhật thành công
+            
+            Ctrl --> UI: 17. Thông báo đổi mật khẩu thành công
+            UI --> User: 18. Hiển thị thông báo thành công
+        end
+    end
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

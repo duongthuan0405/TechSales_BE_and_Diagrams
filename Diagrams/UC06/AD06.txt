@@ -1,0 +1,18 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-06: Đặt địa chỉ mặc định
+
+|Khách hàng|
+start
+:1. Điều hướng đến trang Sổ địa chỉ;
+:2. Chọn địa chỉ và yêu cầu thiết lập mặc định;
+
+|Hệ thống|
+:3. Gỡ trạng thái mặc định khỏi địa chỉ trước đó;
+:4. Cập nhật trạng thái mặc định cho địa chỉ mới;
+:5. Thông báo thiết lập địa chỉ mặc định thành công;
+
+|Khách hàng|
+stop
+@enduml

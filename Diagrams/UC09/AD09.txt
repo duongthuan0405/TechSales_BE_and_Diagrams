@@ -1,0 +1,28 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-09: Tìm kiếm sản phẩm bằng từ khóa
+
+|Khách hàng|
+start
+:1. Gõ từ khóa vào thanh tìm kiếm;
+
+|Hệ thống|
+:2. Cung cấp gợi ý tự động (Autocomplete);
+
+|Khách hàng|
+:3. Gửi yêu cầu tìm kiếm;
+
+|Hệ thống|
+:4. Truy vấn tìm các sản phẩm khớp;
+
+if (Có sản phẩm khớp từ khóa?) then (Đúng)
+    :5. Hiển thị danh sách sản phẩm phù hợp;
+else (Sai)
+    :6. Thông báo không tìm thấy kết quả;
+endif
+
+|Khách hàng|
+
+stop
+@enduml

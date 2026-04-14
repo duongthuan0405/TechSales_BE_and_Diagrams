@@ -1,0 +1,35 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-11: Sắp xếp sản phẩm theo giá
+
+actor "Khách hàng" as User
+boundary "ProductList_UI" as UI
+control "Product_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Chọn tiêu chí sắp xếp theo giá
+activate User
+activate UI
+
+UI -> Ctrl: 2. Gửi yêu cầu sắp xếp sản phẩm
+activate Ctrl
+
+Ctrl -> DB: 3. sortProductByPrice(criteria)
+activate DB
+
+alt [x Danh sách sản phẩm hợp lệ]
+    DB --> Ctrl: 4. Phản hồi danh sách sản phẩm đã sắp xếp
+    Ctrl --> UI: 5. Trả về dữ liệu hiển thị mới
+    UI --> User: 6. Hiển thị danh sách sản phẩm theo giá đã chọn
+else [x Lỗi truy xuất dữ liệu]
+    DB --> Ctrl: 7. Phản hồi lỗi hệ thống
+    Ctrl --> UI: 8. Thông báo lỗi tải dữ liệu
+    UI --> User: 9. Hiển thị yêu cầu tải lại trang
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

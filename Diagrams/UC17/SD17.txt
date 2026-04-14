@@ -1,0 +1,34 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-17: Chọn mặt hàng để thanh toán từ giỏ hàng
+
+actor "Khách hàng" as User
+boundary "Cart_UI" as UI
+control "Checkout_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Tích chọn sản phẩm và nhấn thanh toán
+activate User
+activate UI
+
+UI -> Ctrl: 2. Yêu cầu kiểm tra lựa chọn sản phẩm
+activate Ctrl
+
+alt [x Danh sách chọn bị trống]
+    Ctrl --> UI: 3. Phản hồi lỗi chưa chọn sản phẩm
+    UI --> User: 4. Hiển thị thông báo yêu cầu chọn mục thanh toán
+else [x Có sản phẩm được chọn]
+    Ctrl -> DB: 5. savePendingOrderItems(userID, selectedItems)
+    activate DB
+    
+    DB --> Ctrl: 6. Xác nhận lưu dữ liệu tạm thời thành công
+    Ctrl --> UI: 7. Phản hồi yêu cầu chuyển hướng trang
+    UI --> User: 8. Hiển thị màn hình Thanh toán (Checkout)
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

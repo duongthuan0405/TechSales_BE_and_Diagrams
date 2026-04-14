@@ -1,0 +1,37 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-16: Xóa sản phẩm khỏi giỏ hàng
+
+actor "Khách hàng" as User
+boundary "Cart_UI" as UI
+control "Cart_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Nhấn nút xóa sản phẩm
+activate User
+activate UI
+
+UI --> User: 2. Hiển thị yêu cầu xác nhận xóa
+
+alt [x Khách hàng đồng ý xác nhận]
+    User -> UI: 3. Nhấn nút xác nhận xóa
+    UI -> Ctrl: 4. Yêu cầu xóa sản phẩm khỏi giỏ
+    activate Ctrl
+    
+    Ctrl -> DB: 5. removeItemFromCart(userID, itemID)
+    activate DB
+    
+    DB --> Ctrl: 6. Xác nhận đã xóa thành công
+    Ctrl --> UI: 7. Phản hồi kết quả và tổng tiền mới
+    UI --> User: 8. Thông báo thành công và cập nhật lại giỏ hàng
+else [x Khách hàng từ chối xác nhận]
+    User -> UI: 9. Nhấn nút hủy bỏ
+    UI --> User: 10. Đóng hộp thoại và giữ nguyên trạng thái
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-05: Chủ động đổi mật khẩu
+
+|Khách hàng|
+start
+:1. Nhấn nút "Change Password";
+
+|Hệ thống|
+:2. Hiển thị form cập nhật mật khẩu;
+
+|Khách hàng|
+if (Thao tác của khách hàng?) then (Nhấn "Update")
+    :3. Nhập mật khẩu cũ, mới, xác nhận và gửi yêu cầu;
+    
+    |Hệ thống|
+    :4. Kiểm tra mật khẩu hiện tại;
+    
+    if (Mật khẩu hiện tại đúng?) then (Đúng)
+        :5. Kiểm tra tính hợp lệ của mật khẩu mới;
+        if (Mật khẩu mới hợp lệ?) then (Đúng)
+            :6. Mã hóa và lưu mật khẩu mới vào CSDL;
+            :7. Thông báo đổi mật khẩu thành công;
+        else (Sai)
+            :8. Thông báo lỗi mật khẩu mới không hợp lệ hoặc trùng mật khẩu cũ;
+        endif
+    else (Sai)
+        :9. Thông báo lỗi mật khẩu hiện tại không chính xác;
+    endif
+else (Nhấn "Cancel")
+    |Hệ thống|
+    :10. Hủy thao tác cập nhật;
+endif
+
+|Khách hàng|
+stop
+@enduml
