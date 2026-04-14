@@ -1,0 +1,22 @@
+@startuml
+title UC-37: Xem phản hồi mới nhất
+
+|Nhân viên Sales|
+start
+:1. Chọn mục "Quản lý đánh giá/Phản hồi";
+
+|Hệ thống|
+:2. Truy vấn danh sách đánh giá mới nhất từ CSDL;
+if (3. Kiểm tra dữ liệu phản hồi?) then (Có dữ liệu)
+    :4. Hiển thị danh sách đánh giá theo thứ tự thời gian;
+    |Nhân viên Sales|
+    :5. Tùy chỉnh bộ lọc số sao (nếu cần);
+    |Hệ thống|
+    :6. Cập nhật danh sách theo bộ lọc;
+else (Trống)
+    :7. Hiển thị thông báo chưa có bài đánh giá nào;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+title UC-31: Duyệt đơn hàng
+
+|Nhân viên Sales|
+start
+:1. Nhấn nút "Duyệt đơn";
+
+|Hệ thống|
+:2. Hiển thị hộp thoại xác nhận;
+
+|Nhân viên Sales|
+if (3. Xác nhận duyệt?) then (Đồng ý)
+    |Hệ thống|
+    :4. Cập nhật trạng thái đơn hàng thành "Approved";
+    :5. Ghi nhận hành động vào Audit Log;
+    :6. Gửi thông báo cho khách hàng;
+    :7. Hiển thị thông báo duyệt thành công;
+else (Hủy)
+    |Hệ thống|
+    :8. Đóng hộp thoại xác nhận;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

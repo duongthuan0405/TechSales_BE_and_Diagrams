@@ -1,0 +1,34 @@
+@startuml
+title UC-38: Phản hồi đánh giá
+
+actor "Nhân viên Sales" as Staff
+boundary ReviewManagement_UI as UI
+control Review_Controller as Ctrl
+database DB
+
+activate Staff
+activate UI
+activate Ctrl
+activate DB
+
+Staff -> UI : 1. Chọn phản hồi và nhấn nút "Trả lời"
+UI -> Staff : 2. Hiển thị khung nhập văn bản
+
+Staff -> UI : 3. Nhập nội dung phản hồi và nhấn gửi
+UI -> Ctrl : 4. Yêu cầu gửi phản hồi(reviewID, content)
+
+alt x Nội dung phản hồi hợp lệ
+    Ctrl -> DB : 5. saveResponse(reviewID, staffID, content)
+    DB -> Ctrl : 6. success
+    Ctrl -> UI : 7. Thông báo gửi phản hồi thành công
+    UI -> Staff : 8. Hiển thị thông báo thành công
+else x Nội dung phản hồi để trống
+    Ctrl -> UI : 9. Báo lỗi nội dung không được để trống
+    UI -> Staff : 10. Hiển thị cảnh báo yêu cầu nhập liệu
+end
+
+deactivate Staff
+deactivate UI
+deactivate Ctrl
+deactivate DB
+@enduml

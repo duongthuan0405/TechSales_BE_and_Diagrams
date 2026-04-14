@@ -1,0 +1,24 @@
+@startuml
+title UC-40: Thêm danh mục sản phẩm mới
+
+|Business Admin|
+start
+:1. Nhấn nút "Thêm danh mục";
+
+|Hệ thống|
+:2. Hiển thị biểu mẫu nhập thông tin danh mục;
+
+|Business Admin|
+:3. Nhập Tên, Hình ảnh, Mô tả và nhấn "Lưu";
+
+|Hệ thống|
+if (4. Kiểm tra tên danh mục tồn tại?) then (Chưa tồn tại)
+    :5. Lưu bản ghi danh mục mới vào CSDL;
+    :6. Hiển thị thông báo tạo thành công;
+else (Đã tồn tại)
+    :7. Hiển thị cảnh báo lỗi trùng lặp dữ liệu;
+endif
+
+|Business Admin|
+stop
+@enduml

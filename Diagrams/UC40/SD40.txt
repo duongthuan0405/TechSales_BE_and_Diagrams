@@ -1,0 +1,38 @@
+@startuml
+title UC-40: Thêm danh mục sản phẩm mới
+
+actor "Business Admin" as Admin
+boundary CategoryManagement_UI as UI
+control Category_Controller as Ctrl
+database DB
+
+activate Admin
+activate UI
+activate Ctrl
+activate DB
+
+Admin -> UI : 1. Nhấn nút "Thêm danh mục"
+UI -> Admin : 2. Hiển thị form nhập liệu
+
+Admin -> UI : 3. Nhập thông tin danh mục và nhấn Lưu
+UI -> Ctrl : 4. Yêu cầu tạo danh mục mới(categoryData)
+
+alt x Tên danh mục hợp lệ (không trùng)
+    Ctrl -> DB : 5. checkCategoryName(name)
+    DB -> Ctrl : 6. not_exists
+    Ctrl -> DB : 7. saveNewCategory(categoryData)
+    DB -> Ctrl : 8. success
+    Ctrl -> UI : 9. Thông báo tạo danh mục thành công
+    UI -> Admin : 10. Hiển thị thông báo thành công
+else x Tên danh mục đã tồn tại
+    Ctrl -> DB : 11. checkCategoryName(name)
+    DB -> Ctrl : 12. exists
+    Ctrl -> UI : 13. Báo lỗi trùng lặp dữ liệu
+    UI -> Admin : 14. Hiển thị cảnh báo lỗi
+end
+
+deactivate Admin
+deactivate UI
+deactivate Ctrl
+deactivate DB
+@enduml
