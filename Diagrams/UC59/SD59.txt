@@ -1,0 +1,35 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-59: Bật chế độ bảo trì và sao lưu
+
+actor "Technical Admin" as Admin
+boundary System_UI
+control System_Controller
+database DB
+
+activate Admin
+Admin -> System_UI: 1. Nhấn xác nhận bật chế độ bảo trì
+activate System_UI
+System_UI -> System_Controller: 2. Gửi yêu cầu kích hoạt bảo trì
+activate System_Controller
+System_Controller -> System_Controller: 3. switchToMaintenanceMode()
+System_Controller -> DB: 4. triggerFullBackup()
+activate DB
+DB --> System_Controller: 5. Trả về kết quả sao lưu
+
+alt [x Tiến trình sao lưu thất bại]
+    System_Controller -> System_Controller: 6. revertMaintenanceMode()
+    System_Controller --> System_UI: 7. Báo lỗi sao lưu khẩn cấp
+    System_UI --> Admin: 8. Hiển thị thông báo lỗi sao lưu và hủy bảo trì
+else [x Sao lưu và kiểm tra thành công]
+    System_Controller -> System_Controller: 9. verifyBackupIntegrity()
+    System_Controller --> System_UI: 10. Báo lỗi bật bảo trì và sao lưu thành công
+    System_UI --> Admin: 11. Hiển thị thông báo trạng thái thành công
+end
+
+deactivate Admin
+deactivate System_UI
+deactivate System_Controller
+deactivate DB
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+skinparam defaultFontColor black
+title UC-55: Cấu hình phí giao hàng
+
+|Business Admin|
+start
+:1. Xem danh sách các khu vực vận chuyển;
+:2. Nhập hoặc sửa đổi mức phí vận chuyển;
+:3. Nhấn xác nhận lưu cấu hình;
+|Hệ thống|
+:4. Kiểm tra định dạng dữ liệu đầu vào;
+if (Dữ liệu hợp lệ?) then (Đúng)
+    :5. Cập nhật các mức phí mới vào CSDL;
+    :6. Thông báo cập nhật thành công;
+else (Sai)
+    :7. Cảnh báo dữ liệu không hợp lệ;
+endif
+|Business Admin|
+stop
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-51: Chặn tài khoản đặt hàng giả mạo
+
+actor "Business Admin" as Admin
+boundary Customer_UI
+control Customer_Controller
+database DB
+
+activate Admin
+Admin -> Customer_UI: 1. Chọn tài khoản vi phạm và nhấn nút chặn
+activate Customer_UI
+Customer_UI --> Admin: 2. Hiển thị hộp thoại cảnh báo hủy đơn hàng
+Admin -> Customer_UI: 3. Nhấn xác nhận đồng ý
+Customer_UI -> Customer_Controller: 4. Gửi yêu cầu chặn tài khoản và hủy đơn
+activate Customer_Controller
+Customer_Controller -> DB: 5. startAtomicTransaction()
+activate DB
+Customer_Controller -> DB: 6. lockAccount(customerID)
+Customer_Controller -> DB: 7. cancelPendingOrders(customerID)
+Customer_Controller -> DB: 8. restoreInventoryStock()
+DB --> Customer_Controller: 9. Kết quả xử lý giao dịch
+
+alt [x Lỗi cập nhật cơ sở dữ liệu]
+    Customer_Controller -> DB: 10. rollbackTransaction()
+    Customer_Controller --> Customer_UI: 11. Báo lỗi xử lý không thành công
+    Customer_UI --> Admin: 12. Hiển thị thông báo lỗi hệ thống
+else [x Xử lý thành công]
+    Customer_Controller -> DB: 13. commitTransaction()
+    Customer_Controller --> Customer_UI: 14. Báo lỗi xử lý thành công
+    Customer_UI --> Admin: 15. Hiển thị thông báo xử lý thành công
+end
+
+deactivate Admin
+deactivate Customer_UI
+deactivate Customer_Controller
+deactivate DB
+@enduml

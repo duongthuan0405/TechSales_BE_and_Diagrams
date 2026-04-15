@@ -1,0 +1,34 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-53: Xem báo cáo sản phẩm bán chạy
+
+actor "Business Admin" as Admin
+boundary Report_UI
+control Report_Controller
+database DB
+
+activate Admin
+Admin -> Report_UI: 1. Điều hướng đến trang báo cáo sản phẩm
+activate Report_UI
+Admin -> Report_UI: 2. Chọn khoảng thời gian cần phân tích
+Report_UI -> Report_Controller: 3. Gửi yêu cầu lấy báo cáo bán chạy
+activate Report_Controller
+Report_Controller -> DB: 4. getCompletedOrdersData(period)
+activate DB
+DB --> Report_Controller: 5. Trả về dữ liệu các đơn hàng hoàn tất
+
+alt [x Không có sản phẩm nào được bán ra trong thời gian chọn]
+    Report_Controller --> Report_UI: 6. Báo lỗi không có dữ liệu báo cáo
+    Report_UI --> Admin: 7. Hiển thị thông báo bảng danh sách trống
+else [x Có dữ liệu bán hàng hợp lệ]
+    Report_Controller -> Report_Controller: 8. calculateAndSortProductSales()
+    Report_Controller --> Report_UI: 9. Báo lỗi kết xuất báo cáo thành công
+    Report_UI --> Admin: 10. Hiển thị danh sách xếp hạng sản phẩm
+end
+
+deactivate Admin
+deactivate Report_UI
+deactivate Report_Controller
+deactivate DB
+@enduml

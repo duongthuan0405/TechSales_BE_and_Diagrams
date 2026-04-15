@@ -1,0 +1,34 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-54: Xuất đơn hàng ra Excel
+
+actor "Business Admin" as Admin
+boundary Order_UI
+control Order_Controller
+database DB
+
+activate Admin
+Admin -> Order_UI: 1. Áp dụng bộ lọc và nhấn nút xuất tệp
+activate Order_UI
+Order_UI -> Order_Controller: 2. Gửi yêu cầu kết xuất Excel
+activate Order_Controller
+Order_Controller -> DB: 3. getFilteredOrders(filters)
+activate DB
+DB --> Order_Controller: 4. Trả về dữ liệu đơn hàng theo bộ lọc
+
+alt [x Lỗi thư viện tạo tệp của máy chủ]
+    Order_Controller --> Order_UI: 5. Báo lỗi không thể tạo tệp Excel
+    Order_UI --> Admin: 6. Hiển thị thông báo lỗi hệ thống
+else [x Khởi tạo tệp thành công]
+    Order_Controller -> Order_Controller: 7. formatExcelData()
+    Order_Controller -> Order_Controller: 8. generateExcelFile()
+    Order_Controller --> Order_UI: 9. Báo lỗi kết xuất dữ liệu thành công
+    Order_UI --> Admin: 10. Gửi luồng dữ liệu và thông báo kết xuất thành công
+end
+
+deactivate Admin
+deactivate Order_UI
+deactivate Order_Controller
+deactivate DB
+@enduml
