@@ -1,0 +1,23 @@
+@startuml
+skinparam defaultFontColor black
+title UC-45: Ngừng kinh doanh sản phẩm
+
+|Business Admin|
+start
+:1. Chọn sản phẩm cần ngừng kinh doanh;
+:2. Chọn chức năng ngừng kinh doanh;
+|Hệ thống|
+:3. Hiển thị hộp thoại yêu cầu xác nhận;
+|Business Admin|
+:4. Phản hồi xác nhận;
+if (Xác nhận đồng ý?) then (Đúng)
+    |Hệ thống|
+    :5. Cập nhật trạng thái Discontinued vào CSDL;
+    :6. Thông báo thao tác thành công;
+else (Sai)
+    |Hệ thống|
+    :7. Đóng hộp thoại và hủy thao tác;
+endif
+|Business Admin|
+stop
+@enduml

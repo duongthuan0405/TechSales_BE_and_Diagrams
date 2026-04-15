@@ -1,0 +1,34 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-47: Dừng voucher khẩn cấp
+
+actor "Business Admin" as Admin
+boundary Voucher_UI
+control Voucher_Controller
+database DB
+
+activate Admin
+Admin -> Voucher_UI: 1. Chọn voucher đang hoạt động và nhấn nút dừng
+activate Voucher_UI
+Voucher_UI --> Admin: 2. Hiển thị hộp thoại cảnh báo vô hiệu hóa mã
+Admin -> Voucher_UI: 3. Nhấn xác nhận đồng ý
+Voucher_UI -> Voucher_Controller: 4. Gửi yêu cầu dừng voucher
+activate Voucher_Controller
+Voucher_Controller -> DB: 5. updateVoucherStatus(stopped)
+activate DB
+DB --> Voucher_Controller: 6. Kết quả cập nhật trạng thái
+
+alt [x Lỗi cập nhật hệ thống]
+    Voucher_Controller --> Voucher_UI: 7. Báo lỗi thao tác không thành công
+    Voucher_UI --> Admin: 8. Hiển thị thông báo thao tác không thành công
+else [x Cập nhật thành công]
+    Voucher_Controller --> Voucher_UI: 9. Báo lỗi thao tác thành công
+    Voucher_UI --> Admin: 10. Hiển thị thông báo thao tác thành công
+end
+
+deactivate Admin
+deactivate Voucher_UI
+deactivate Voucher_Controller
+deactivate DB
+@enduml

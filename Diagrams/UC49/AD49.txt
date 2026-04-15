@@ -1,0 +1,24 @@
+@startuml
+skinparam defaultFontColor black
+title UC-49: Khóa tài khoản nhân viên cũ
+
+|Business Admin|
+start
+:1. Tìm kiếm và chọn hồ sơ nhân viên cần khóa;
+:2. Nhấn nút khóa tài khoản;
+|Hệ thống|
+:3. Yêu cầu xác nhận thao tác thu hồi quyền;
+|Business Admin|
+:4. Phản hồi xác nhận;
+if (Xác nhận đồng ý?) then (Đúng)
+    |Hệ thống|
+    :5. Thay đổi trạng thái tài khoản thành Bị khóa;
+    :6. Hủy bỏ các phiên làm việc hiện tại;
+    :7. Thông báo khóa thành công;
+else (Sai)
+    |Hệ thống|
+    :8. Đóng hộp thoại và hủy thao tác;
+endif
+|Business Admin|
+stop
+@enduml

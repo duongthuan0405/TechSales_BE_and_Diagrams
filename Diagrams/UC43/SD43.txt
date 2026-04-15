@@ -1,0 +1,37 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-43: Cập nhật giá sản phẩm
+
+actor "Business Admin" as Admin
+boundary Product_UI
+control Product_Controller
+database DB
+
+activate Admin
+Admin -> Product_UI: 1. Chọn sản phẩm cần đổi giá
+activate Product_UI
+Product_UI --> Admin: 2. Hiển thị thông tin giá hiện tại
+Admin -> Product_UI: 3. Nhập mức giá mới
+Admin -> Product_UI: 4. Nhấn nút xác nhận lưu
+Product_UI -> Product_Controller: 5. Gửi yêu cầu cập nhật giá
+activate Product_Controller
+Product_Controller -> DB: 6. checkPrice(input)
+activate DB
+DB --> Product_Controller: 7. Kết quả xác thực
+
+alt [x Giá trị âm hoặc sai định dạng]
+    Product_Controller --> Product_UI: 8. Báo lỗi dữ liệu không hợp lệ
+    Product_UI --> Admin: 9. Hiển thị thông báo dữ liệu không hợp lệ
+else [x Giá trị hợp lệ]
+    Product_Controller -> DB: 10. updateProductPrice(data)
+    DB --> Product_Controller: 11. success
+    Product_Controller --> Product_UI: 12. Báo lỗi cập nhật giá thành công
+    Product_UI --> Admin: 13. Hiển thị thông báo cập nhật giá thành công
+end
+
+deactivate Admin
+deactivate Product_UI
+deactivate Product_Controller
+deactivate DB
+@enduml

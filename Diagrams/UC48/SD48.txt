@@ -1,0 +1,38 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-48: Tạo tài khoản nhân viên mới
+
+actor "Business Admin" as Admin
+boundary Staff_UI
+control Staff_Controller
+database DB
+
+activate Admin
+Admin -> Staff_UI: 1. Chọn chức năng thêm nhân viên
+activate Staff_UI
+Staff_UI --> Admin: 2. Hiển thị biểu mẫu thông tin và phân quyền
+Admin -> Staff_UI: 3. Nhập Email, Họ tên và gán Role
+Admin -> Staff_UI: 4. Nhấn xác nhận tạo
+Staff_UI -> Staff_Controller: 5. Gửi yêu cầu tạo tài khoản
+activate Staff_Controller
+Staff_Controller -> DB: 6. checkEmailExistence(email)
+activate DB
+DB --> Staff_Controller: 7. Kết quả kiểm tra email
+
+alt [x Email đã tồn tại trong hệ thống]
+    Staff_Controller --> Staff_UI: 8. Báo lỗi trùng lặp dữ liệu
+    Staff_UI --> Admin: 9. Hiển thị thông báo lỗi trùng lặp dữ liệu
+else [x Email hợp lệ]
+    Staff_Controller -> DB: 10. createStaffAccount(data)
+    DB --> Staff_Controller: 11. success
+    Staff_Controller -> Staff_Controller: 12. sendLoginInfoEmail()
+    Staff_Controller --> Staff_UI: 13. Báo lỗi tạo tài khoản thành công
+    Staff_UI --> Admin: 14. Hiển thị thông báo tạo tài khoản thành công
+end
+
+deactivate Admin
+deactivate Staff_UI
+deactivate Staff_Controller
+deactivate DB
+@enduml

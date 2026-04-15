@@ -1,0 +1,33 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-50: Quản lý danh sách khách hàng
+
+actor "Business Admin" as Admin
+boundary Customer_UI
+control Customer_Controller
+database DB
+
+activate Admin
+Admin -> Customer_UI: 1. Truy cập vào màn hình quản lý khách hàng
+activate Customer_UI
+Customer_UI -> Customer_Controller: 2. Gửi yêu cầu lấy danh sách khách hàng
+activate Customer_Controller
+Customer_Controller -> DB: 3. getCustomerList()
+activate DB
+DB --> Customer_Controller: 4. Trả về danh sách khách hàng
+
+alt [x Hệ thống chưa có khách hàng nào đăng ký]
+    Customer_Controller --> Customer_UI: 5. Báo lỗi danh sách khách hàng trống
+    Customer_UI --> Admin: 6. Hiển thị bảng trống kèm thông báo
+else [x Có dữ liệu khách hàng]
+    Customer_Controller -> Customer_Controller: 7. sortAndPaginateData()
+    Customer_Controller --> Customer_UI: 8. Báo lỗi truy xuất danh sách thành công
+    Customer_UI --> Admin: 9. Hiển thị danh sách khách hàng lên bảng
+end
+
+deactivate Admin
+deactivate Customer_UI
+deactivate Customer_Controller
+deactivate DB
+@enduml

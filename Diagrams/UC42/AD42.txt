@@ -1,0 +1,25 @@
+@startuml
+title UC-42: Đăng sản phẩm mới
+
+|Business Admin|
+start
+:1. Nhấn nút "Thêm sản phẩm";
+
+|Hệ thống|
+:2. Hiển thị biểu mẫu đăng tải sản phẩm;
+
+|Business Admin|
+:3. Nhập thông tin chi tiết, tải ảnh và nhấn "Lưu";
+
+|Hệ thống|
+if (4. Kiểm tra dữ liệu đầu vào?) then (Hợp lệ)
+    :5. Lưu trữ tệp hình ảnh vào hệ thống;
+    :6. Ghi nhận dữ liệu sản phẩm vào cơ sở dữ liệu;
+    :7. Hiển thị thông báo tạo sản phẩm thành công;
+else (Sai định dạng)
+    :8. Hiển thị cảnh báo lỗi tại các trường tương ứng;
+endif
+
+|Business Admin|
+stop
+@enduml
