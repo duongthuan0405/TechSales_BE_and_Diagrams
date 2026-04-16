@@ -1,0 +1,38 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-28: Đọc đánh giá từ người khác
+
+actor "Khách hàng" as User
+boundary "ProductDetail_UI" as UI
+control "Review_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Cuộn xuống khu vực đánh giá
+activate User
+activate UI
+
+UI -> Ctrl: 2. Yêu cầu tải danh sách đánh giá sản phẩm
+activate Ctrl
+
+Ctrl -> DB: 3. getProductReviews(productID)
+activate DB
+
+alt [x Sản phẩm chưa có bài đánh giá nào]
+    DB --> Ctrl: 4. Phản hồi danh sách rỗng
+    Ctrl --> UI: 5. Trả về trạng thái chưa có dữ liệu
+    UI --> User: 6. Hiển thị thông báo chưa có đánh giá
+else [x Có bài đánh giá hợp lệ]
+    DB --> Ctrl: 7. Phản hồi danh sách đánh giá chi tiết
+    
+    Ctrl -> Ctrl: 8. calculateAverageRating(reviewList)
+    
+    Ctrl --> UI: 9. Trả về điểm trung bình và danh sách phân trang
+    UI --> User: 10. Hiển thị điểm đánh giá và các bình luận chi tiết
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml

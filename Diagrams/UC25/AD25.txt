@@ -1,0 +1,31 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-25: Hủy đơn hàng trạng thái "Pending"
+
+|Khách hàng|
+start
+:1. Nhấn nút "Hủy đơn hàng" tại chi tiết đơn;
+
+|Hệ thống|
+:2. Hiển thị hộp thoại xác nhận hủy;
+
+|Khách hàng|
+if (Xác nhận hủy đơn?) then (Đồng ý)
+    |Hệ thống|
+    :3. Kiểm tra trạng thái đơn hàng thực tế;
+    if (Trạng thái vẫn là "Pending"?) then (Đúng)
+        :4. Cập nhật trạng thái sang "Canceled";
+        :5. Hoàn trả số lượng sản phẩm vào tồn kho;
+        :6. Thông báo hủy đơn thành công;
+    else (Sai)
+        :7. Thông báo lỗi đơn hàng đã được xử lý;
+    endif
+else (Từ chối)
+    |Hệ thống|
+    :8. Đóng hộp thoại và giữ nguyên trạng thái;
+endif
+
+|Khách hàng|
+stop
+@enduml

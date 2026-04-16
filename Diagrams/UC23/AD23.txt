@@ -1,0 +1,21 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-23: Xem chi tiết đơn hàng cũ
+
+|Khách hàng|
+start
+:1. Chọn xem chi tiết một đơn hàng cụ thể;
+
+|Hệ thống|
+:2. Truy vấn dữ liệu chi tiết đơn hàng từ CSDL;
+
+if (Dữ liệu tồn tại và hợp lệ?) then (Không)
+    :3. Thông báo lỗi truy xuất và quay lại danh sách tổng;
+else (Có)
+    :4. Hiển thị thông tin chi tiết đơn hàng;
+endif
+
+|Khách hàng|
+stop
+@enduml

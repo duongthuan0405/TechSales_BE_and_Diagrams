@@ -1,0 +1,26 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-27: Đánh giá sản phẩm đã mua
+
+|Khách hàng|
+start
+:1. Chọn chức năng viết đánh giá;
+
+|Hệ thống|
+:2. Hiển thị biểu mẫu (số sao và khung bình luận);
+
+|Khách hàng|
+:3. Chọn số sao, nhập bình luận và nhấn gửi;
+
+|Hệ thống|
+if (Đã chọn số sao?) then (Chưa)
+    :4. Thông báo yêu cầu chọn số sao tối thiểu;
+else (Rồi)
+    :5. Lưu bài đánh giá và liên kết với sản phẩm;
+    :6. Thông báo gửi đánh giá thành công;
+endif
+
+|Khách hàng|
+stop
+@enduml

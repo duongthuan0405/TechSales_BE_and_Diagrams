@@ -1,0 +1,22 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-28: Đọc đánh giá từ người khác
+
+|Khách hàng|
+start
+:1. Cuộn xuống khu vực đánh giá trên trang sản phẩm;
+
+|Hệ thống|
+:2. Truy vấn danh sách đánh giá từ cơ sở dữ liệu;
+
+if (Sản phẩm đã có đánh giá?) then (Có)
+    :3. Tính toán điểm đánh giá trung bình;
+    :4. Hiển thị điểm trung bình và danh sách bình luận;
+else (Chưa)
+    :5. Thông báo sản phẩm chưa có đánh giá;
+endif
+
+|Khách hàng|
+stop
+@enduml

@@ -1,0 +1,48 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-26: Thay đổi địa chỉ giao hàng
+
+actor "Khách hàng" as User
+boundary "OrderDetail_UI" as UI
+control "Order_Controller" as Ctrl
+database "DB" as DB
+
+User -> UI: 1. Chọn chức năng thay đổi địa chỉ
+activate User
+activate UI
+
+UI -> Ctrl: 2. Yêu cầu lấy danh sách địa chỉ đã lưu
+activate Ctrl
+
+Ctrl -> DB: 3. getSavedAddresses(userID)
+activate DB
+
+DB --> Ctrl: 4. Phản hồi danh sách địa chỉ
+Ctrl --> UI: 5. Trả về dữ liệu địa chỉ
+UI --> User: 6. Hiển thị danh sách địa chỉ cho khách hàng
+
+User -> UI: 7. Chọn địa chỉ và nhấn xác nhận
+UI -> Ctrl: 8. Gửi yêu cầu cập nhật địa chỉ cho đơn hàng
+
+Ctrl -> DB: 9. checkOrderStatus(orderID)
+
+alt [x Đơn hàng đã chuyển sang trạng thái Shipping]
+    DB --> Ctrl: 10. Phản hồi trạng thái không hợp lệ
+    Ctrl --> UI: 11. Phản hồi lỗi đơn hàng đang giao
+    UI --> User: 12. Hiển thị thông báo không thể thay đổi địa chỉ
+else [x Đơn hàng vẫn cho phép thay đổi]
+    DB --> Ctrl: 13. Xác nhận trạng thái hợp lệ
+    
+    Ctrl -> DB: 14. updateOrderAddress(orderID, addressID)
+    DB --> Ctrl: 15. Xác nhận cập nhật thành công
+    
+    Ctrl --> UI: 16. Phản hồi kết quả thành công
+    UI --> User: 17. Thông báo thành công và cập nhật lại giao diện
+end
+
+deactivate DB
+deactivate Ctrl
+deactivate UI
+deactivate User
+@enduml
