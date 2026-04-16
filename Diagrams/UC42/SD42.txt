@@ -1,0 +1,37 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-42: Đăng sản phẩm mới
+
+actor "Business Admin" as Admin
+boundary Product_UI
+control Product_Controller
+database DB
+
+activate Admin
+Admin -> Product_UI: 1. Nhấn nút thêm mới sản phẩm
+activate Product_UI
+Product_UI --> Admin: 2. Hiển thị biểu mẫu đăng tải
+Admin -> Product_UI: 3. Nhập các thông tin chi tiết
+Admin -> Product_UI: 4. Nhấn nút lưu
+Product_UI -> Product_Controller: 5. Gửi thông tin sản phẩm
+activate Product_Controller
+Product_Controller -> DB: 6. validateData(data)
+activate DB
+DB --> Product_Controller: 7. Kết quả xác thực
+
+alt  [x Thiếu hoặc sai thông tin]
+    Product_Controller --> Product_UI: 8. Cảnh báo lỗi dữ liệu
+    Product_UI --> Admin: 9. Hiển thị cảnh báo lỗi dữ liệu
+else [x Đầy đủ thông tin hợp lệ]
+    Product_Controller -> DB: 10. saveProduct(data)
+    DB --> Product_Controller: 11. success
+    Product_Controller --> Product_UI: 12. Thông báo tạo sản phẩm thành công
+    Product_UI --> Admin: 13. Hiển thị thông báo tạo sản phẩm thành công
+end
+
+deactivate Admin
+deactivate Product_UI
+deactivate Product_Controller
+deactivate DB
+@enduml

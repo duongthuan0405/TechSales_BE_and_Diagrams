@@ -1,0 +1,24 @@
+@startuml
+skinparam defaultFontColor black
+title UC-48: Tạo tài khoản nhân viên mới
+
+|Business Admin|
+start
+:1. Chọn chức năng thêm nhân viên;
+|Hệ thống|
+:2. Hiển thị biểu mẫu thông tin và phân quyền;
+|Business Admin|
+:3. Nhập Email, Họ tên và gán Role;
+:4. Nhấn xác nhận tạo;
+|Hệ thống|
+:5. Kiểm tra email trong hệ thống;
+if (Email chưa tồn tại?) then (Đúng)
+    :6. Tạo tài khoản và sinh mật khẩu tạm;
+    :7. Gửi email thông tin đăng nhập;
+    :8. Thông báo tạo tài khoản thành công;
+else (Sai)
+    :9. Cảnh báo lỗi trùng lặp dữ liệu;
+endif
+|Business Admin|
+stop
+@enduml

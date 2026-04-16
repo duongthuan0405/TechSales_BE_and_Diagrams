@@ -1,0 +1,26 @@
+@startuml
+title UC-34: Hủy đơn hàng
+
+|Nhân viên Sales|
+start
+:1. Nhấn nút "Hủy đơn";
+
+|Hệ thống|
+:2. Hiển thị danh sách lý do hủy chuẩn hóa;
+
+|Nhân viên Sales|
+:3. Chọn lý do và nhấn xác nhận;
+
+|Hệ thống|
+if (4. Kiểm tra việc chọn lý do?) then (Đã chọn)
+    :5. Cập nhật trạng thái đơn thành "Canceled";
+    :6. Hoàn trả số lượng sản phẩm vào kho;
+    :7. Ghi nhận Audit Log kèm lý do;
+    :8. Hiển thị thông báo hủy đơn thành công;
+else (Chưa chọn)
+    :9. Hiển thị cảnh báo yêu cầu chọn lý do;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

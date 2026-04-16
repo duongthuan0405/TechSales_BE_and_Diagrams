@@ -1,0 +1,25 @@
+@startuml
+title UC-39: Ẩn đánh giá vi phạm
+
+|Nhân viên Sales|
+start
+:1. Nhấn nút "Ẩn đánh giá";
+
+|Hệ thống|
+:2. Hiển thị yêu cầu nhập lý do giải trình;
+
+|Nhân viên Sales|
+:3. Nhập lý do vi phạm và nhấn xác nhận;
+
+|Hệ thống|
+if (4. Kiểm tra việc nhập lý do?) then (Đã nhập)
+    :5. Cập nhật trạng thái đánh giá thành "Bị ẩn";
+    :6. Ghi nhận hành động và lý do vào Audit Log;
+    :7. Hiển thị thông báo ẩn đánh giá thành công;
+else (Chưa nhập)
+    :8. Hiển thị cảnh báo yêu cầu bắt buộc điền lý do;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

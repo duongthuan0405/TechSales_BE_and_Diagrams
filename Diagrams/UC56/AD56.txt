@@ -1,0 +1,24 @@
+@startuml
+skinparam defaultFontColor black
+title UC-56: Định nghĩa vai trò người dùng
+
+|Technical Admin|
+start
+:1. Chọn chức năng quản lý phân quyền;
+|Hệ thống|
+:2. Hiển thị ma trận Role-Permission;
+|Technical Admin|
+:3. Thiết lập các quyền và nhấn lưu;
+|Hệ thống|
+partition "Giao dịch nguyên tử (Atomic)" {
+    :4. Kiểm tra cấu trúc dữ liệu;
+    :5. Cập nhật quyền mới vào CSDL;
+}
+if (Cập nhật thành công?) then (Đúng)
+    :6. Thông báo thiết lập thành công;
+else (Sai)
+    :7. Rollback và thông báo lỗi kỹ thuật;
+endif
+|Technical Admin|
+stop
+@enduml

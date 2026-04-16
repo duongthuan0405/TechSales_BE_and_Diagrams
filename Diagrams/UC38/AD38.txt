@@ -1,0 +1,25 @@
+@startuml
+title UC-38: Phản hồi đánh giá
+
+|Nhân viên Sales|
+start
+:1. Chọn bài đánh giá và nhấn "Trả lời";
+
+|Hệ thống|
+:2. Hiển thị khung soạn thảo văn bản;
+
+|Nhân viên Sales|
+:3. Nhập nội dung và nhấn nút gửi;
+
+|Hệ thống|
+if (4. Kiểm tra nội dung?) then (Có dữ liệu)
+    :5. Lưu phản hồi vào cơ sở dữ liệu;
+    :6. Liên kết phản hồi với bình luận gốc;
+    :7. Hiển thị thông báo gửi thành công;
+else (Trống)
+    :8. Hiển thị cảnh báo yêu cầu nhập nội dung;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

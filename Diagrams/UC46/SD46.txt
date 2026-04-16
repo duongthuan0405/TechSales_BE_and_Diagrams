@@ -1,0 +1,37 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-46: Tạo voucher kèm điều kiện
+
+actor "Business Admin" as Admin
+boundary Voucher_UI
+control Voucher_Controller
+database DB
+
+activate Admin
+Admin -> Voucher_UI: 1. Nhấn tạo voucher mới
+activate Voucher_UI
+Voucher_UI --> Admin: 2. Hiển thị biểu mẫu thiết lập
+Admin -> Voucher_UI: 3. Nhập thông tin voucher và điều kiện
+Admin -> Voucher_UI: 4. Nhấn nút lưu
+Voucher_UI -> Voucher_Controller: 5. Gửi yêu cầu tạo voucher
+activate Voucher_Controller
+Voucher_Controller -> DB: 6. checkVoucherData(input)
+activate DB
+DB --> Voucher_Controller: 7. Kết quả xác thực dữ liệu
+
+alt [x Mã code đã tồn tại hoặc điều kiện không hợp lệ]
+    Voucher_Controller --> Voucher_UI: 8. Báo lỗi dữ liệu không hợp lệ
+    Voucher_UI --> Admin: 9. Hiển thị thông báo dữ liệu không hợp lệ
+else [x Dữ liệu hợp lệ]
+    Voucher_Controller -> DB: 10. saveVoucher(data)
+    DB --> Voucher_Controller: 11. success
+    Voucher_Controller --> Voucher_UI: 12. Báo lỗi tạo thành công
+    Voucher_UI --> Admin: 13. Hiển thị thông báo tạo thành công
+end
+
+deactivate Admin
+deactivate Voucher_UI
+deactivate Voucher_Controller
+deactivate DB
+@enduml

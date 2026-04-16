@@ -1,0 +1,25 @@
+@startuml
+title UC-32: Cập nhật trạng thái giao hàng
+
+|Nhân viên Sales|
+start
+:1. Nhấn nút "Chuyển giao hàng";
+
+|Hệ thống|
+:2. Hiển thị form yêu cầu nhập mã vận đơn;
+
+|Nhân viên Sales|
+:3. Nhập mã vận đơn và nhấn xác nhận;
+
+|Hệ thống|
+if (4. Kiểm tra mã vận đơn?) then (Hợp lệ)
+    :5. Cập nhật trạng thái đơn hàng thành "Shipping";
+    :6. Ghi nhận thao tác vào Audit Log;
+    :7. Hiển thị thông báo cập nhật thành công;
+else (Bỏ trống)
+    :8. Hiển thị cảnh báo lỗi yêu cầu nhập đầy đủ;
+endif
+
+|Nhân viên Sales|
+stop
+@enduml

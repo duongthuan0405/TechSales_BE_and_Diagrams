@@ -1,0 +1,40 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-56: Định nghĩa vai trò người dùng
+
+actor "Technical Admin" as Admin
+boundary Permission_UI
+control Permission_Controller
+database DB
+
+activate Admin
+Admin -> Permission_UI: 1. Chọn chức năng quản lý phân quyền
+activate Permission_UI
+Permission_UI -> Permission_Controller: 2. Gửi yêu cầu lấy ma trận quyền
+activate Permission_Controller
+Permission_Controller -> DB: 3. getPermissionMatrix()
+activate DB
+DB --> Permission_Controller: 4. Trả về dữ liệu Role-Permission
+Permission_UI --> Admin: 5. Hiển thị ma trận quyền hạn
+Admin -> Permission_UI: 6. Thiết lập quyền và nhấn lưu
+Permission_UI -> Permission_Controller: 7. Gửi cấu hình phân quyền mới
+Permission_Controller -> DB: 8. startAtomicTransaction()
+Permission_Controller -> DB: 9. updateRolePermissions(data)
+DB --> Permission_Controller: 10. Kết quả cập nhật dữ liệu
+
+alt [x Lỗi cập nhật cơ sở dữ liệu]
+    Permission_Controller -> DB: 11. rollbackTransaction()
+    Permission_Controller --> Permission_UI: 12. Báo lỗi thiết lập không thành công
+    Permission_UI --> Admin: 13. Hiển thị thông báo lỗi kỹ thuật
+else [x Thiết lập thành công]
+    Permission_Controller -> DB: 14. commitTransaction()
+    Permission_Controller --> Permission_UI: 15. Báo lỗi thiết lập thành công
+    Permission_UI --> Admin: 16. Hiển thị thông báo thiết lập thành công
+end
+
+deactivate Admin
+deactivate Permission_UI
+deactivate Permission_Controller
+deactivate DB
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+title UC-33: Xác nhận trạng thái "Delivered"
+
+|Nhân viên Sales|
+start
+:1. Nhấn nút "Đã giao thành công";
+
+|Hệ thống|
+:2. Hiển thị hộp thoại xác nhận;
+
+|Nhân viên Sales|
+:3. Xác nhận hoàn tất;
+
+|Hệ thống|
+:4. Cập nhật trạng thái đơn hàng thành "Delivered";
+:5. Ghi nhận hành động vào Audit Log;
+:6. Hiển thị thông báo hoàn tất đơn hàng;
+
+|Nhân viên Sales|
+stop
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+skinparam defaultFontColor black
+skinparam monochrome true
+title UC-44: Cập nhật số lượng tồn kho
+
+actor "Business Admin" as Admin
+boundary Inventory_UI
+control Inventory_Controller
+database DB
+
+activate Admin
+Admin -> Inventory_UI: 1. Tìm kiếm sản phẩm cần kiểm kê
+activate Inventory_UI
+Inventory_UI --> Admin: 2. Hiển thị thông tin tồn kho hiện tại
+Admin -> Inventory_UI: 3. Nhập số lượng tồn kho mới
+Admin -> Inventory_UI: 4. Nhấn xác nhận lưu thay đổi
+Inventory_UI -> Inventory_Controller: 5. Gửi thông tin tồn kho mới
+activate Inventory_Controller
+Inventory_Controller -> DB: 6. checkInventoryData(input)
+activate DB
+DB --> Inventory_Controller: 7. Kết quả xác thực dữ liệu
+
+alt [x Số lượng âm hoặc chứa ký tự chữ]
+    Inventory_Controller --> Inventory_UI: 8. Báo lỗi dữ liệu không hợp lệ
+    Inventory_UI --> Admin: 9. Hiển thị thông báo dữ liệu không hợp lệ
+else [x Dữ liệu hợp lệ]
+    Inventory_Controller -> DB: 10. updateInventoryQuantity(data)
+    DB --> Inventory_Controller: 11. success
+    Inventory_Controller -> Inventory_Controller: 12. re-evaluateProductStatus()
+    Inventory_Controller --> Inventory_UI: 13. Báo lỗi cập nhật số lượng thành công
+    Inventory_UI --> Admin: 14. Hiển thị thông báo cập nhật số lượng thành công
+end
+
+deactivate Admin
+deactivate Inventory_UI
+deactivate Inventory_Controller
+deactivate DB
+@enduml
