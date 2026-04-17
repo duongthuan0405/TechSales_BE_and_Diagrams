@@ -8,12 +8,11 @@ start
 |Hệ thống|
 :2. Hiển thị hộp thoại cảnh báo vô hiệu hóa mã;
 |Business Admin|
-:3. Phản hồi xác nhận;
-if (Xác nhận đồng ý?) then (Đúng)
+if (3. Phản hồi xác nhận?) then (Đồng ý)
     |Hệ thống|
     :4. Cập nhật trạng thái voucher thành Đã dừng;
     :5. Thông báo thao tác thành công;
-else (Sai)
+else (Từ chối)
     |Hệ thống|
     :6. Đóng hộp thoại và giữ nguyên trạng thái;
 endif

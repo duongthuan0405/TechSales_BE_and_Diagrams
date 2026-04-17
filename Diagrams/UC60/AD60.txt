@@ -8,8 +8,7 @@ start
 :2. Nhập giá trị mới vào ô tương ứng;
 :3. Nhấn xác nhận lưu cấu hình;
 |Hệ thống|
-:4. Kiểm tra định dạng và tính hợp lệ;
-if (Dữ liệu hợp lệ?) then (Đúng)
+if (4. Kiểm tra định dạng và tính hợp lệ?) then (Đúng)
     :5. Lưu thay đổi và cập nhật vào môi trường thực tế;
     :6. Thông báo lưu thay đổi thành công;
 else (Sai)

@@ -6,8 +6,7 @@ start
 :1. Chọn mục "Quản lý đánh giá/Phản hồi";
 
 |Hệ thống|
-:2. Truy vấn danh sách đánh giá mới nhất từ CSDL;
-if (3. Kiểm tra dữ liệu phản hồi?) then (Có dữ liệu)
+if (2. Truy vấn danh sách đánh giá mới nhất từ CSDL?) then (Có dữ liệu)
     :4. Hiển thị danh sách đánh giá theo thứ tự thời gian;
     |Nhân viên Sales|
     :5. Tùy chỉnh bộ lọc số sao (nếu cần);

@@ -10,14 +10,12 @@ start
 |Technical Admin|
 :3. Thiết lập các quyền và nhấn lưu;
 |Hệ thống|
-partition "Giao dịch nguyên tử (Atomic)" {
-    :4. Kiểm tra cấu trúc dữ liệu;
-    :5. Cập nhật quyền mới vào CSDL;
-}
-if (Cập nhật thành công?) then (Đúng)
-    :6. Thông báo thiết lập thành công;
-else (Sai)
-    :7. Rollback và thông báo lỗi kỹ thuật;
+:4. Kiểm tra cấu trúc dữ liệu;
+:5. Cập nhật quyền mới vào CSDL;
+if (6. Cập nhật thành công?) then (Thành công)
+    :7. Thông báo thiết lập thành công;
+else (Thất bại)
+    :8. Rollback và thông báo lỗi kỹ thuật;
 endif
 |Technical Admin|
 stop

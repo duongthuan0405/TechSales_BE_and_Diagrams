@@ -7,11 +7,10 @@ start
 :1. Truy cập vào màn hình Audit Log;
 :2. Thiết lập các bộ lọc tra cứu;
 |Hệ thống|
-:3. Truy xuất dữ liệu từ bảng nhật ký;
-if (Tìm thấy bản ghi?) then (Đúng)
+if (3. Truy xuất dữ liệu từ bảng nhật ký?) then (Có dữ liệu)
     :4. Phân trang dữ liệu nhật ký;
     :5. Hiển thị danh sách bản ghi lên màn hình;
-else (Sai)
+else (Không có dữ liệu)
     :6. Hiển thị bảng trống và thông báo không tìm thấy;
 endif
 |Technical Admin|

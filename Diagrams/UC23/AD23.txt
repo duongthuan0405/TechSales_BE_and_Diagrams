@@ -8,11 +8,9 @@ start
 :1. Chọn xem chi tiết một đơn hàng cụ thể;
 
 |Hệ thống|
-:2. Truy vấn dữ liệu chi tiết đơn hàng từ CSDL;
-
-if (Dữ liệu tồn tại và hợp lệ?) then (Không)
+if (2. Truy vấn dữ liệu chi tiết đơn hàng từ CSDL?) then (Không tìm thấy đơn hàng)
     :3. Thông báo lỗi truy xuất và quay lại danh sách tổng;
-else (Có)
+else (Tìm thấy đơn hàng)
     :4. Hiển thị thông tin chi tiết đơn hàng;
 endif
 

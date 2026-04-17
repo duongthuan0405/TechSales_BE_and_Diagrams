@@ -7,11 +7,10 @@ start
 :1. Truy cập vào trang báo cáo doanh thu;
 :2. Thiết lập bộ lọc khoảng thời gian;
 |Hệ thống|
-:3. Truy vấn các đơn hàng trạng thái Delivered;
-if (Có dữ liệu doanh thu?) then (Đúng)
+if (3. Truy vấn các đơn hàng trạng thái Delivered?) then (Có dữ liệu)
     :4. Tổng hợp và kết xuất biểu đồ;
     :5. Hiển thị biểu đồ và các chỉ số tóm tắt;
-else (Sai)
+else (Không có dữ liệu)
     :6. Hiển thị biểu đồ rỗng và thông báo không có dữ liệu;
 endif
 |Business Admin|

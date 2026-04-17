@@ -14,11 +14,9 @@ start
 :3. Gửi yêu cầu tìm kiếm;
 
 |Hệ thống|
-:4. Truy vấn tìm các sản phẩm khớp;
-
-if (Có sản phẩm khớp từ khóa?) then (Đúng)
+if (4. Truy vấn tìm các sản phẩm khớp?) then (Có sản phẩm)
     :5. Hiển thị danh sách sản phẩm phù hợp;
-else (Sai)
+else (Không có sản phẩm)
     :6. Thông báo không tìm thấy kết quả;
 endif
 

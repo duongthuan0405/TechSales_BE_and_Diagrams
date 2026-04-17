@@ -8,11 +8,9 @@ start
 :1. Chọn chức năng xem lịch sử đơn hàng;
 
 |Hệ thống|
-:2. Truy vấn danh sách đơn hàng từ CSDL;
-
-if (Có tồn tại đơn hàng?) then (Không)
+if (2. Truy vấn danh sách đơn hàng từ CSDL?) then (Không có đơn hàng)
     :3. Thông báo danh sách trống và gợi ý sản phẩm;
-else (Có)
+else (Có đơn hàng)
     :4. Sắp xếp danh sách theo thời gian và phân trang;
     :5. Hiển thị danh sách lịch sử đơn hàng;
 endif

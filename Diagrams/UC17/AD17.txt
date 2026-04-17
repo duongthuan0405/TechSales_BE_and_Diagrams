@@ -14,11 +14,11 @@ start
 :3. Nhấn nút "Thanh toán";
 
 |Hệ thống|
-if (Kiểm tra danh sách chọn?) then (Trống)
-    :4. Thông báo lỗi yêu cầu chọn sản phẩm;
+if (4. Kiểm tra danh sách chọn?) then (Trống)
+    :5. Thông báo lỗi yêu cầu chọn sản phẩm;
 else (Có sản phẩm)
-    :5. Ghi nhận danh sách sản phẩm chờ thanh toán;
-    :6. Chuyển hướng sang màn hình Checkout;
+    :6. Ghi nhận danh sách sản phẩm chờ thanh toán;
+    :7. Chuyển hướng sang màn hình Checkout;
 endif
 
 |Khách hàng|

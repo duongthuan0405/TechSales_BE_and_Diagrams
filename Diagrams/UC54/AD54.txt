@@ -7,12 +7,11 @@ start
 :1. Áp dụng bộ lọc và nhấn nút xuất tệp;
 |Hệ thống|
 :2. Tiếp nhận yêu cầu và tổng hợp dữ liệu;
-:3. Định dạng dữ liệu và khởi tạo tệp Excel;
-if (Khởi tạo tệp thành công?) then (Đúng)
+if (3. Định dạng dữ liệu và khởi tạo tệp Excel?) then (Có dữ liệu)
     :4. Gửi luồng dữ liệu tệp về trình duyệt;
     :5. Tự động tải tệp xuống thiết bị;
     :6. Thông báo kết xuất thành công;
-else (Sai)
+else (Không có dữ liệu)
     :7. Thông báo lỗi không thể tạo tệp;
 endif
 |Business Admin|

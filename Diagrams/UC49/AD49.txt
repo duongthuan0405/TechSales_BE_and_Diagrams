@@ -9,13 +9,12 @@ start
 |Hệ thống|
 :3. Yêu cầu xác nhận thao tác thu hồi quyền;
 |Business Admin|
-:4. Phản hồi xác nhận;
-if (Xác nhận đồng ý?) then (Đúng)
+if (4. Phản hồi xác nhận?) then (Đồng ý)
     |Hệ thống|
     :5. Thay đổi trạng thái tài khoản thành Bị khóa;
     :6. Hủy bỏ các phiên làm việc hiện tại;
     :7. Thông báo khóa thành công;
-else (Sai)
+else (Từ chối)
     |Hệ thống|
     :8. Đóng hộp thoại và hủy thao tác;
 endif

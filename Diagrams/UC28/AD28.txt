@@ -8,12 +8,10 @@ start
 :1. Cuộn xuống khu vực đánh giá trên trang sản phẩm;
 
 |Hệ thống|
-:2. Truy vấn danh sách đánh giá từ cơ sở dữ liệu;
-
-if (Sản phẩm đã có đánh giá?) then (Có)
+if (2. Truy vấn danh sách đánh giá từ CSDL?) then (Có đánh giá)
     :3. Tính toán điểm đánh giá trung bình;
     :4. Hiển thị điểm trung bình và danh sách bình luận;
-else (Chưa)
+else (Không có đánh giá)
     :5. Thông báo sản phẩm chưa có đánh giá;
 endif
 

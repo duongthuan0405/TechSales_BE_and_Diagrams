@@ -14,28 +14,21 @@ start
 :3. Nhập thông tin cá nhân và nhấn xác nhận;
 
 |Hệ thống|
-:4. Kiểm tra định dạng dữ liệu đầu vào;
-
-if (Dữ liệu hợp lệ?) then (Đúng)
-    :5. Kiểm tra sự tồn tại của tài khoản;
-    if (Chưa tồn tại?) then (Đúng)
-        :6. Mã hóa mật khẩu;
-        :7. Lưu thông tin tài khoản chờ xác thực;
-        :8. Gửi email chứa đường dẫn xác nhận;
+if (4. Kiểm tra định dạng dữ liệu đầu vào?) then (Không hợp lệ)
+    :5. Thông báo lỗi định dạng không hợp lệ;
+else (Hợp lệ)
+    if (6. Kiểm tra sự tồn tại của tài khoản?) then (Đã tồn tại)
+        :7. Thông báo lỗi tài khoản đã tồn tại;
+    else (Chưa tồn tại)
+        :8. Mã hóa mật khẩu và lưu tài khoản chờ xác thực;
+        :9. Gửi email chứa đường dẫn xác nhận;
         
         |Khách hàng|
-        :9. Nhấn vào đường dẫn xác nhận trong email;
+        :10. Nhấn vào đường dẫn xác nhận trong email;
         
         |Hệ thống|
-        :10. Kích hoạt tài khoản;
-        :11. Thông báo đăng ký thành công;
-    else (Sai)
-        |Hệ thống|
-        :12. Thông báo lỗi tài khoản đã tồn tại;
+        :11. Kích hoạt tài khoản và thông báo đăng ký thành công;
     endif
-else (Sai)
-    |Hệ thống|
-    :13. Thông báo lỗi định dạng không hợp lệ;
 endif
 
 |Khách hàng|

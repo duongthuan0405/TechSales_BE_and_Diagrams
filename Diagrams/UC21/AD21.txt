@@ -10,11 +10,9 @@ start
 |Hệ thống|
 :2. Tổng hợp thông tin đơn hàng vừa tạo;
 :3. Biên dịch thông tin thành biểu mẫu email;
-:4. Kết nối với dịch vụ gửi email (SMTP);
-
-if (Kết nối dịch vụ thành công?) then (Có)
+if (4. Kết nối với dịch vụ gửi email (SMTP)?) then (Thành công)
     :5. Thực hiện gửi email xác nhận đến khách hàng;
-else (Không)
+else (Không thành công)
     :6. Ghi nhận lỗi và đưa email vào hàng đợi gửi lại;
 endif
 

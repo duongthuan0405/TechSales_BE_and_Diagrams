@@ -8,21 +8,16 @@ start
 :1. Nhấn nút "Xác nhận đặt hàng";
 
 |Hệ thống|
-:2. Kiểm tra tồn kho thực tế toàn bộ sản phẩm;
-
-if (Đủ số lượng tồn kho?) then (Không)
+if (2. Kiểm tra tồn kho thực tế toàn bộ sản phẩm?) then (Thiếu hàng)
     :3. Thông báo lỗi thiếu hàng;
-else (Có)
-    :4. Bắt đầu giao dịch nguyên tử (Atomic Transaction);
-    :5. Thực hiện trừ kho, tạo đơn hàng và xóa giỏ hàng;
-    
-    if (Các bước thực hiện thành công?) then (Có)
-        :6. Hoàn tất (Commit) giao dịch;
-        :7. Thông báo đặt hàng thành công và gửi email;
-    else (Không)
-        :8. Hủy bỏ (Rollback) toàn bộ giao dịch;
-        :9. Thông báo lỗi hệ thống;
+else (Đủ hàng)
+    :4. Thực hiện trừ kho;
+    :5. Tạo đơn hàng;
+    if (6. Kiểm tra phương thức thanh toán?) then (Thanh toán online)
+        :7. Thực hiện thanh toán online;
     endif
+    :8. Xóa giỏ hàng;
+    :9. Gửi thông báo đặt hàng thành công và gửi email;
 endif
 
 |Khách hàng|

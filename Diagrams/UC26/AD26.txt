@@ -14,12 +14,10 @@ start
 :3. Chọn địa chỉ mới và xác nhận;
 
 |Hệ thống|
-:4. Kiểm tra trạng thái đơn hàng thực tế;
-
-if (Đơn hàng chưa bắt đầu giao?) then (Đúng)
+if (4. Kiểm tra trạng thái đơn hàng thực tế?) then (Chưa được giao)
     :5. Cập nhật địa chỉ mới cho bản ghi đơn hàng;
     :6. Thông báo thay đổi địa chỉ thành công;
-else (Sai)
+else (Đã được giao)
     :7. Thông báo lỗi đơn hàng đã được gửi đi;
 endif
 

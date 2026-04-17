@@ -8,13 +8,11 @@ start
 :1. Chọn số lượng và nhấn "Thêm vào giỏ hàng";
 
 |Hệ thống|
-:2. Kiểm tra số lượng yêu cầu với tồn kho;
-
-if (Đủ hàng tồn kho?) then (Không)
+if (2. Kiểm tra số lượng yêu cầu với tồn kho?) then (Thiếu hàng)
     :3. Thông báo thiếu hàng và điều chỉnh về mức tối đa;
-else (Có)
+else (Đủ hàng)
     :4. Thêm sản phẩm vào dữ liệu giỏ hàng;
-    :5. Cập nhật bộ đếm trên biểu tượng giỏ hàng;
+    :5. Cập nhật bộ đếm trên giỏ hàng;
     :6. Thông báo thêm vào giỏ hàng thành công;
 endif
 

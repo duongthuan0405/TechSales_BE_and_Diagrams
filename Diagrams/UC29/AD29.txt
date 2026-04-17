@@ -9,11 +9,9 @@ start
 
 |Hệ thống|
 :2. Thiết lập bộ lọc mặc định là "Pending";
-:3. Truy vấn danh sách đơn hàng từ CSDL;
-
-if (Có đơn hàng chờ xử lý?) then (Không)
+if (3. Truy vấn danh sách đơn hàng từ CSDL?) then (Không có đơn hàng)
     :4. Hiển thị bảng trống và thông báo không có đơn mới;
-else (Có)
+else (Có đơn hàng)
     :5. Hiển thị danh sách đơn hàng dưới dạng bảng;
 endif
 

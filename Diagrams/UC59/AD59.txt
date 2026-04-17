@@ -8,8 +8,7 @@ start
 |Hệ thống|
 :2. Chuyển giao diện khách hàng sang màn hình bảo trì;
 :3. Kích hoạt tiến trình sao lưu CSDL;
-:4. Kiểm tra tính toàn vẹn của tệp sao lưu;
-if (Sao lưu thành công?) then (Đúng)
+if (4. Kiểm tra tính toàn vẹn của tệp sao lưu?) then (Đúng)
     :5. Thông báo đã bật bảo trì và sao lưu thành công;
 else (Sai)
     :6. Hủy bỏ bảo trì và cảnh báo lỗi sao lưu khẩn cấp;

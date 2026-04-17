@@ -8,13 +8,11 @@ start
 :1. Nhập mã voucher và nhấn "Áp dụng";
 
 |Hệ thống|
-:2. Truy xuất và kiểm tra tính hợp lệ của voucher;
-
-if (Voucher hợp lệ?) then (Đúng)
+if (2. Truy xuất và kiểm tra tính hợp lệ của voucher?) then (Hợp lệ)
     :3. Tính toán số tiền giảm giá;
     :4. Cập nhật lại tổng tiền hóa đơn;
     :5. Thông báo áp dụng mã thành công;
-else (Sai)
+else (Không hợp lệ)
     :6. Thông báo lỗi mã không hợp lệ;
 endif
 

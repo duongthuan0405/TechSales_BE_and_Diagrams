@@ -3,17 +3,18 @@ skinparam style strictuml
 skinparam monochrome true
 title UC-13: Kiểm tra trạng thái tồn kho
 
-|Hệ thống|
+|Khách hàng|
 start
-:1. Truy vấn số lượng tồn kho theo thời gian thực;
-:2. Tính toán số lượng hàng khả dụng;
+:1. Truy cập vào trang chi tiết sản phẩm;
 
-if (Số lượng > 0?) then (Đúng)
-    :3. Hiển thị trạng thái còn hàng;
-    :4. Kích hoạt các nút mua sắm;
-else (Sai)
-    :5. Hiển thị trạng thái hết hàng;
-    :6. Ẩn các nút tương tác mua sắm;
+|Hệ thống|
+:2. Truy vấn số lượng tồn kho theo thời gian thực;
+if (3. Tính toán số lượng hàng khả dụng?) then (Còn hàng)
+    :4. Hiển thị trạng thái còn hàng;
+    :5. Kích hoạt các nút mua sắm;
+else (Hết hàng)
+    :6. Hiển thị trạng thái hết hàng;
+    :7. Ẩn các nút mua sắm;
 endif
 
 |Khách hàng|
