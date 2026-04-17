@@ -9,14 +9,15 @@ control System_Controller
 database DB
 
 activate Admin
-Admin -> System_UI: 1. Nhấn xác nhận bật chế độ bảo trì
 activate System_UI
-System_UI -> System_Controller: 2. Gửi yêu cầu kích hoạt bảo trì
+Admin -> System_UI: 1. Nhấn xác nhận bật chế độ bảo trì
 activate System_Controller
+System_UI -> System_Controller: 2. Gửi yêu cầu kích hoạt bảo trì
 System_Controller -> System_Controller: 3. switchToMaintenanceMode()
-System_Controller -> DB: 4. triggerFullBackup()
 activate DB
+System_Controller -> DB: 4. triggerFullBackup()
 DB --> System_Controller: 5. Trả về kết quả sao lưu
+deactivate DB
 
 alt [x Tiến trình sao lưu thất bại]
     System_Controller -> System_Controller: 6. revertMaintenanceMode()
@@ -25,11 +26,10 @@ alt [x Tiến trình sao lưu thất bại]
 else [x Sao lưu và kiểm tra thành công]
     System_Controller -> System_Controller: 9. verifyBackupIntegrity()
     System_Controller --> System_UI: 10. Báo lỗi bật bảo trì và sao lưu thành công
+    deactivate System_Controller
     System_UI --> Admin: 11. Hiển thị thông báo trạng thái thành công
+    deactivate Admin
+    deactivate System_UI
 end
 
-deactivate Admin
-deactivate System_UI
-deactivate System_Controller
-deactivate DB
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-49: Khóa tài khoản nhân viên cũ
 
@@ -18,6 +18,9 @@ else (Từ chối)
     |Hệ thống|
     :8. Đóng hộp thoại và hủy thao tác;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

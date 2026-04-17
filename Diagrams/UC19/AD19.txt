@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-19: Chọn phương thức thanh toán
@@ -10,6 +10,8 @@ start
 |Hệ thống|
 :2. Tiếp nhận lựa chọn và truy xuất hướng dẫn tương ứng;
 :3. Hiển thị thông tin hướng dẫn và lưu tạm vào phiên làm việc;
+
+|Khách hàng|
 
 |Khách hàng|
 stop

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-13: Kiểm tra trạng thái tồn kho
@@ -16,6 +16,9 @@ else (Hết hàng)
     :6. Hiển thị trạng thái hết hàng;
     :7. Ẩn các nút mua sắm;
 endif
+
+
+
 
 |Khách hàng|
 stop

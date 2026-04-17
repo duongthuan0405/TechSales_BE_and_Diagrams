@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-11: Sắp xếp sản phẩm theo giá
@@ -10,6 +10,8 @@ start
 |Hệ thống|
 :2. Tiếp nhận tiêu chí và xử lý sắp xếp dữ liệu;
 :3. Cập nhật giao diện danh sách sản phẩm theo thứ tự mới;
+
+|Khách hàng|
 
 |Khách hàng|
 stop

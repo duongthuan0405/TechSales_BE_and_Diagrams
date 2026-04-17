@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-28: Đọc đánh giá từ người khác
@@ -14,6 +14,9 @@ if (2. Truy vấn danh sách đánh giá từ CSDL?) then (Có đánh giá)
 else (Không có đánh giá)
     :5. Thông báo sản phẩm chưa có đánh giá;
 endif
+
+
+
 
 |Khách hàng|
 stop

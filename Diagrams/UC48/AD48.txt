@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-48: Tạo tài khoản nhân viên mới
 
@@ -18,6 +18,9 @@ if (5. Kiểm tra email trong hệ thống?) then (Hợp lệ)
 else (Không hợp lệ)
     :9. Cảnh báo lỗi trùng lặp dữ liệu;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

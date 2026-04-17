@@ -8,15 +8,15 @@ boundary "Checkout_UI" as UI
 control "Checkout_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn chọn phương thức thanh toán
 activate User
 activate UI
+User -> UI: 1. Nhấn chọn phương thức thanh toán
 
-UI -> Ctrl: 2. Yêu cầu cập nhật phương thức đã chọn
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu cập nhật phương thức đã chọn
 
-Ctrl -> DB: 3. getPaymentInstruction(methodID)
 activate DB
+Ctrl -> DB: 3. getPaymentInstruction(methodID)
 
 alt [x Phương thức thanh toán khả dụng]
     DB --> Ctrl: 4. Phản hồi thông tin hướng dẫn chi tiết
@@ -24,12 +24,12 @@ alt [x Phương thức thanh toán khả dụng]
     UI --> User: 6. Hiển thị hướng dẫn thanh toán cho người dùng
 else [x Lỗi tải thông tin phương thức]
     DB --> Ctrl: 7. Phản hồi lỗi truy xuất dữ liệu
+    deactivate DB
     Ctrl --> UI: 8. Thông báo lỗi hệ thống tạm thời
+    deactivate Ctrl
     UI --> User: 9. Hiển thị yêu cầu chọn lại phương thức
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

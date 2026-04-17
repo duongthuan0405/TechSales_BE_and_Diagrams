@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-30: Xem chi tiết đơn hàng
@@ -10,6 +10,8 @@ start
 |Hệ thống|
 :2. Truy vấn dữ liệu chi tiết của đơn hàng từ CSDL;
 :3. Hiển thị màn hình chi tiết (Thông tin giao hàng, Sản phẩm, Thanh toán, Trạng thái);
+
+|Nhân viên Sales|
 
 |Nhân viên Sales|
 stop

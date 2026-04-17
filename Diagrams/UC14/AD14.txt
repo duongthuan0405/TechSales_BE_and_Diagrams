@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-14: Thêm sản phẩm vào giỏ hàng
@@ -15,6 +15,9 @@ else (Đủ hàng)
     :5. Cập nhật bộ đếm trên giỏ hàng;
     :6. Thông báo thêm vào giỏ hàng thành công;
 endif
+
+
+
 
 |Khách hàng|
 stop

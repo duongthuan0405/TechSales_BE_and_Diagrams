@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-27: Đánh giá sản phẩm đã mua
@@ -20,6 +20,9 @@ else (Rồi)
     :6. Lưu bài đánh giá và liên kết với sản phẩm;
     :7. Thông báo gửi đánh giá thành công;
 endif
+
+
+
 
 |Khách hàng|
 stop

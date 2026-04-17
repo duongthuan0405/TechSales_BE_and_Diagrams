@@ -9,15 +9,15 @@ control Product_Controller
 database DB
 
 activate Admin
-Admin -> Product_UI: 1. Chọn sản phẩm cần đổi giá
 activate Product_UI
+Admin -> Product_UI: 1. Chọn sản phẩm cần đổi giá
 Product_UI --> Admin: 2. Hiển thị thông tin giá hiện tại
 Admin -> Product_UI: 3. Nhập mức giá mới
 Admin -> Product_UI: 4. Nhấn nút xác nhận lưu
-Product_UI -> Product_Controller: 5. Gửi yêu cầu cập nhật giá
 activate Product_Controller
-Product_Controller -> DB: 6. checkPrice(input)
+Product_UI -> Product_Controller: 5. Gửi yêu cầu cập nhật giá
 activate DB
+Product_Controller -> DB: 6. checkPrice(input)
 DB --> Product_Controller: 7. Kết quả xác thực
 
 alt [x Giá trị âm hoặc sai định dạng]
@@ -26,12 +26,12 @@ alt [x Giá trị âm hoặc sai định dạng]
 else [x Giá trị hợp lệ]
     Product_Controller -> DB: 10. updateProductPrice(data)
     DB --> Product_Controller: 11. success
+    deactivate DB
     Product_Controller --> Product_UI: 12. Báo lỗi cập nhật giá thành công
+    deactivate Product_Controller
     Product_UI --> Admin: 13. Hiển thị thông báo cập nhật giá thành công
+    deactivate Admin
+    deactivate Product_UI
 end
 
-deactivate Admin
-deactivate Product_UI
-deactivate Product_Controller
-deactivate DB
 @enduml

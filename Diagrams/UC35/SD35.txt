@@ -5,23 +5,23 @@ actor "Nhân viên Sales" as Staff
 boundary OrderDetail_UI as UI
 control Order_Controller as Ctrl
 database DB
-entity "Bank API" as Bank
+actor "Bank API" as Bank
+
 
 activate Staff
 activate UI
-activate Ctrl
-activate DB
-activate Bank
-
 Staff -> UI : 1. Nhấn nút "Hoàn tiền"
 UI -> Staff : 2. Hiển thị thông tin tiền và phương thức gốc
 
 Staff -> UI : 3. Xác nhận gửi lệnh
+activate Ctrl
 UI -> Ctrl : 4. Yêu cầu khởi tạo hoàn tiền(orderID)
 
 alt x Điều kiện đơn hàng hợp lệ
+    activate DB
     Ctrl -> DB : 5. checkRefundEligibility(orderID)
     DB -> Ctrl : 6. eligible
+    activate Bank
     Ctrl -> Bank : 7. requestRefund(amount, accountInfo)
     
     alt x Bank API phản hồi thành công
@@ -30,22 +30,22 @@ alt x Điều kiện đơn hàng hợp lệ
         DB -> Ctrl : 10. success
         Ctrl -> DB : 11. writeAuditLog(staffID, "Refund", time)
         DB -> Ctrl : 12. success
+        deactivate DB
         Ctrl -> UI : 13. Thông báo hoàn tiền thành công
         UI -> Staff : 14. Hiển thị thông báo thành công
     else x Bank API từ chối/lỗi
         Bank -> Ctrl : 15. refund_denied
+        deactivate Bank
         Ctrl -> UI : 16. Báo lỗi từ chối từ phía ngân hàng
         UI -> Staff : 17. Hiển thị cảnh báo xử lý thủ công
     end
     
 else x Đơn hàng chưa hủy hoặc chưa thanh toán
     Ctrl -> UI : 18. Báo lỗi đơn hàng không đủ điều kiện hoàn tiền
+    deactivate Ctrl
     UI -> Staff : 19. Hiển thị thông báo lỗi
+    deactivate Staff
+    deactivate UI
 end
 
-deactivate Staff
-deactivate UI
-deactivate Ctrl
-deactivate DB
-deactivate Bank
 @enduml

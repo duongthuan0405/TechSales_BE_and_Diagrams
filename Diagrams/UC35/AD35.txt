@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-35: Khởi tạo hoàn tiền
 
 |Nhân viên Sales|
@@ -23,6 +23,9 @@ if (4. Kiểm tra điều kiện hoàn tiền?) then (Hợp lệ)
 else (Không hợp lệ)
     :11. Hiển thị thông báo lỗi điều kiện đơn hàng;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

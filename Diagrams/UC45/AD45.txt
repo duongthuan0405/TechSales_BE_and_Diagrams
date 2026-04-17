@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-45: Ngừng kinh doanh sản phẩm
 
@@ -17,6 +17,9 @@ else (Từ chối)
     |Hệ thống|
     :7. Đóng hộp thoại và hủy thao tác;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

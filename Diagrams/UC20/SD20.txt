@@ -8,17 +8,17 @@ boundary "Checkout_UI" as UI
 control "Order_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn nút xác nhận đặt hàng
 activate User
 activate UI
+User -> UI: 1. Nhấn nút xác nhận đặt hàng
 
-UI -> Ctrl: 2. Yêu cầu tạo đơn hàng
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu tạo đơn hàng
 
 note over Ctrl: Bắt đầu giao dịch nguyên tử (Atomic)
 
-Ctrl -> DB: 3. checkAndReserveStock(items)
 activate DB
+Ctrl -> DB: 3. checkAndReserveStock(items)
 
 alt [x Một hoặc nhiều sản phẩm bị thiếu hàng]
     DB --> Ctrl: 4. Phản hồi lỗi thiếu tồn kho
@@ -37,14 +37,14 @@ else [x Đủ hàng tồn kho]
     else [x Thực hiện thành công toàn bộ]
         Ctrl -> DB: 13. Thực hiện Commit()
         DB --> Ctrl: 14. Xác nhận lưu dữ liệu vĩnh viễn
+        deactivate DB
         Ctrl --> UI: 15. Phản hồi đặt hàng thành công
+        deactivate Ctrl
         UI --> User: 16. Thông báo thành công và điều hướng trang
+        deactivate User
+        deactivate UI
         note over Ctrl: Kích hoạt tự động UC-21
     end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

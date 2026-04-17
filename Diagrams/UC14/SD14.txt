@@ -8,15 +8,15 @@ boundary "ProductDetail_UI" as UI
 control "Cart_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn nút thêm sản phẩm vào giỏ hàng
 activate User
 activate UI
+User -> UI: 1. Nhấn nút thêm sản phẩm vào giỏ hàng
 
-UI -> Ctrl: 2. Gửi yêu cầu thêm sản phẩm với số lượng cụ thể
 activate Ctrl
+UI -> Ctrl: 2. Gửi yêu cầu thêm sản phẩm với số lượng cụ thể
 
-Ctrl -> DB: 3. checkInventory(productID)
 activate DB
+Ctrl -> DB: 3. checkInventory(productID)
 
 DB --> Ctrl: 4. Phản hồi số lượng tồn kho hiện có
 
@@ -26,13 +26,13 @@ alt [x Số lượng yêu cầu vượt quá tồn kho]
 else [x Số lượng hợp lệ]
     Ctrl -> DB: 7. addProductToCart(userID, productID, qty)
     DB --> Ctrl: 8. Xác nhận lưu dữ liệu thành công
+    deactivate DB
     
     Ctrl --> UI: 9. Phản hồi kết quả thành công
+    deactivate Ctrl
     UI --> User: 10. Hiển thị thông báo thêm vào giỏ hàng thành công
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-39: Ẩn đánh giá vi phạm
 
 |Nhân viên Sales|
@@ -19,6 +19,9 @@ if (4. Kiểm tra việc nhập lý do?) then (Đã nhập)
 else (Chưa nhập)
     :8. Hiển thị cảnh báo yêu cầu bắt buộc điền lý do;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

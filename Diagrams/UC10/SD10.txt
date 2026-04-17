@@ -8,12 +8,12 @@ boundary "Filter_UI" as UI
 control "Filter_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Tương tác với bộ lọc danh mục
 activate User
 activate UI
+User -> UI: 1. Tương tác với bộ lọc danh mục
 
-UI -> Ctrl: 2. Gửi trạng thái bộ lọc mới
 activate Ctrl
+UI -> Ctrl: 2. Gửi trạng thái bộ lọc mới
 
 alt [x Khách hàng tích chọn thêm bộ lọc]
     Ctrl -> Ctrl: 3. Xử lý thêm điều kiện lọc
@@ -21,15 +21,15 @@ else [x Khách hàng bỏ tích bộ lọc]
     Ctrl -> Ctrl: 4. Xử lý gỡ bỏ điều kiện lọc
 end
 
-Ctrl -> DB: 5. getProductsByCategory(filterData)
 activate DB
+Ctrl -> DB: 5. getProductsByCategory(filterData)
 
 DB --> Ctrl: 6. Phản hồi danh sách sản phẩm
-Ctrl --> UI: 7. Trả về danh sách sản phẩm đã lọc
-UI --> User: 8. Cập nhật hiển thị danh sách sản phẩm mới
-
 deactivate DB
+Ctrl --> UI: 7. Trả về danh sách sản phẩm đã lọc
 deactivate Ctrl
-deactivate UI
+UI --> User: 8. Cập nhật hiển thị danh sách sản phẩm mới
 deactivate User
+deactivate UI
+
 @enduml

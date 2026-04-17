@@ -9,17 +9,17 @@ if (-not (Test-Path $img_dir)) {
 
 $filesProcessed = 0
 
-Write-Host "Starting export of 60 diagrams via Kroki API (ADxx.txt -> ADxx.png)... This will take a moment." -ForegroundColor Cyan
+Write-Host "Starting export of 61 diagrams via Kroki API (SDxx-re.txt -> SDxx-re.png)... This will take a moment." -ForegroundColor Cyan
 
-for ($i=1; $i -le 60; $i++) {
+for ($i=1; $i -le 61; $i++) {
     $folder = "UC{0:D2}" -f $i
-    $fileName = "AD{0:D2}.txt" -f $i
+    $fileName = "SD{0:D2}-re.txt" -f $i
     $filePath = Join-Path $base_dir $folder | Join-Path -ChildPath $fileName
     
     if (Test-Path $filePath) {
         $content = Get-Content -Path $filePath -Raw -Encoding UTF8
         
-        $outFileName = "AD{0:D2}.png" -f $i
+        $outFileName = "SD{0:D2}-re.png" -f $i
         $outFilePath = Join-Path $img_dir $outFileName
         
         try {
@@ -37,4 +37,4 @@ for ($i=1; $i -le 60; $i++) {
     }
 }
 
-Write-Host "`nSuccessfully exported $filesProcessed diagrams to $img_dir!" -ForegroundColor Cyan
+Write-Host "`nSuccessfully exported $filesProcessed SD diagrams to $img_dir!" -ForegroundColor Cyan

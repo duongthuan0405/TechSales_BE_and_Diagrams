@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-32: Cập nhật trạng thái giao hàng
 
 |Nhân viên Sales|
@@ -19,6 +19,9 @@ if (4. Kiểm tra mã vận đơn?) then (Hợp lệ)
 else (Không hợp lệ)
     :8. Hiển thị cảnh báo lỗi yêu cầu nhập đầy đủ;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

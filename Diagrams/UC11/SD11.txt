@@ -8,15 +8,15 @@ boundary "ProductList_UI" as UI
 control "Product_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Chọn tiêu chí sắp xếp theo giá
 activate User
 activate UI
+User -> UI: 1. Chọn tiêu chí sắp xếp theo giá
 
-UI -> Ctrl: 2. Gửi yêu cầu sắp xếp sản phẩm
 activate Ctrl
+UI -> Ctrl: 2. Gửi yêu cầu sắp xếp sản phẩm
 
-Ctrl -> DB: 3. sortProductByPrice(criteria)
 activate DB
+Ctrl -> DB: 3. sortProductByPrice(criteria)
 
 alt [x Danh sách sản phẩm hợp lệ]
     DB --> Ctrl: 4. Phản hồi danh sách sản phẩm đã sắp xếp
@@ -24,12 +24,12 @@ alt [x Danh sách sản phẩm hợp lệ]
     UI --> User: 6. Hiển thị danh sách sản phẩm theo giá đã chọn
 else [x Lỗi truy xuất dữ liệu]
     DB --> Ctrl: 7. Phản hồi lỗi hệ thống
+    deactivate DB
     Ctrl --> UI: 8. Thông báo lỗi tải dữ liệu
+    deactivate Ctrl
     UI --> User: 9. Hiển thị yêu cầu tải lại trang
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

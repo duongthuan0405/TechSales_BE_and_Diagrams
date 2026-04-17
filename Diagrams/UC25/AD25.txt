@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-25: Hủy đơn hàng trạng thái "Pending"
@@ -24,6 +24,9 @@ else (Từ chối)
     |Hệ thống|
     :9. Đóng hộp thoại và giữ nguyên trạng thái;
 endif
+
+
+
 
 |Khách hàng|
 stop

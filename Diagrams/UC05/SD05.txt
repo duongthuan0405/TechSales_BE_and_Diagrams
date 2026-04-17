@@ -8,9 +8,9 @@ boundary "Password_UI" as UI
 control "Password_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Chọn chức năng "Change Password"
 activate User
 activate UI
+User -> UI: 1. Chọn chức năng "Change Password"
 
 UI --> User: 2. Hiển thị form cập nhật mật khẩu
 
@@ -19,11 +19,11 @@ alt [x Khách hàng hủy thao tác]
     UI --> User: 4. Phản hồi kết thúc thao tác
 else [x Khách hàng nhấn "Update"]
     User -> UI: 5. Nhập mật khẩu hiện tại, mật khẩu mới và nhấn "Update"
-    UI -> Ctrl: 6. Gửi yêu cầu đổi mật khẩu
     activate Ctrl
+    UI -> Ctrl: 6. Gửi yêu cầu đổi mật khẩu
     
-    Ctrl -> DB: 7. checkCurrentPassword(userID, oldPass)
     activate DB
+    Ctrl -> DB: 7. checkCurrentPassword(userID, oldPass)
     
     alt [x Mật khẩu hiện tại không chính xác]
         DB --> Ctrl: 8. Phản hồi kết quả xác thực sai
@@ -40,15 +40,15 @@ else [x Khách hàng nhấn "Update"]
         else [x Mật khẩu mới hợp lệ]
             Ctrl -> DB: 15. updatePassword(userID, encryptedNewPass)
             DB --> Ctrl: 16. Phản hồi cập nhật thành công
+            deactivate DB
             
             Ctrl --> UI: 17. Thông báo đổi mật khẩu thành công
+            deactivate Ctrl
             UI --> User: 18. Hiển thị thông báo thành công
+            deactivate User
+            deactivate UI
         end
     end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-41: Sửa hoặc xóa danh mục
 
 |Business Admin|
@@ -26,6 +26,9 @@ else (Sửa)
     :12. Cập nhật dữ liệu danh mục vào CSDL;
     :13. Hiển thị thông báo cập nhật thành công;
 endif
+
+
+
 
 |Business Admin|
 stop

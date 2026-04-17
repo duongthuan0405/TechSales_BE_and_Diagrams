@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-09: Tìm kiếm sản phẩm bằng từ khóa
@@ -20,7 +20,10 @@ else (Không có sản phẩm)
     :6. Thông báo không tìm thấy kết quả;
 endif
 
-|Khách hàng|
 
+
+
+
+|Khách hàng|
 stop
 @enduml

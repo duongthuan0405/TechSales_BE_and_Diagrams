@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-46: Tạo voucher kèm điều kiện
 
@@ -17,6 +17,9 @@ if (5. Kiểm tra mã trùng và tính hợp lệ?) then (Hợp lệ)
 else (Không hợp lệ)
     :8. Cảnh báo lỗi dữ liệu đầu vào;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

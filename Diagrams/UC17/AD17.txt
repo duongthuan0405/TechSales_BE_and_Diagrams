@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-17: Chọn mặt hàng để thanh toán từ giỏ hàng
@@ -20,6 +20,9 @@ else (Có sản phẩm)
     :6. Ghi nhận danh sách sản phẩm chờ thanh toán;
     :7. Chuyển hướng sang màn hình Checkout;
 endif
+
+
+
 
 |Khách hàng|
 stop

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-20: Xác nhận mua hàng
@@ -19,6 +19,9 @@ else (Đủ hàng)
     :8. Xóa giỏ hàng;
     :9. Gửi thông báo đặt hàng thành công và gửi email;
 endif
+
+
+
 
 |Khách hàng|
 stop

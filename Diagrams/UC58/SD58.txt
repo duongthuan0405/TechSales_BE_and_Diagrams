@@ -9,14 +9,15 @@ control System_Controller
 database DB
 
 activate Admin
-Admin -> System_UI: 1. Truy cập vào màn hình Audit Log
 activate System_UI
+Admin -> System_UI: 1. Truy cập vào màn hình Audit Log
 Admin -> System_UI: 2. Thiết lập các bộ lọc tra cứu
-System_UI -> System_Controller: 3. Gửi yêu cầu truy xuất nhật ký
 activate System_Controller
-System_Controller -> DB: 4. getAuditLogs(filters)
+System_UI -> System_Controller: 3. Gửi yêu cầu truy xuất nhật ký
 activate DB
+System_Controller -> DB: 4. getAuditLogs(filters)
 DB --> System_Controller: 5. Trả về dữ liệu nhật ký hệ thống
+deactivate DB
 
 alt [x Không có dữ liệu nhật ký khớp với bộ lọc]
     System_Controller --> System_UI: 6. Báo lỗi không tìm thấy bản ghi nhật ký
@@ -24,11 +25,10 @@ alt [x Không có dữ liệu nhật ký khớp với bộ lọc]
 else [x Tìm thấy dữ liệu nhật ký]
     System_Controller -> System_Controller: 8. paginateLogs()
     System_Controller --> System_UI: 9. Báo lỗi truy xuất nhật ký thành công
+    deactivate System_Controller
     System_UI --> Admin: 10. Hiển thị danh sách bản ghi nhật ký chi tiết
+    deactivate Admin
+    deactivate System_UI
 end
 
-deactivate Admin
-deactivate System_UI
-deactivate System_Controller
-deactivate DB
 @enduml

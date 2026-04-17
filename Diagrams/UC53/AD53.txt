@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-53: Xem báo cáo sản phẩm bán chạy
 
@@ -13,6 +13,9 @@ if (3. Truy vấn dữ liệu từ các đơn hàng đã hoàn tất?) then (Có
 else (Không có dữ liệu)
     :6. Hiển thị bảng danh sách trống và thông báo;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

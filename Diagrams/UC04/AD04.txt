@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-04: Cập nhật thông tin cá nhân
@@ -28,6 +28,9 @@ else (Đồng ý)
         :9. Cập nhật thông tin vào CSDL và thông báo thành công;
     endif
 endif
+
+
+
 |Khách hàng|
 stop
 @enduml

@@ -8,12 +8,12 @@ boundary "Cart_UI" as UI
 control "Cart_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Thay đổi số lượng sản phẩm
 activate User
 activate UI
+User -> UI: 1. Thay đổi số lượng sản phẩm
 
-UI -> Ctrl: 2. Yêu cầu cập nhật số lượng
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu cập nhật số lượng
 
 Ctrl -> Ctrl: 3. validateQuantityFormat(newQty)
 
@@ -21,8 +21,8 @@ alt [x Dữ liệu không hợp lệ]
     Ctrl --> UI: 4. Phản hồi lỗi định dạng
     UI --> User: 5. Hiển thị cảnh báo và khôi phục số lượng cũ
 else [x Dữ liệu hợp lệ]
-    Ctrl -> DB: 6. checkInventory(productID)
     activate DB
+    Ctrl -> DB: 6. checkInventory(productID)
     
     DB --> Ctrl: 7. Phản hồi số lượng tồn kho khả dụng
     
@@ -32,14 +32,14 @@ else [x Dữ liệu hợp lệ]
     else [x Đủ tồn kho]
         Ctrl -> DB: 10. updateCartQuantity(userID, itemID, newQty)
         DB --> Ctrl: 11. Xác nhận cập nhật thành công
+        deactivate DB
         
         Ctrl --> UI: 12. Phản hồi kết quả và tổng tiền mới
+        deactivate Ctrl
         UI --> User: 13. Cập nhật giao diện và tổng hóa đơn
+        deactivate User
+        deactivate UI
     end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -6,31 +6,31 @@ boundary CategoryManagement_UI as UI
 control Category_Controller as Ctrl
 database DB
 
+
 activate Admin
 activate UI
-activate Ctrl
-activate DB
-
 Admin -> UI : 1. Chọn thao tác Xóa danh mục
 UI -> Admin : 2. Hiển thị popup yêu cầu chọn danh mục thay thế
 
 Admin -> UI : 3. Chọn danh mục thay thế và xác nhận
+activate Ctrl
 UI -> Ctrl : 4. Yêu cầu xóa danh mục(oldCatID, newCatID)
 
 alt x Business Admin đã chọn danh mục thay thế
+    activate DB
     Ctrl -> DB : 5. migrateProducts(oldCatID, newCatID)
     DB -> Ctrl : 6. success
     Ctrl -> DB : 7. deleteCategory(oldCatID)
     DB -> Ctrl : 8. success
+    deactivate DB
     Ctrl -> UI : 9. Thông báo xóa và chuyển dữ liệu thành công
     UI -> Admin : 10. Hiển thị thông báo thành công
 else x Business Admin chưa chọn danh mục thay thế
     Ctrl -> UI : 11. Báo lỗi yêu cầu chọn nơi chuyển dữ liệu
+    deactivate Ctrl
     UI -> Admin : 12. Hiển thị cảnh báo lỗi
+    deactivate Admin
+    deactivate UI
 end
 
-deactivate Admin
-deactivate UI
-deactivate Ctrl
-deactivate DB
 @enduml

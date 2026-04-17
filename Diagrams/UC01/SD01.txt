@@ -8,15 +8,15 @@ boundary "SignUp_UI" as UI
 control "SignUp_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn nút đăng ký
 activate User
 activate UI
+User -> UI: 1. Nhấn nút đăng ký
 
 UI --> User: 2. Hiển thị màn hình đăng ký
 User -> UI: 3. Nhập thông tin cá nhân và nhấn xác nhận
 
-UI -> Ctrl: 4. Yêu cầu xử lý đăng ký
 activate Ctrl
+UI -> Ctrl: 4. Yêu cầu xử lý đăng ký
 
 Ctrl -> Ctrl: 5. checkDataFormat(input)
 
@@ -24,8 +24,8 @@ alt [x Dữ liệu không hợp lệ]
     Ctrl --> UI: 6. Báo lỗi định dạng không hợp lệ
     UI --> User: 7. Hiển thị thông báo lỗi định dạng không hợp lệ
 else [x Dữ liệu hợp lệ]
-    Ctrl -> DB: 8. checkAccountExists(email, username)
     activate DB
+    Ctrl -> DB: 8. checkAccountExists(email, username)
     
     DB --> Ctrl: 9. Trả về kết quả kiểm tra
     
@@ -46,14 +46,14 @@ else [x Dữ liệu hợp lệ]
         
         Ctrl -> DB: 20. activateAccount(token)
         DB --> Ctrl: 21. Xác nhận cập nhật trạng thái thành công
+        deactivate DB
         
         Ctrl --> UI: 22. Thông báo đăng ký thành công
+        deactivate Ctrl
         UI --> User: 23. Hiển thị thông báo thành công
+        deactivate User
+        deactivate UI
     end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

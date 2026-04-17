@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-50: Quản lý danh sách khách hàng
 
@@ -12,6 +12,9 @@ if (2. Truy vấn CSDL lấy danh sách tài khoản?) then (Có dữ liệu)
 else (Không có dữ liệu)
     :5. Hiển thị bảng trống và thông báo tương ứng;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

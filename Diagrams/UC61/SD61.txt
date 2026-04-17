@@ -7,13 +7,13 @@ actor "Khách hàng" as Customer
 boundary "Giao diện Thanh toán" as UI
 control "Payment Controller" as Controller
 database "CSDL" as DB
-boundary "Cổng thanh toán (Gateway)" as Gateway
+actor "Cổng thanh toán (Gateway)" as Gateway
 
 activate Customer
-Customer -> UI: 1. Chọn phương thức và nhấn "Thanh toán"
 activate UI
-UI -> Controller: 2. Gửi yêu cầu thanh toán trực tuyến
+Customer -> UI: 1. Chọn phương thức và nhấn "Thanh toán"
 activate Controller
+UI -> Controller: 2. Gửi yêu cầu thanh toán trực tuyến
 
 Controller -> Controller: 3. Khởi tạo yêu cầu, mã hóa dữ liệu và tạo Checksum
 
@@ -21,8 +21,8 @@ alt [x Lỗi kết nối đến Gateway]
     Controller --> UI: 4. Báo lỗi không thể kết nối đến Gateway
     UI --> Customer: 5. Hiển thị thông báo lỗi kỹ thuật và yêu cầu thử lại
 else [x Kết nối thành công]
-    Controller -> Gateway: 6. Gửi yêu cầu thanh toán
     activate Gateway
+    Controller -> Gateway: 6. Gửi yêu cầu thanh toán
     Gateway --> Controller: 7. Trả về URL thanh toán
     
     Controller --> UI: 8. Trả về URL thanh toán
@@ -33,10 +33,9 @@ else [x Kết nối thành công]
     alt [x Người dùng hủy giao dịch]
         Customer -> Gateway: 11. Nhấn "Hủy giao dịch" hoặc "Quay lại"
         Gateway --> Controller: 12. Trả kết quả "Hủy" qua URL phản hồi
-        Controller -> DB: 13. Cập nhật trạng thái giao dịch "Đã hủy"
         activate DB
+        Controller -> DB: 13. Cập nhật trạng thái giao dịch "Đã hủy"
         DB --> Controller: 14. Xác nhận cập nhật
-        deactivate DB
         Controller --> UI: 15. Yêu cầu hiển thị lại trang thanh toán
         UI --> Customer: 16. Điều hướng quay lại trang thanh toán
         
@@ -47,9 +46,7 @@ else [x Kết nối thành công]
         alt [x Giao dịch thất bại]
             Gateway --> Controller: 19. Trả kết quả "Thất bại" qua URL phản hồi
             Controller -> DB: 20. Cập nhật trạng thái giao dịch "Thất bại"
-            activate DB
             DB --> Controller: 21. Xác nhận cập nhật
-            deactivate DB
             Controller --> UI: 22. Gửi thông báo lỗi thanh toán
             UI --> Customer: 23. Hiển thị lỗi và cho phép thử lại
             
@@ -60,19 +57,18 @@ else [x Kết nối thành công]
             Controller -> Controller: 25. Kiểm tra hợp lệ chữ ký số và dữ liệu phản hồi
             
             Controller -> DB: 26. Lưu trữ thông tin giao dịch và trạng thái đơn hàng
-            activate DB
             DB --> Controller: 27. Xác nhận lưu trữ thành công
             deactivate DB
             
             Controller -> Controller: 28. Gửi email thông báo cho khách hàng
             
             Controller --> UI: 29. Trả về kết quả giao dịch thành công
+            deactivate Controller
             UI --> Customer: 30. Điều hướng quay lại website và hiển thị thông báo thành công
+            deactivate Customer
+            deactivate UI
         end
     end
 end
 
-deactivate Controller
-deactivate UI
-deactivate Customer
 @enduml

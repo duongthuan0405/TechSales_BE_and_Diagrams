@@ -8,23 +8,23 @@ boundary "Address_UI" as UI
 control "Address_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Điều hướng đến trang Sổ địa chỉ
 activate User
 activate UI
+User -> UI: 1. Điều hướng đến trang Sổ địa chỉ
 
 User -> UI: 2. Chọn địa chỉ và yêu cầu đặt làm mặc định
-UI -> Ctrl: 3. Gửi yêu cầu đặt địa chỉ mặc định
 activate Ctrl
+UI -> Ctrl: 3. Gửi yêu cầu đặt địa chỉ mặc định
 
-Ctrl -> DB: 4. updateDefaultAddress(userID, addressID)
 activate DB
+Ctrl -> DB: 4. updateDefaultAddress(userID, addressID)
 
 DB --> Ctrl: 5. Xác nhận cập nhật thành công
-Ctrl --> UI: 6. Phản hồi thiết lập thành công
-UI --> User: 7. Hiển thị thông báo và cập nhật nhãn mặc định
-
 deactivate DB
+Ctrl --> UI: 6. Phản hồi thiết lập thành công
 deactivate Ctrl
-deactivate UI
+UI --> User: 7. Hiển thị thông báo và cập nhật nhãn mặc định
 deactivate User
+deactivate UI
+
 @enduml

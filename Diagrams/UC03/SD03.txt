@@ -8,18 +8,18 @@ boundary "ForgotPass_UI" as UI
 control "ForgotPass_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Chọn chức năng "Forget Password"
 activate User
 activate UI
+User -> UI: 1. Chọn chức năng "Forget Password"
 
 UI --> User: 2. Hiển thị màn hình nhập email
 User -> UI: 3. Nhập email và xác nhận
 
-UI -> Ctrl: 4. Yêu cầu xử lý quên mật khẩu
 activate Ctrl
+UI -> Ctrl: 4. Yêu cầu xử lý quên mật khẩu
 
-Ctrl -> DB: 5. checkEmailExists(email)
 activate DB
+Ctrl -> DB: 5. checkEmailExists(email)
 
 DB --> Ctrl: 6. Trả về kết quả kiểm tra email
 
@@ -55,15 +55,15 @@ else [x Email tồn tại]
             Ctrl -> Ctrl: 24. encryptPassword()
             Ctrl -> DB: 25. updatePassword(email, newPassword)
             DB --> Ctrl: 26. Xác nhận cập nhật thành công
+            deactivate DB
             
             Ctrl --> UI: 27. Phản hồi cập nhật mật khẩu thành công
+            deactivate Ctrl
             UI --> User: 28. Hiển thị thông báo cập nhật thành công
+            deactivate User
+            deactivate UI
         end
     end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-26: Thay đổi địa chỉ giao hàng
@@ -20,6 +20,9 @@ if (4. Kiểm tra trạng thái đơn hàng thực tế?) then (Chưa được g
 else (Đã được giao)
     :7. Thông báo lỗi đơn hàng đã được gửi đi;
 endif
+
+
+
 
 |Khách hàng|
 stop

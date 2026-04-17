@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-56: Định nghĩa vai trò người dùng
 
@@ -17,6 +17,9 @@ if (6. Cập nhật thành công?) then (Thành công)
 else (Thất bại)
     :8. Rollback và thông báo lỗi kỹ thuật;
 endif
+
+
+
 |Technical Admin|
 stop
 @enduml

@@ -9,14 +9,14 @@ control Customer_Controller
 database DB
 
 activate Admin
-Admin -> Customer_UI: 1. Chọn tài khoản vi phạm và nhấn nút chặn
 activate Customer_UI
+Admin -> Customer_UI: 1. Chọn tài khoản vi phạm và nhấn nút chặn
 Customer_UI --> Admin: 2. Hiển thị hộp thoại cảnh báo hủy đơn hàng
 Admin -> Customer_UI: 3. Nhấn xác nhận đồng ý
-Customer_UI -> Customer_Controller: 4. Gửi yêu cầu chặn tài khoản và hủy đơn
 activate Customer_Controller
-Customer_Controller -> DB: 5. startAtomicTransaction()
+Customer_UI -> Customer_Controller: 4. Gửi yêu cầu chặn tài khoản và hủy đơn
 activate DB
+Customer_Controller -> DB: 5. startAtomicTransaction()
 Customer_Controller -> DB: 6. lockAccount(customerID)
 Customer_Controller -> DB: 7. cancelPendingOrders(customerID)
 Customer_Controller -> DB: 8. restoreInventoryStock()
@@ -28,12 +28,12 @@ alt [x Lỗi cập nhật cơ sở dữ liệu]
     Customer_UI --> Admin: 12. Hiển thị thông báo lỗi hệ thống
 else [x Xử lý thành công]
     Customer_Controller -> DB: 13. commitTransaction()
+    deactivate DB
     Customer_Controller --> Customer_UI: 14. Báo lỗi xử lý thành công
+    deactivate Customer_Controller
     Customer_UI --> Admin: 15. Hiển thị thông báo xử lý thành công
+    deactivate Admin
+    deactivate Customer_UI
 end
 
-deactivate Admin
-deactivate Customer_UI
-deactivate Customer_Controller
-deactivate DB
 @enduml

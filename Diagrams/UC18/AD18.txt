@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-18: Nhập mã giảm giá
@@ -15,6 +15,9 @@ if (2. Truy xuất và kiểm tra tính hợp lệ của voucher?) then (Hợp l
 else (Không hợp lệ)
     :6. Thông báo lỗi mã không hợp lệ;
 endif
+
+
+
 
 |Khách hàng|
 stop

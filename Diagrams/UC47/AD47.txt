@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-47: Dừng voucher khẩn cấp
 
@@ -16,6 +16,9 @@ else (Từ chối)
     |Hệ thống|
     :6. Đóng hộp thoại và giữ nguyên trạng thái;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

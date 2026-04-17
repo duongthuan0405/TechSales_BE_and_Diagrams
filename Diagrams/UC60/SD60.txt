@@ -9,27 +9,27 @@ control Config_Controller
 database DB
 
 activate Admin
-Admin -> Config_UI: 1. Chọn tham số và nhập giá trị mới
 activate Config_UI
+Admin -> Config_UI: 1. Chọn tham số và nhập giá trị mới
 Admin -> Config_UI: 2. Nhấn xác nhận lưu cấu hình
-Config_UI -> Config_Controller: 3. Gửi yêu cầu cập nhật cấu hình
 activate Config_Controller
+Config_UI -> Config_Controller: 3. Gửi yêu cầu cập nhật cấu hình
 Config_Controller -> Config_Controller: 4. validateConfigValue(value)
 
 alt [x Giá trị nhập vào sai định dạng]
     Config_Controller --> Config_UI: 5. Báo lỗi dữ liệu không hợp lệ
     Config_UI --> Admin: 6. Hiển thị cảnh báo lỗi dữ liệu
 else [x Giá trị hợp lệ]
-    Config_Controller -> DB: 7. updateSystemConfig(data)
     activate DB
+    Config_Controller -> DB: 7. updateSystemConfig(data)
     DB --> Config_Controller: 8. success
+    deactivate DB
     Config_Controller -> Config_Controller: 9. applyConfigToEnvironment()
     Config_Controller --> Config_UI: 10. Báo lỗi lưu thay đổi thành công
+    deactivate Config_Controller
     Config_UI --> Admin: 11. Hiển thị thông báo lưu thay đổi thành công
+    deactivate Admin
+    deactivate Config_UI
 end
 
-deactivate Admin
-deactivate Config_UI
-deactivate Config_Controller
-deactivate DB
 @enduml

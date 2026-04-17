@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-05: Chủ động đổi mật khẩu
@@ -28,6 +28,9 @@ else ("Cancel")
     |Hệ thống|
     :11. Hủy thao tác cập nhật;
 endif
+
+
+
 
 |Khách hàng|
 stop

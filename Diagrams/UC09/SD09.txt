@@ -8,15 +8,15 @@ boundary "Search_UI" as UI
 control "Search_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Gõ từ khóa vào thanh tìm kiếm
 activate User
 activate UI
+User -> UI: 1. Gõ từ khóa vào thanh tìm kiếm
 
-UI -> Ctrl: 2. Yêu cầu gợi ý tự động
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu gợi ý tự động
 
-Ctrl -> DB: 3. getSuggestions(keyword)
 activate DB
+Ctrl -> DB: 3. getSuggestions(keyword)
 
 DB --> Ctrl: 4. Phản hồi danh sách gợi ý
 Ctrl --> UI: 5. Trả về kết quả gợi ý
@@ -33,12 +33,12 @@ alt [x Không tìm thấy sản phẩm]
     UI --> User: 12. Hiển thị thông báo không tìm thấy kết quả
 else [x Có sản phẩm khớp]
     DB --> Ctrl: 13. Phản hồi danh sách sản phẩm
+    deactivate DB
     Ctrl --> UI: 14. Trả về danh sách sản phẩm
+    deactivate Ctrl
     UI --> User: 15. Hiển thị danh sách sản phẩm phân trang
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

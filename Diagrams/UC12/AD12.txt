@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-12: Xem thông tin chi tiết của sản phẩm
@@ -14,6 +14,9 @@ if (2. Truy xuất thông tin chi tiết sản phẩm từ CSDL?) then (Có thô
 else (Không có thông tin)
     :5. Hiển thị thông báo không tìm thấy sản phẩm;
 endif
+
+
+
 
 |Khách hàng|
 stop

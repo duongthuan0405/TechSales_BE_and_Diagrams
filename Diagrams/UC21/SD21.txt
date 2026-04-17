@@ -9,34 +9,34 @@ control "Order_Controller" as Ctrl
 database "DB" as DB
 actor "Email_Service" as Email
 
-User -> UI: 1. Hoàn tất quá trình đặt hàng (Từ UC-20)
 activate User
 activate UI
+User -> UI: 1. Hoàn tất quá trình đặt hàng (Từ UC-20)
 
-UI -> Ctrl: 2. Kích hoạt ngầm tiến trình gửi email
 activate Ctrl
+UI -> Ctrl: 2. Kích hoạt ngầm tiến trình gửi email
+deactivate UI
 
-Ctrl -> DB: 3. getOrderDetails(orderID)
 activate DB
+Ctrl -> DB: 3. getOrderDetails(orderID)
 
 DB --> Ctrl: 4. Phản hồi thông tin chi tiết đơn hàng
 Ctrl -> Ctrl: 5. compileEmailTemplate(orderData)
 
-Ctrl -> Email: 6. sendEmail(userEmail, emailTemplate)
 activate Email
+Ctrl -> Email: 6. sendEmail(userEmail, emailTemplate)
 
 alt [x Kết nối và gửi email thành công]
     Email --> Ctrl: 7. Phản hồi xác nhận đã gửi email
     Ctrl --> User: 8. Giao email vào hộp thư cá nhân
+    deactivate User
 else [x Lỗi kết nối dịch vụ email]
     Email --> Ctrl: 9. Phản hồi lỗi kết nối hệ thống
+    deactivate Email
     Ctrl -> DB: 10. logErrorAndQueueEmail(orderID)
     DB --> Ctrl: 11. Xác nhận đã đưa vào hàng đợi
+    deactivate Ctrl
+    deactivate DB
 end
 
-deactivate Email
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

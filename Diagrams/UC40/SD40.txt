@@ -6,18 +6,18 @@ boundary CategoryManagement_UI as UI
 control Category_Controller as Ctrl
 database DB
 
+
 activate Admin
 activate UI
-activate Ctrl
-activate DB
-
 Admin -> UI : 1. Nhấn nút "Thêm danh mục"
 UI -> Admin : 2. Hiển thị form nhập liệu
 
 Admin -> UI : 3. Nhập thông tin danh mục và nhấn Lưu
+activate Ctrl
 UI -> Ctrl : 4. Yêu cầu tạo danh mục mới(categoryData)
 
 alt x Tên danh mục hợp lệ (không trùng)
+    activate DB
     Ctrl -> DB : 5. checkCategoryName(name)
     DB -> Ctrl : 6. not_exists
     Ctrl -> DB : 7. saveNewCategory(categoryData)
@@ -27,12 +27,12 @@ alt x Tên danh mục hợp lệ (không trùng)
 else x Tên danh mục đã tồn tại
     Ctrl -> DB : 11. checkCategoryName(name)
     DB -> Ctrl : 12. exists
+    deactivate DB
     Ctrl -> UI : 13. Báo lỗi trùng lặp dữ liệu
+    deactivate Ctrl
     UI -> Admin : 14. Hiển thị cảnh báo lỗi
+    deactivate Admin
+    deactivate UI
 end
 
-deactivate Admin
-deactivate UI
-deactivate Ctrl
-deactivate DB
 @enduml

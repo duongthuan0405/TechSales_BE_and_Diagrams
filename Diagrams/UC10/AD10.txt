@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-10: Lọc theo danh mục
@@ -19,6 +19,9 @@ endif
 |Hệ thống|
 :5. Truy xuất sản phẩm khớp với điều kiện hiện tại;
 :6. Cập nhật danh sách sản phẩm trên giao diện;
+
+
+
 
 |Khách hàng|
 stop

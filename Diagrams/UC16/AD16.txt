@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-16: Xóa sản phẩm khỏi giỏ hàng
@@ -20,6 +20,9 @@ else (Không)
     |Hệ thống|
     :7. Đóng hộp thoại và giữ nguyên giỏ hàng;
 endif
+
+
+
 
 |Khách hàng|
 stop

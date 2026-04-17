@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-38: Phản hồi đánh giá
 
 |Nhân viên Sales|
@@ -19,6 +19,9 @@ if (4. Kiểm tra nội dung?) then (Có dữ liệu)
 else (Trống)
     :8. Hiển thị cảnh báo yêu cầu nhập nội dung;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

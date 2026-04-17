@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-51: Chặn tài khoản đặt hàng giả mạo
 
@@ -18,6 +18,9 @@ else (Từ chối)
     |Hệ thống|
     :8. Đóng hộp thoại và giữ nguyên trạng thái;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-31: Duyệt đơn hàng
 
 |Nhân viên Sales|
@@ -19,6 +19,9 @@ else (Hủy)
     |Hệ thống|
     :8. Đóng hộp thoại xác nhận;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

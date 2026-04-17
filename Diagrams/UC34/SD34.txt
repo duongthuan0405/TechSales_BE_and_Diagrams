@@ -6,33 +6,33 @@ boundary OrderDetail_UI as UI
 control Order_Controller as Ctrl
 database DB
 
+
 activate Staff
 activate UI
-activate Ctrl
-activate DB
-
 Staff -> UI : 1. Nhấn nút "Hủy đơn"
 UI -> Staff : 2. Hiển thị popup chọn lý do hủy
 
 Staff -> UI : 3. Chọn lý do và nhấn xác nhận
+activate Ctrl
 UI -> Ctrl : 4. Yêu cầu hủy đơn(orderID, reasonID)
 
 alt x Nhân viên đã chọn lý do
+    activate DB
     Ctrl -> DB : 5. updateOrderStatus(orderID, "Canceled")
     DB -> Ctrl : 6. success
     Ctrl -> DB : 7. restoreInventory(orderID)
     DB -> Ctrl : 8. success
     Ctrl -> DB : 9. writeAuditLog(staffID, "Cancel Order", reasonID)
     DB -> Ctrl : 10. success
+    deactivate DB
     Ctrl -> UI : 11. Thông báo hủy đơn thành công
     UI -> Staff : 12. Hiển thị thông báo thành công
 else x Nhân viên chưa chọn lý do
     Ctrl -> UI : 13. Báo lỗi yêu cầu cung cấp lý do hủy
+    deactivate Ctrl
     UI -> Staff : 14. Hiển thị cảnh báo lỗi
+    deactivate Staff
+    deactivate UI
 end
 
-deactivate Staff
-deactivate UI
-deactivate Ctrl
-deactivate DB
 @enduml

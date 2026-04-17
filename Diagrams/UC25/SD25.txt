@@ -8,19 +8,19 @@ boundary "OrderDetail_UI" as UI
 control "Order_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn nút hủy đơn hàng
 activate User
 activate UI
+User -> UI: 1. Nhấn nút hủy đơn hàng
 
 UI --> User: 2. Hiển thị hộp thoại yêu cầu xác nhận
 
 alt [x Khách hàng xác nhận đồng ý]
     User -> UI: 3. Nhấn nút xác nhận hủy
-    UI -> Ctrl: 4. Gửi yêu cầu hủy đơn hàng
     activate Ctrl
+    UI -> Ctrl: 4. Gửi yêu cầu hủy đơn hàng
     
-    Ctrl -> DB: 5. checkOrderStatus(orderID)
     activate DB
+    Ctrl -> DB: 5. checkOrderStatus(orderID)
     
     alt [x Trạng thái đã thay đổi sang Approved]
         DB --> Ctrl: 6. Phản hồi trạng thái không còn là Pending
@@ -35,15 +35,14 @@ alt [x Khách hàng xác nhận đồng ý]
         deactivate DB
         
         Ctrl --> UI: 13. Phản hồi hủy đơn thành công
+        deactivate Ctrl
         UI --> User: 14. Thông báo thành công và cập nhật lại giao diện
     end
 else [x Khách hàng từ chối]
     User -> UI: 15. Nhấn nút đóng hoặc từ chối
     UI --> User: 16. Đóng hộp thoại xác nhận
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

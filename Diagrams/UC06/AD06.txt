@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-06: Đặt địa chỉ mặc định
@@ -12,6 +12,8 @@ start
 :3. Gỡ trạng thái mặc định khỏi địa chỉ trước đó;
 :4. Cập nhật trạng thái mặc định cho địa chỉ mới;
 :5. Thông báo thiết lập địa chỉ mặc định thành công;
+
+|Khách hàng|
 
 |Khách hàng|
 stop

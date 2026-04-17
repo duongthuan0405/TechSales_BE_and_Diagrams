@@ -6,25 +6,25 @@ boundary OrderDetail_UI as UI
 control Order_Controller as Ctrl
 database DB
 
+
 activate Staff
 activate UI
-activate Ctrl
-activate DB
-
 Staff -> UI : 1. Nhấn nút "Đã giao thành công"
 UI -> Staff : 2. Hiển thị hộp thoại xác nhận
 
 Staff -> UI : 3. Xác nhận hoàn tất
+activate Ctrl
 UI -> Ctrl : 4. Yêu cầu cập nhật Delivered(orderID)
+activate DB
 Ctrl -> DB : 5. updateOrderStatus(orderID, "Delivered")
 DB -> Ctrl : 6. success
 Ctrl -> DB : 7. writeAuditLog(staffID, action, time)
 DB -> Ctrl : 8. success
+deactivate DB
 Ctrl -> UI : 9. Thông báo hoàn tất đơn hàng thành công
+deactivate Ctrl
 UI -> Staff : 10. Hiển thị thông báo thành công
-
 deactivate Staff
 deactivate UI
-deactivate Ctrl
-deactivate DB
+
 @enduml

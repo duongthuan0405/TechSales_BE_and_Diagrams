@@ -9,15 +9,15 @@ database "DB" as DB
 
 title UC-04: Cập nhật thông tin cá nhân
 
-User -> UI: 1. Chọn chức năng chỉnh sửa thông tin
 activate User
 activate UI
+User -> UI: 1. Chọn chức năng chỉnh sửa thông tin
 
-UI -> Ctrl: 2. Yêu cầu lấy thông tin hiện tại
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu lấy thông tin hiện tại
 
-Ctrl -> DB: 3. getProfileData(userID)
 activate DB
+Ctrl -> DB: 3. getProfileData(userID)
 
 DB --> Ctrl: 4. Trả về thông tin cá nhân
 Ctrl --> UI: 5. Hiển thị form dữ liệu hiện tại
@@ -40,13 +40,13 @@ else [x Khách hàng đồng ý]
    else [x Dữ liệu hợp lệ]
        Ctrl -> DB: 15. updateProfile(data)
        DB --> Ctrl: 16. success
+       deactivate DB
        Ctrl --> UI: 17. Phản hồi cập nhật thành công
+       deactivate Ctrl
        UI --> User: 18. Hiển thị thông tin mới trên giao diện
+       deactivate User
+       deactivate UI
    end
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-23: Xem chi tiết đơn hàng cũ
@@ -13,6 +13,9 @@ if (2. Truy vấn dữ liệu chi tiết đơn hàng từ CSDL?) then (Không t�
 else (Tìm thấy đơn hàng)
     :4. Hiển thị thông tin chi tiết đơn hàng;
 endif
+
+
+
 
 |Khách hàng|
 stop

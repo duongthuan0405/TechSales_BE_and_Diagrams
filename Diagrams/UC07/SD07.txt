@@ -8,15 +8,15 @@ boundary "Address_UI" as UI
 control "Address_Controller" as Ctrl
 database "DB" as DB
 
-User -> UI: 1. Nhấn chọn chỉnh sửa địa chỉ mặc định
 activate User
 activate UI
+User -> UI: 1. Nhấn chọn chỉnh sửa địa chỉ mặc định
 
-UI -> Ctrl: 2. Yêu cầu dữ liệu địa chỉ hiện tại
 activate Ctrl
+UI -> Ctrl: 2. Yêu cầu dữ liệu địa chỉ hiện tại
 
-Ctrl -> DB: 3. getAddressDetails(addressID)
 activate DB
+Ctrl -> DB: 3. getAddressDetails(addressID)
 
 DB --> Ctrl: 4. Phản hồi chi tiết địa chỉ
 Ctrl --> UI: 5. Trả về dữ liệu hiện tại
@@ -33,13 +33,13 @@ alt [x Dữ liệu không hợp lệ]
 else [x Dữ liệu hợp lệ]
     Ctrl -> DB: 12. updateAddress(addressID, data)
     DB --> Ctrl: 13. Phản hồi cập nhật thành công
+    deactivate DB
     
     Ctrl --> UI: 14. Phản hồi kết quả thành công
+    deactivate Ctrl
     UI --> User: 15. Hiển thị thông báo cập nhật thành công
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

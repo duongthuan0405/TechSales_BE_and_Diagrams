@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-08: Thêm địa chỉ giao hàng mới
@@ -20,6 +20,9 @@ if (4. Kiểm tra định dạng dữ liệu đầu vào?) then (Hợp lệ)
 else (Không hợp lệ)
     :7. Thông báo lỗi và cảnh báo các trường bỏ trống;
 endif
+
+
+
 
 |Khách hàng|
 stop

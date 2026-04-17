@@ -8,13 +8,13 @@ boundary "Account_UI" as UI
 control "Order_Controller" as Ctrl
 database "DB" as DB
 
+
 activate User
 activate UI
-activate Ctrl
-activate DB
-
 User -> UI: 1. Chọn chức năng xem lịch sử đơn hàng
+activate Ctrl
 UI -> Ctrl: 2. Yêu cầu tải danh sách lịch sử đơn hàng
+activate DB
 Ctrl -> DB: 3. getOrderHistory(userID)
 
 alt [x Khách hàng chưa có đơn hàng]
@@ -23,13 +23,13 @@ alt [x Khách hàng chưa có đơn hàng]
     UI --> User: 6. Hiển thị thông báo trống và gợi ý sản phẩm
 else [x Khách hàng đã có đơn hàng]
     DB --> Ctrl: 7. Phản hồi danh sách đơn hàng
+    deactivate DB
     Ctrl -> Ctrl: 8. sortAndPaginateOrders(orderList)
     Ctrl --> UI: 9. Trả về danh sách đơn hàng đã xử lý
+    deactivate Ctrl
     UI --> User: 10. Hiển thị danh sách lịch sử đơn hàng
+    deactivate User
+    deactivate UI
 end
 
-deactivate DB
-deactivate Ctrl
-deactivate UI
-deactivate User
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-60: Cập nhật cấu hình hệ thống không bảo mật
 
@@ -14,6 +14,9 @@ if (4. Kiểm tra định dạng và tính hợp lệ?) then (Đúng)
 else (Sai)
     :7. Cảnh báo lỗi dữ liệu không hợp lệ;
 endif
+
+
+
 |Technical Admin|
 stop
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-59: Bật chế độ bảo trì và sao lưu
 
@@ -13,6 +13,9 @@ if (4. Kiểm tra tính toàn vẹn của tệp sao lưu?) then (Đúng)
 else (Sai)
     :6. Hủy bỏ bảo trì và cảnh báo lỗi sao lưu khẩn cấp;
 endif
+
+
+
 |Technical Admin|
 stop
 @enduml

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam style strictuml
 skinparam monochrome true
 title UC-15: Thay đổi số lượng trong giỏ
@@ -18,6 +18,9 @@ else (Hợp lệ)
         :7. Tính toán lại tổng tiền giỏ hàng;
     endif
 endif
+
+
+
 
 |Khách hàng|
 stop

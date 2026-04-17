@@ -9,16 +9,17 @@ control Staff_Controller
 database DB
 
 activate Admin
-Admin -> Staff_UI: 1. Tìm kiếm và chọn hồ sơ nhân viên cần khóa
 activate Staff_UI
+Admin -> Staff_UI: 1. Tìm kiếm và chọn hồ sơ nhân viên cần khóa
 Admin -> Staff_UI: 2. Nhấn nút khóa tài khoản
 Staff_UI --> Admin: 3. Hiển thị yêu cầu xác nhận thu hồi quyền
 Admin -> Staff_UI: 4. Nhấn xác nhận đồng ý
-Staff_UI -> Staff_Controller: 5. Gửi yêu cầu khóa tài khoản
 activate Staff_Controller
-Staff_Controller -> DB: 6. updateStaffStatus(locked)
+Staff_UI -> Staff_Controller: 5. Gửi yêu cầu khóa tài khoản
 activate DB
+Staff_Controller -> DB: 6. updateStaffStatus(locked)
 DB --> Staff_Controller: 7. Kết quả cập nhật trạng thái
+deactivate DB
 
 alt [x Lỗi kết nối hủy phiên làm việc]
     Staff_Controller --> Staff_UI: 8. Báo lỗi sự cố kỹ thuật hủy phiên làm việc
@@ -26,11 +27,10 @@ alt [x Lỗi kết nối hủy phiên làm việc]
 else [x Khóa tài khoản thành công]
     Staff_Controller -> Staff_Controller: 10. revokeAllSessions(staffID)
     Staff_Controller --> Staff_UI: 11. Báo lỗi khóa tài khoản thành công
+    deactivate Staff_Controller
     Staff_UI --> Admin: 12. Hiển thị thông báo khóa thành công
+    deactivate Admin
+    deactivate Staff_UI
 end
 
-deactivate Admin
-deactivate Staff_UI
-deactivate Staff_Controller
-deactivate DB
 @enduml
