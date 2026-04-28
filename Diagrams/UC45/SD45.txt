@@ -9,27 +9,27 @@ control Product_Controller
 database DB
 
 activate Admin
-Admin -> Product_UI: 1. Chọn sản phẩm cần ngừng kinh doanh
 activate Product_UI
+Admin -> Product_UI: 1. Chọn sản phẩm cần ngừng kinh doanh
 Admin -> Product_UI: 2. Chọn chức năng ngừng kinh doanh
 Product_UI --> Admin: 3. Hiển thị hộp thoại yêu cầu xác nhận
 Admin -> Product_UI: 4. Nhấn xác nhận đồng ý
-Product_UI -> Product_Controller: 5. Gửi yêu cầu cập nhật trạng thái
 activate Product_Controller
-Product_Controller -> DB: 6. updateProductStatus(discontinued)
+Product_UI -> Product_Controller: 5. Gửi yêu cầu cập nhật trạng thái
 activate DB
+Product_Controller -> DB: 6. updateProductStatus(discontinued)
 DB --> Product_Controller: 7. Kết quả cập nhật trạng thái
+deactivate DB
 
 alt [x Lỗi cập nhật cơ sở dữ liệu]
     Product_Controller --> Product_UI: 8. Báo lỗi cập nhật không thành công
     Product_UI --> Admin: 9. Hiển thị thông báo cập nhật không thành công
 else [x Cập nhật thành công]
     Product_Controller --> Product_UI: 10. Báo lỗi thao tác thành công
+    deactivate Product_Controller
     Product_UI --> Admin: 11. Hiển thị thông báo thao tác thành công
+    deactivate Admin
+    deactivate Product_UI
 end
 
-deactivate Admin
-deactivate Product_UI
-deactivate Product_Controller
-deactivate DB
 @enduml

@@ -1,0 +1,49 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-02: Đăng nhập (Sign In)
+
+actor "Khách hàng" as User
+boundary "SignIn_UI" as UI
+control "SignIn_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Nhấn nút "Sign In"
+
+UI --> User: 2. Hiển thị màn hình đăng nhập
+User -> UI: 3. Nhập email, mật khẩu và xác nhận
+
+activate Ctrl
+UI -> Ctrl: 4. Yêu cầu đăng nhập
+
+Ctrl -> Ctrl: 5. checkInputFormat(email, password)
+
+alt [x Dữ liệu không hợp lệ]
+    Ctrl --> UI: 6. Phản hồi lỗi dữ liệu không hợp lệ
+    UI --> User: 7. Hiển thị thông báo lỗi không hợp lệ
+else [x Dữ liệu hợp lệ]
+    activate DB
+    Ctrl -> DB: 8. verifyCredentials(email, password)
+
+    DB --> Ctrl: 9. Trả về kết quả xác thực
+
+    alt [x Thông tin chính xác]
+        Ctrl --> UI: 10. Phản hồi đăng nhập thành công
+        UI --> User: 11. Thông báo thành công và chuyển hướng trang chủ
+    else [x Số lần sai quá 5 lần]
+        Ctrl -> DB: 12. lockAccount(email)
+        deactivate DB
+        Ctrl --> UI: 13. Phản hồi khóa tài khoản tạm thời
+        UI --> User: 14. Hiển thị thông báo khóa tài khoản
+    else [x Sai thông tin đăng nhập]
+        Ctrl --> UI: 15. Phản hồi lỗi tài khoản hoặc mật khẩu
+        deactivate Ctrl
+        UI --> User: 16. Hiển thị thông báo lỗi đăng nhập
+        deactivate User
+        deactivate UI
+    end
+end
+
+@enduml

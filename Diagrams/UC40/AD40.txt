@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-40: Thêm danh mục sản phẩm mới
 
 |Business Admin|
@@ -18,6 +18,9 @@ if (4. Kiểm tra tên danh mục tồn tại?) then (Chưa tồn tại)
 else (Đã tồn tại)
     :7. Hiển thị cảnh báo lỗi trùng lặp dữ liệu;
 endif
+
+
+
 
 |Business Admin|
 stop

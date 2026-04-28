@@ -6,30 +6,30 @@ boundary OrderDetail_UI as UI
 control Order_Controller as Ctrl
 database DB
 
+
 activate Staff
 activate UI
-activate Ctrl
-activate DB
-
 Staff -> UI : 1. Nhấn nút "Duyệt đơn"
 UI -> Staff : 2. Hiển thị hộp thoại xác nhận
 
 alt x Đồng ý xác nhận
     Staff -> UI : 3. Chọn xác nhận đồng ý
+    activate Ctrl
     UI -> Ctrl : 4. Yêu cầu duyệt đơn hàng(orderID)
+    activate DB
     Ctrl -> DB : 5. updateOrderStatus(orderID, "Approved")
     DB -> Ctrl : 6. success
     Ctrl -> DB : 7. writeAuditLog(staffID, action, time)
     DB -> Ctrl : 8. success
+    deactivate DB
     Ctrl -> UI : 9. Thông báo duyệt đơn hàng thành công
+    deactivate Ctrl
     UI -> Staff : 10. Hiển thị thông báo thành công
 else x Hủy bỏ thao tác
     Staff -> UI : 11. Chọn nút Hủy
     UI -> Staff : 12. Đóng hộp thoại, giữ nguyên trạng thái
+    deactivate Staff
+    deactivate UI
 end
 
-deactivate Staff
-deactivate UI
-deactivate Ctrl
-deactivate DB
 @enduml

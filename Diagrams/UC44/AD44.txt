@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-44: Cập nhật số lượng tồn kho
 
@@ -8,14 +8,16 @@ start
 :2. Nhập số lượng tồn kho mới;
 :3. Nhấn xác nhận lưu thay đổi;
 |Hệ thống|
-:4. Kiểm tra định dạng dữ liệu đầu vào;
-if (Dữ liệu hợp lệ?) then (Đúng)
+if (4. Kiểm tra định dạng dữ liệu đầu vào?) then (Hợp lệ)
     :5. Cập nhật số lượng tồn kho vào CSDL;
     :6. Đánh giá lại trạng thái hiển thị sản phẩm;
     :7. Thông báo cập nhật số lượng thành công;
-else (Sai)
+else (Không hợp lệ)
     :8. Cảnh báo lỗi định dạng dữ liệu;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

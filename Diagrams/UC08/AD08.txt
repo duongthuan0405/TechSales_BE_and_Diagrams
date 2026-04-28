@@ -1,0 +1,29 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-08: Thêm địa chỉ giao hàng mới
+
+|Khách hàng|
+start
+:1. Nhấn chọn thêm địa chỉ mới;
+
+|Hệ thống|
+:2. Hiển thị biểu mẫu địa chỉ trống;
+
+|Khách hàng|
+:3. Nhập chi tiết bắt buộc và nhấn lưu;
+
+|Hệ thống|
+if (4. Kiểm tra định dạng dữ liệu đầu vào?) then (Hợp lệ)
+    :5. Lưu địa chỉ mới vào CSDL;
+    :6. Thông báo lưu địa chỉ thành công;
+else (Không hợp lệ)
+    :7. Thông báo lỗi và cảnh báo các trường bỏ trống;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

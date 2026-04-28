@@ -1,0 +1,29 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-17: Chọn mặt hàng để thanh toán từ giỏ hàng
+
+|Khách hàng|
+start
+:1. Tích chọn các sản phẩm trong giỏ hàng;
+
+|Hệ thống|
+:2. Tính toán và hiển thị tổng tiền tạm tính;
+
+|Khách hàng|
+:3. Nhấn nút "Thanh toán";
+
+|Hệ thống|
+if (4. Kiểm tra danh sách chọn?) then (Trống)
+    :5. Thông báo lỗi yêu cầu chọn sản phẩm;
+else (Có sản phẩm)
+    :6. Ghi nhận danh sách sản phẩm chờ thanh toán;
+    :7. Chuyển hướng sang màn hình Checkout;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

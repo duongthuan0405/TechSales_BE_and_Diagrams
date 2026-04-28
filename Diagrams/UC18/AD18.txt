@@ -1,0 +1,24 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-18: Nhập mã giảm giá
+
+|Khách hàng|
+start
+:1. Nhập mã voucher và nhấn "Áp dụng";
+
+|Hệ thống|
+if (2. Truy xuất và kiểm tra tính hợp lệ của voucher?) then (Hợp lệ)
+    :3. Tính toán số tiền giảm giá;
+    :4. Cập nhật lại tổng tiền hóa đơn;
+    :5. Thông báo áp dụng mã thành công;
+else (Không hợp lệ)
+    :6. Thông báo lỗi mã không hợp lệ;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

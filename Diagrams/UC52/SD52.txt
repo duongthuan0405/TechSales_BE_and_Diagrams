@@ -9,14 +9,15 @@ control Report_Controller
 database DB
 
 activate Admin
-Admin -> Report_UI: 1. Truy cập vào trang báo cáo doanh thu
 activate Report_UI
+Admin -> Report_UI: 1. Truy cập vào trang báo cáo doanh thu
 Admin -> Report_UI: 2. Thiết lập bộ lọc khoảng thời gian
-Report_UI -> Report_Controller: 3. Gửi yêu cầu lọc dữ liệu doanh thu
 activate Report_Controller
-Report_Controller -> DB: 4. getRevenueData(period)
+Report_UI -> Report_Controller: 3. Gửi yêu cầu lọc dữ liệu doanh thu
 activate DB
+Report_Controller -> DB: 4. getRevenueData(period)
 DB --> Report_Controller: 5. Trả về danh sách đơn hàng Delivered
+deactivate DB
 
 alt [x Không có đơn hàng thành công trong thời gian chọn]
     Report_Controller --> Report_UI: 6. Báo lỗi không có dữ liệu hiển thị
@@ -25,11 +26,10 @@ else [x Có dữ liệu doanh thu hợp lệ]
     Report_Controller -> Report_Controller: 8. calculateTotalRevenue()
     Report_Controller -> Report_Controller: 9. generateChartData()
     Report_Controller --> Report_UI: 10. Báo lỗi kết xuất dữ liệu thành công
+    deactivate Report_Controller
     Report_UI --> Admin: 11. Hiển thị biểu đồ và các chỉ số tóm tắt
+    deactivate Admin
+    deactivate Report_UI
 end
 
-deactivate Admin
-deactivate Report_UI
-deactivate Report_Controller
-deactivate DB
 @enduml

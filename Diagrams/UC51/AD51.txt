@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-51: Chặn tài khoản đặt hàng giả mạo
 
@@ -8,19 +8,19 @@ start
 |Hệ thống|
 :2. Hiển thị hộp thoại cảnh báo hủy các đơn hàng Pending;
 |Business Admin|
-:3. Phản hồi xác nhận;
-if (Xác nhận đồng ý?) then (Đúng)
+if (3. Phản hồi xác nhận?) then (Đồng ý)
     |Hệ thống|
-    partition "Giao dịch nguyên tử (Atomic)" {
-        :4. Thay đổi trạng thái tài khoản thành Bị khóa;
-        :5. Chuyển toàn bộ đơn hàng Pending sang Đã hủy;
-        :6. Hoàn trả số lượng sản phẩm vào kho;
-    }
+    :4. Thay đổi trạng thái tài khoản thành Bị khóa;
+    :5. Chuyển toàn bộ đơn hàng Pending sang Đã hủy;
+    :6. Hoàn trả số lượng sản phẩm vào kho;
     :7. Thông báo xử lý thành công;
-else (Sai)
+else (Từ chối)
     |Hệ thống|
     :8. Đóng hộp thoại và giữ nguyên trạng thái;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

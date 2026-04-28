@@ -1,25 +1,41 @@
 @startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
 title UC-32: Cập nhật trạng thái giao hàng
 
-|Nhân viên Sales|
-start
-:1. Nhấn nút "Chuyển giao hàng";
+actor "Nhân viên Sales" as Sales
+boundary "Order_UI" as UI
+control "Order_Controller" as Ctrl
+database "DB" as DB
 
-|Hệ thống|
-:2. Hiển thị form yêu cầu nhập mã vận đơn;
+activate Sales
+activate UI
+Sales -> UI: 1. Nhấn nút "Chuyển giao hàng"
+UI --> Sales: 2. Hiển thị form yêu cầu nhập mã vận đơn
 
-|Nhân viên Sales|
-:3. Nhập mã vận đơn và nhấn xác nhận;
+Sales -> UI: 3. Nhập mã vận đơn và nhấn xác nhận
+activate Ctrl
+UI -> Ctrl: 4. Gửi yêu cầu cập nhật trạng thái giao hàng
 
-|Hệ thống|
-if (4. Kiểm tra mã vận đơn?) then (Hợp lệ)
-    :5. Cập nhật trạng thái đơn hàng thành "Shipping";
-    :6. Ghi nhận thao tác vào Audit Log;
-    :7. Hiển thị thông báo cập nhật thành công;
-else (Bỏ trống)
-    :8. Hiển thị cảnh báo lỗi yêu cầu nhập đầy đủ;
-endif
+Ctrl -> Ctrl: 5. Kiểm tra mã vận đơn (bỏ trống hay hợp lệ)
 
-|Nhân viên Sales|
-stop
+alt [x Mã vận đơn hợp lệ]
+    activate DB
+    Ctrl -> DB: 6. Cập nhật trạng thái đơn hàng thành "Shipping"
+    DB --> Ctrl: 7. Xác nhận cập nhật thành công
+    
+    Ctrl -> DB: 8. Ghi nhận thao tác vào Audit Log
+    DB --> Ctrl: 9. Xác nhận lưu log
+    deactivate DB
+    
+    Ctrl --> UI: 10. Thông báo cập nhật thành công
+    UI --> Sales: 11. Hiển thị thông báo cập nhật thành công
+else [x Mã vận đơn bỏ trống]
+    Ctrl --> UI: 12. Báo lỗi yêu cầu nhập đầy đủ
+    deactivate Ctrl
+    UI --> Sales: 13. Hiển thị cảnh báo lỗi yêu cầu nhập đầy đủ
+    deactivate Sales
+    deactivate UI
+end
+
 @enduml

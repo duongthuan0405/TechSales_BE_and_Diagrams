@@ -1,0 +1,39 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-01: Đăng ký (Sign Up)
+
+|Khách hàng|
+start
+:1. Nhấn nút đăng ký;
+
+|Hệ thống|
+:2. Hiển thị màn hình đăng ký;
+
+|Khách hàng|
+:3. Nhập thông tin cá nhân và nhấn xác nhận;
+
+|Hệ thống|
+if (4. Kiểm tra định dạng dữ liệu đầu vào?) then (Không hợp lệ)
+    :5. Thông báo lỗi định dạng không hợp lệ;
+else (Hợp lệ)
+    if (6. Kiểm tra sự tồn tại của tài khoản?) then (Đã tồn tại)
+        :7. Thông báo lỗi tài khoản đã tồn tại;
+    else (Chưa tồn tại)
+        :8. Mã hóa mật khẩu và lưu tài khoản chờ xác thực;
+        :9. Gửi email chứa đường dẫn xác nhận;
+        
+        |Khách hàng|
+        :10. Nhấn vào đường dẫn xác nhận trong email;
+        
+        |Hệ thống|
+        :11. Kích hoạt tài khoản và thông báo đăng ký thành công;
+    endif
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

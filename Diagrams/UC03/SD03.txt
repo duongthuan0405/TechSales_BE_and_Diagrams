@@ -1,0 +1,69 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-03: Quên mật khẩu (Forget Password)
+
+actor "Khách hàng" as User
+boundary "ForgotPass_UI" as UI
+control "ForgotPass_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Chọn chức năng "Forget Password"
+
+UI --> User: 2. Hiển thị màn hình nhập email
+User -> UI: 3. Nhập email và xác nhận
+
+activate Ctrl
+UI -> Ctrl: 4. Yêu cầu xử lý quên mật khẩu
+
+activate DB
+Ctrl -> DB: 5. checkEmailExists(email)
+
+DB --> Ctrl: 6. Trả về kết quả kiểm tra email
+
+alt [x Email không tồn tại]
+    Ctrl --> UI: 7. Phản hồi lỗi email không tồn tại
+    UI --> User: 8. Hiển thị thông báo lỗi email không tồn tại
+else [x Email tồn tại]
+    Ctrl -> Ctrl: 9. sendRecoveryEmail()
+    Ctrl --> UI: 10. Yêu cầu hiển thị hướng dẫn kiểm tra email
+    UI --> User: 11. Hiển thị thông báo yêu cầu kiểm tra email
+    
+    User -> UI: 12. Nhấn vào liên kết khôi phục từ email
+    UI -> Ctrl: 13. Gửi yêu cầu xác thực liên kết
+    
+    Ctrl -> Ctrl: 14. verifyRecoveryLink(token)
+    
+    alt [x Liên kết hết hạn]
+        Ctrl --> UI: 15. Phản hồi lỗi liên kết hết hạn
+        UI --> User: 16. Hiển thị thông báo lỗi liên kết hết hạn
+    else [x Liên kết hợp lệ]
+        Ctrl --> UI: 17. Yêu cầu hiển thị giao diện đặt lại mật khẩu
+        UI --> User: 18. Hiển thị màn hình đặt lại mật khẩu
+        
+        User -> UI: 19. Nhập mật khẩu mới, xác nhận và lưu
+        UI -> Ctrl: 20. Yêu cầu cập nhật mật khẩu mới
+        
+        Ctrl -> Ctrl: 21. validateNewPassword(password, confirmPassword)
+        
+        alt [x Mật khẩu không hợp lệ hoặc không khớp]
+            Ctrl --> UI: 22. Phản hồi lỗi mật khẩu không hợp lệ
+            UI --> User: 23. Hiển thị thông báo lỗi mật khẩu
+        else [x Mật khẩu hợp lệ và khớp]
+            Ctrl -> Ctrl: 24. encryptPassword()
+            Ctrl -> DB: 25. updatePassword(email, newPassword)
+            DB --> Ctrl: 26. Xác nhận cập nhật thành công
+            deactivate DB
+            
+            Ctrl --> UI: 27. Phản hồi cập nhật mật khẩu thành công
+            deactivate Ctrl
+            UI --> User: 28. Hiển thị thông báo cập nhật thành công
+            deactivate User
+            deactivate UI
+        end
+    end
+end
+
+@enduml

@@ -1,0 +1,42 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-03: Quên mật khẩu (Forget Password)
+
+|Khách hàng|
+start
+:1. Chọn chức năng "Forget Password" và nhập email;
+
+|Hệ thống|
+if (2. Kiểm tra sự tồn tại của email?) then (Không tồn tại)
+    :3. Thông báo lỗi email không tồn tại;
+else (Tồn tại)
+    :4. Gửi liên kết khôi phục qua email;
+    
+    |Khách hàng|
+    :5. Nhấn vào liên kết khôi phục trong email;
+    
+    |Hệ thống|
+    if (6. Kiểm tra tính hợp lệ và thời hạn liên kết?) then (Hết hạn/Không hợp lệ)
+        :7. Thông báo lỗi liên kết không hợp lệ;
+    else (Hợp lệ)
+        :8. Hiển thị màn hình đặt lại mật khẩu;
+        
+        |Khách hàng|
+        :9. Nhập mật khẩu mới và xác nhận lưu;
+        
+        |Hệ thống|
+        if (10. Kiểm tra định dạng và sự trùng khớp mật khẩu?) then (Không hợp lệ)
+            :11. Thông báo lỗi mật khẩu không khớp hoặc sai định dạng;
+        else (Hợp lệ)
+            :12. Cập nhật mật khẩu mới và thông báo thành công;
+        endif
+    endif
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

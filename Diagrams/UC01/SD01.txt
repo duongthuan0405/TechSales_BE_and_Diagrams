@@ -1,0 +1,59 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-01: Đăng ký (Sign Up)
+
+actor "Khách hàng" as User
+boundary "SignUp_UI" as UI
+control "SignUp_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Nhấn nút đăng ký
+
+UI --> User: 2. Hiển thị màn hình đăng ký
+User -> UI: 3. Nhập thông tin cá nhân và nhấn xác nhận
+
+activate Ctrl
+UI -> Ctrl: 4. Yêu cầu xử lý đăng ký
+
+Ctrl -> Ctrl: 5. checkDataFormat(input)
+
+alt [x Dữ liệu không hợp lệ]
+    Ctrl --> UI: 6. Báo lỗi định dạng không hợp lệ
+    UI --> User: 7. Hiển thị thông báo lỗi định dạng không hợp lệ
+else [x Dữ liệu hợp lệ]
+    activate DB
+    Ctrl -> DB: 8. checkAccountExists(email, username)
+    
+    DB --> Ctrl: 9. Trả về kết quả kiểm tra
+    
+    alt [x Tài khoản đã tồn tại]
+        Ctrl --> UI: 10. Báo lỗi tài khoản đã tồn tại
+        UI --> User: 11. Hiển thị thông báo lỗi tài khoản đã tồn tại
+    else [x Tài khoản chưa tồn tại]
+        Ctrl -> Ctrl: 12. encryptPassword()
+        Ctrl -> DB: 13. savePendingAccount(userData)
+        DB --> Ctrl: 14. Xác nhận lưu dữ liệu thành công
+        
+        Ctrl -> Ctrl: 15. sendVerificationEmail()
+        Ctrl --> UI: 16. Yêu cầu hiển thị hướng dẫn xác nhận
+        UI --> User: 17. Hiển thị thông báo yêu cầu kiểm tra email
+        
+        User -> UI: 18. Nhấn vào liên kết xác nhận từ email
+        UI -> Ctrl: 19. Gửi yêu cầu kích hoạt tài khoản
+        
+        Ctrl -> DB: 20. activateAccount(token)
+        DB --> Ctrl: 21. Xác nhận cập nhật trạng thái thành công
+        deactivate DB
+        
+        Ctrl --> UI: 22. Thông báo đăng ký thành công
+        deactivate Ctrl
+        UI --> User: 23. Hiển thị thông báo thành công
+        deactivate User
+        deactivate UI
+    end
+end
+
+@enduml

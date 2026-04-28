@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-50: Quản lý danh sách khách hàng
 
@@ -6,13 +6,15 @@ title UC-50: Quản lý danh sách khách hàng
 start
 :1. Truy cập vào màn hình quản lý khách hàng;
 |Hệ thống|
-:2. Truy vấn CSDL lấy danh sách tài khoản;
-if (Có dữ liệu khách hàng?) then (Đúng)
+if (2. Truy vấn CSDL lấy danh sách tài khoản?) then (Có dữ liệu)
     :3. Sắp xếp danh sách và phân trang;
     :4. Hiển thị dữ liệu lên giao diện bảng;
-else (Sai)
+else (Không có dữ liệu)
     :5. Hiển thị bảng trống và thông báo tương ứng;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

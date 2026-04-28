@@ -1,0 +1,23 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-12: Xem thông tin chi tiết của sản phẩm
+
+|Khách hàng|
+start
+:1. Nhấn vào tên hoặc hình ảnh sản phẩm;
+
+|Hệ thống|
+if (2. Truy xuất thông tin chi tiết sản phẩm từ CSDL?) then (Có thông tin)
+    :3. Truy xuất trạng thái tồn kho;
+    :4. Hiển thị trang chi tiết sản phẩm đầy đủ;
+else (Không có thông tin)
+    :5. Hiển thị thông báo không tìm thấy sản phẩm;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

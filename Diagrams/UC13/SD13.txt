@@ -1,0 +1,35 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-13: Kiểm tra trạng thái tồn kho
+
+actor "Khách hàng" as User
+boundary "ProductDetail_UI" as UI
+control "Inventory_Controller" as Ctrl
+database "DB" as DB
+
+note over UI: Tự động kích hoạt khi mở trang chi tiết
+
+activate UI
+activate Ctrl
+UI -> Ctrl: 1. Yêu cầu kiểm tra tồn kho sản phẩm
+
+activate DB
+Ctrl -> DB: 2. checkStockQuantity(productID)
+
+DB --> Ctrl: 3. Phản hồi số lượng tồn kho thực tế
+deactivate DB
+
+alt [x Số lượng lớn hơn 0]
+    Ctrl --> UI: 4. Phản hồi trạng thái còn hàng
+    activate User
+    UI --> User: 5. Hiển thị nút mua sắm và tình trạng hàng
+else [x Số lượng bằng 0]
+    Ctrl --> UI: 6. Phản hồi trạng thái hết hàng
+    deactivate Ctrl
+    UI --> User: 7. Ẩn nút mua sắm và hiển thị thông báo hết hàng
+    deactivate User
+    deactivate UI
+end
+
+@enduml

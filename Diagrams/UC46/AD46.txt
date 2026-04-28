@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-46: Tạo voucher kèm điều kiện
 
@@ -11,13 +11,15 @@ start
 :3. Nhập thông tin voucher và điều kiện;
 :4. Nhấn nút lưu;
 |Hệ thống|
-:5. Kiểm tra mã trùng và tính hợp lệ;
-if (Dữ liệu hợp lệ?) then (Đúng)
+if (5. Kiểm tra mã trùng và tính hợp lệ?) then (Hợp lệ)
     :6. Lưu bản ghi voucher vào CSDL;
     :7. Thông báo tạo thành công;
-else (Sai)
+else (Không hợp lệ)
     :8. Cảnh báo lỗi dữ liệu đầu vào;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

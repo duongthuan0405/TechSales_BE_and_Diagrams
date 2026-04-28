@@ -1,0 +1,24 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-21: Nhận email xác nhận đơn hàng
+
+|Khách hàng|
+start
+:1. Hoàn tất xác nhận mua hàng;
+
+|Hệ thống|
+:2. Tổng hợp thông tin đơn hàng vừa tạo;
+:3. Biên dịch thông tin thành biểu mẫu email;
+if (4. Kết nối với dịch vụ gửi email (SMTP)?) then (Thành công)
+    :5. Thực hiện gửi email xác nhận đến khách hàng;
+else (Không thành công)
+    :6. Ghi nhận lỗi và đưa email vào hàng đợi gửi lại;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

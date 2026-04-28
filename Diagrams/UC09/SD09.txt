@@ -1,0 +1,44 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-09: Tìm kiếm sản phẩm bằng từ khóa
+
+actor "Khách hàng" as User
+boundary "Search_UI" as UI
+control "Search_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Gõ từ khóa vào thanh tìm kiếm
+
+activate Ctrl
+UI -> Ctrl: 2. Yêu cầu gợi ý tự động
+
+activate DB
+Ctrl -> DB: 3. getSuggestions(keyword)
+
+DB --> Ctrl: 4. Phản hồi danh sách gợi ý
+Ctrl --> UI: 5. Trả về kết quả gợi ý
+UI --> User: 6. Hiển thị gợi ý tự động trên giao diện
+
+User -> UI: 7. Gửi yêu cầu tìm kiếm chính thức
+UI -> Ctrl: 8. Gửi truy vấn tìm kiếm sản phẩm
+
+Ctrl -> DB: 9. searchProducts(keyword)
+
+alt [x Không tìm thấy sản phẩm]
+    DB --> Ctrl: 10. Phản hồi danh sách rỗng
+    Ctrl --> UI: 11. Trả về kết quả rỗng
+    UI --> User: 12. Hiển thị thông báo không tìm thấy kết quả
+else [x Có sản phẩm khớp]
+    DB --> Ctrl: 13. Phản hồi danh sách sản phẩm
+    deactivate DB
+    Ctrl --> UI: 14. Trả về danh sách sản phẩm
+    deactivate Ctrl
+    UI --> User: 15. Hiển thị danh sách sản phẩm phân trang
+    deactivate User
+    deactivate UI
+end
+
+@enduml

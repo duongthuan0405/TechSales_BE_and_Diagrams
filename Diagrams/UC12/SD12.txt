@@ -1,0 +1,39 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-12: Xem thông tin chi tiết của sản phẩm
+
+actor "Khách hàng" as User
+boundary "ProductDetail_UI" as UI
+control "Product_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Nhấn xem chi tiết sản phẩm
+
+activate Ctrl
+UI -> Ctrl: 2. Yêu cầu tải thông tin chi tiết sản phẩm
+
+activate DB
+Ctrl -> DB: 3. getProductDetail(productID)
+
+alt [x Sản phẩm tồn tại]
+    DB --> Ctrl: 4. Phản hồi thông tin chi tiết
+    
+    note over Ctrl: Kích hoạt tự động kiểm tra tồn kho
+    Ctrl -> DB: 5. checkInventory(productID)
+    DB --> Ctrl: 6. Phản hồi số lượng tồn kho
+    deactivate DB
+    
+    Ctrl --> UI: 7. Trả về dữ liệu sản phẩm và tồn kho
+    UI --> User: 8. Hiển thị trang chi tiết sản phẩm
+else [x Sản phẩm không tồn tại]
+    Ctrl --> UI: 9. Phản hồi lỗi không tìm thấy dữ liệu
+    deactivate Ctrl
+    UI --> User: 10. Hiển thị màn hình báo lỗi sản phẩm
+    deactivate User
+    deactivate UI
+end
+
+@enduml

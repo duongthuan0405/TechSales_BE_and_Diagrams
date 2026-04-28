@@ -1,0 +1,39 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-08: Thêm địa chỉ giao hàng mới
+
+actor "Khách hàng" as User
+boundary "Address_UI" as UI
+control "Address_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Nhấn chọn thêm địa chỉ mới
+
+UI --> User: 2. Hiển thị biểu mẫu địa chỉ trống
+
+User -> UI: 3. Nhập chi tiết địa chỉ và nhấn lưu
+activate Ctrl
+UI -> Ctrl: 4. Gửi yêu cầu lưu địa chỉ mới
+
+Ctrl -> Ctrl: 5. validateAddressData(data)
+
+alt [x Dữ liệu bỏ trống hoặc không hợp lệ]
+    Ctrl --> UI: 6. Phản hồi lỗi dữ liệu không hợp lệ
+    UI --> User: 7. Hiển thị cảnh báo lỗi trên các trường bỏ trống
+else [x Dữ liệu hợp lệ]
+    activate DB
+    Ctrl -> DB: 8. insertAddress(userID, data)
+    
+    DB --> Ctrl: 9. Xác nhận lưu thành công
+    deactivate DB
+    Ctrl --> UI: 10. Phản hồi kết quả lưu thành công
+    deactivate Ctrl
+    UI --> User: 11. Hiển thị thông báo lưu địa chỉ thành công
+    deactivate User
+    deactivate UI
+end
+
+@enduml

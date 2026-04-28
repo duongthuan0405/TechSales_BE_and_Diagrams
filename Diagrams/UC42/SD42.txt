@@ -9,15 +9,15 @@ control Product_Controller
 database DB
 
 activate Admin
-Admin -> Product_UI: 1. Nhấn nút thêm mới sản phẩm
 activate Product_UI
+Admin -> Product_UI: 1. Nhấn nút thêm mới sản phẩm
 Product_UI --> Admin: 2. Hiển thị biểu mẫu đăng tải
 Admin -> Product_UI: 3. Nhập các thông tin chi tiết
 Admin -> Product_UI: 4. Nhấn nút lưu
-Product_UI -> Product_Controller: 5. Gửi thông tin sản phẩm
 activate Product_Controller
-Product_Controller -> DB: 6. validateData(data)
+Product_UI -> Product_Controller: 5. Gửi thông tin sản phẩm
 activate DB
+Product_Controller -> DB: 6. validateData(data)
 DB --> Product_Controller: 7. Kết quả xác thực
 
 alt  [x Thiếu hoặc sai thông tin]
@@ -26,12 +26,12 @@ alt  [x Thiếu hoặc sai thông tin]
 else [x Đầy đủ thông tin hợp lệ]
     Product_Controller -> DB: 10. saveProduct(data)
     DB --> Product_Controller: 11. success
+    deactivate DB
     Product_Controller --> Product_UI: 12. Thông báo tạo sản phẩm thành công
+    deactivate Product_Controller
     Product_UI --> Admin: 13. Hiển thị thông báo tạo sản phẩm thành công
+    deactivate Admin
+    deactivate Product_UI
 end
 
-deactivate Admin
-deactivate Product_UI
-deactivate Product_Controller
-deactivate DB
 @enduml

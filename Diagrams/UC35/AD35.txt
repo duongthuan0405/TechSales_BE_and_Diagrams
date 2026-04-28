@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-35: Khởi tạo hoàn tiền
 
 |Nhân viên Sales|
@@ -13,8 +13,7 @@ start
 
 |Hệ thống|
 if (4. Kiểm tra điều kiện hoàn tiền?) then (Hợp lệ)
-    :5. Gửi yêu cầu hoàn tiền qua Bank API;
-    if (6. Phản hồi từ Bank API?) then (Thành công)
+    if (5. Gửi yêu cầu hoàn tiền qua Bank API?) then (Thành công)
         :7. Cập nhật trạng thái "Đã hoàn tiền";
         :8. Ghi nhận Audit Log;
         :9. Hiển thị thông báo thành công;
@@ -24,6 +23,9 @@ if (4. Kiểm tra điều kiện hoàn tiền?) then (Hợp lệ)
 else (Không hợp lệ)
     :11. Hiển thị thông báo lỗi điều kiện đơn hàng;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

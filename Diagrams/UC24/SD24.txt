@@ -1,0 +1,32 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-24: Theo dõi trạng thái đơn hàng
+
+actor "Khách hàng" as User
+boundary "OrderHistory_UI" as UI
+control "Order_Controller" as Ctrl
+database "DB" as DB
+
+
+note over UI: Tự động kích hoạt khi mở trang chi tiết đơn hàng
+
+activate User
+activate UI
+User -> UI: 1. Xem trang chi tiết đơn hàng
+activate Ctrl
+UI -> Ctrl: 2. Yêu cầu tải dữ liệu tiến trình xử lý
+activate DB
+Ctrl -> DB: 3. getOrderStatusHistory(orderID)
+
+DB --> Ctrl: 4. Phản hồi lịch sử trạng thái
+deactivate DB
+Ctrl -> Ctrl: 5. mapTimelineData(statusHistory)
+
+Ctrl --> UI: 6. Trả về dữ liệu dòng thời gian trực quan
+deactivate Ctrl
+UI --> User: 7. Hiển thị biểu đồ trạng thái và mốc thời gian gần nhất
+deactivate User
+deactivate UI
+
+@enduml

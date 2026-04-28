@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-53: Xem báo cáo sản phẩm bán chạy
 
@@ -7,13 +7,15 @@ start
 :1. Điều hướng đến trang báo cáo sản phẩm;
 :2. Chọn khoảng thời gian cần phân tích;
 |Hệ thống|
-:3. Truy vấn dữ liệu từ các đơn hàng đã hoàn tất;
-if (Có dữ liệu bán hàng?) then (Đúng)
+if (3. Truy vấn dữ liệu từ các đơn hàng đã hoàn tất?) then (Có dữ liệu)
     :4. Tính toán tổng số lượng bán và sắp xếp giảm dần;
     :5. Hiển thị danh sách xếp hạng lên giao diện;
-else (Sai)
+else (Không có dữ liệu)
     :6. Hiển thị bảng danh sách trống và thông báo;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

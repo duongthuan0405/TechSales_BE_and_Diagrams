@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-48: Tạo tài khoản nhân viên mới
 
@@ -11,14 +11,16 @@ start
 :3. Nhập Email, Họ tên và gán Role;
 :4. Nhấn xác nhận tạo;
 |Hệ thống|
-:5. Kiểm tra email trong hệ thống;
-if (Email chưa tồn tại?) then (Đúng)
+if (5. Kiểm tra email trong hệ thống?) then (Hợp lệ)
     :6. Tạo tài khoản và sinh mật khẩu tạm;
     :7. Gửi email thông tin đăng nhập;
     :8. Thông báo tạo tài khoản thành công;
-else (Sai)
+else (Không hợp lệ)
     :9. Cảnh báo lỗi trùng lặp dữ liệu;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml

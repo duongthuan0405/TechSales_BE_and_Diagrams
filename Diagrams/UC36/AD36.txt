@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-36: Tìm kiếm đơn hàng
 
 |Nhân viên Sales|
@@ -7,12 +7,14 @@ start
 :2. Nhấn nút Tìm kiếm;
 
 |Hệ thống|
-:3. Truy vấn cơ sở dữ liệu theo từ khóa;
-if (4. Kiểm tra kết quả?) then (Có dữ liệu)
+if (3. Truy vấn cơ sở dữ liệu theo từ khóa?) then (Có dữ liệu)
     :5. Hiển thị danh sách đơn hàng trùng khớp;
 else (Trống)
     :6. Hiển thị thông báo không tìm thấy kết quả;
 endif
+
+
+
 
 |Nhân viên Sales|
 stop

@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-57: Tạo tài khoản Business Admin ban đầu
 
@@ -7,14 +7,16 @@ start
 :1. Nhập thông tin tài khoản mới;
 :2. Chọn vai trò Business Admin và nhấn tạo;
 |Hệ thống|
-:3. Kiểm tra định dạng email;
-if (Email hợp lệ?) then (Đúng)
+if (3. Kiểm tra định dạng email?) then (Hợp lệ)
     :4. Mã hóa mật khẩu;
     :5. Lưu tài khoản vào CSDL cấu hình;
     :6. Thông báo khởi tạo thành công;
-else (Sai)
+else (Không hợp lệ)
     :7. Cảnh báo lỗi định dạng email;
 endif
+
+
+
 |Technical Admin|
 stop
 @enduml

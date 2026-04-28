@@ -9,12 +9,12 @@ control Shipping_Controller
 database DB
 
 activate Admin
-Admin -> Shipping_UI: 1. Xem danh sách các khu vực vận chuyển
 activate Shipping_UI
-Shipping_UI -> Shipping_Controller: 2. Gửi yêu cầu lấy danh sách khu vực
+Admin -> Shipping_UI: 1. Xem danh sách các khu vực vận chuyển
 activate Shipping_Controller
-Shipping_Controller -> DB: 3. getShippingRegions()
+Shipping_UI -> Shipping_Controller: 2. Gửi yêu cầu lấy danh sách khu vực
 activate DB
+Shipping_Controller -> DB: 3. getShippingRegions()
 DB --> Shipping_Controller: 4. Trả về danh sách khu vực và phí hiện tại
 Shipping_UI --> Admin: 5. Hiển thị danh sách phí vận chuyển
 Admin -> Shipping_UI: 6. Nhập mức phí mới và nhấn lưu
@@ -28,12 +28,12 @@ alt [x Giá trị âm hoặc sai định dạng chữ]
 else [x Dữ liệu hợp lệ]
     Shipping_Controller -> DB: 12. updateShippingFees(data)
     DB --> Shipping_Controller: 13. success
+    deactivate DB
     Shipping_Controller --> Shipping_UI: 14. Báo lỗi cập nhật thành công
+    deactivate Shipping_Controller
     Shipping_UI --> Admin: 15. Hiển thị thông báo cập nhật thành công
+    deactivate Admin
+    deactivate Shipping_UI
 end
 
-deactivate Admin
-deactivate Shipping_UI
-deactivate Shipping_Controller
-deactivate DB
 @enduml

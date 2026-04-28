@@ -1,0 +1,29 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-30: Xem chi tiết đơn hàng
+
+actor "Nhân viên Sales" as Staff
+boundary "OrderMgmt_UI" as UI
+control "Order_Controller" as Ctrl
+database "DB" as DB
+
+activate Staff
+activate UI
+Staff -> UI: 1. Chọn xem chi tiết đơn hàng
+
+activate Ctrl
+UI -> Ctrl: 2. Yêu cầu tải dữ liệu chi tiết đơn hàng
+
+activate DB
+Ctrl -> DB: 3. getOrderDetails(orderID)
+
+DB --> Ctrl: 4. Phản hồi dữ liệu bản ghi đơn hàng
+deactivate DB
+Ctrl --> UI: 5. Trả về cấu trúc dữ liệu hiển thị
+deactivate Ctrl
+UI --> Staff: 6. Hiển thị giao diện chi tiết đơn hàng tổng hợp
+deactivate Staff
+deactivate UI
+
+@enduml

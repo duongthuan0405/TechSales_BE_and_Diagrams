@@ -1,0 +1,30 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-06: Đặt địa chỉ mặc định
+
+actor "Khách hàng" as User
+boundary "Address_UI" as UI
+control "Address_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Điều hướng đến trang Sổ địa chỉ
+
+User -> UI: 2. Chọn địa chỉ và yêu cầu đặt làm mặc định
+activate Ctrl
+UI -> Ctrl: 3. Gửi yêu cầu đặt địa chỉ mặc định
+
+activate DB
+Ctrl -> DB: 4. updateDefaultAddress(userID, addressID)
+
+DB --> Ctrl: 5. Xác nhận cập nhật thành công
+deactivate DB
+Ctrl --> UI: 6. Phản hồi thiết lập thành công
+deactivate Ctrl
+UI --> User: 7. Hiển thị thông báo và cập nhật nhãn mặc định
+deactivate User
+deactivate UI
+
+@enduml

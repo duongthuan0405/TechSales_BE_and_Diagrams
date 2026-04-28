@@ -1,0 +1,19 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-24: Theo dõi trạng thái đơn hàng
+
+|Khách hàng|
+start
+:1. Xem trang chi tiết đơn hàng (Kế thừa từ UC-23);
+
+|Hệ thống|
+:2. Truy xuất lịch sử cập nhật trạng thái đơn hàng;
+:3. Ánh xạ dữ liệu thành biểu đồ dòng thời gian;
+:4. Hiển thị các mốc trạng thái và làm nổi bật trạng thái hiện tại;
+
+|Khách hàng|
+
+|Khách hàng|
+stop
+@enduml

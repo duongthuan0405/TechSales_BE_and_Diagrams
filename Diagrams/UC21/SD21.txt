@@ -1,0 +1,42 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-21: Nhận email xác nhận đơn hàng
+
+actor "Khách hàng" as User
+boundary "Checkout_UI" as UI
+control "Order_Controller" as Ctrl
+database "DB" as DB
+actor "Email_Service" as Email
+
+activate User
+activate UI
+User -> UI: 1. Hoàn tất quá trình đặt hàng (Từ UC-20)
+
+activate Ctrl
+UI -> Ctrl: 2. Kích hoạt ngầm tiến trình gửi email
+deactivate UI
+
+activate DB
+Ctrl -> DB: 3. getOrderDetails(orderID)
+
+DB --> Ctrl: 4. Phản hồi thông tin chi tiết đơn hàng
+Ctrl -> Ctrl: 5. compileEmailTemplate(orderData)
+
+activate Email
+Ctrl -> Email: 6. sendEmail(userEmail, emailTemplate)
+
+alt [x Kết nối và gửi email thành công]
+    Email --> Ctrl: 7. Phản hồi xác nhận đã gửi email
+    Ctrl --> User: 8. Giao email vào hộp thư cá nhân
+    deactivate User
+else [x Lỗi kết nối dịch vụ email]
+    Email --> Ctrl: 9. Phản hồi lỗi kết nối hệ thống
+    deactivate Email
+    Ctrl -> DB: 10. logErrorAndQueueEmail(orderID)
+    DB --> Ctrl: 11. Xác nhận đã đưa vào hàng đợi
+    deactivate Ctrl
+    deactivate DB
+end
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+title UC-27: Đánh giá sản phẩm đã mua
+
+actor "Khách hàng" as User
+boundary "ProductDetail_UI" as UI
+control "Review_Controller" as Ctrl
+database "DB" as DB
+
+activate User
+activate UI
+User -> UI: 1. Chọn chức năng viết đánh giá
+
+activate Ctrl
+UI -> Ctrl: 2. Yêu cầu hiển thị biểu mẫu đánh giá
+Ctrl --> UI: 3. Trả về cấu trúc biểu mẫu
+UI --> User: 4. Hiển thị biểu mẫu cho người dùng
+
+User -> UI: 5. Chọn số sao, nhập nội dung và nhấn gửi
+UI -> Ctrl: 6. Gửi dữ liệu đánh giá (rating, comment)
+
+alt [x Khách hàng chưa chọn số sao]
+    Ctrl --> UI: 7. Phản hồi lỗi thiếu số sao
+    UI --> User: 8. Hiển thị cảnh báo yêu cầu chọn sao
+else [x Dữ liệu hợp lệ]
+    activate DB
+    Ctrl -> DB: 9. saveProductReview(userID, productID, data)
+    DB --> Ctrl: 10. Xác nhận lưu đánh giá thành công
+    deactivate DB
+    
+    Ctrl --> UI: 11. Phản hồi kết quả thành công
+    deactivate Ctrl
+    UI --> User: 12. Thông báo gửi đánh giá thành công
+    deactivate User
+    deactivate UI
+end
+
+@enduml

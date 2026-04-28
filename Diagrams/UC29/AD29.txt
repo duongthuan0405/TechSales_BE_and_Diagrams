@@ -1,0 +1,23 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-29: Xem danh sách đơn hàng trạng thái "Pending"
+
+|Nhân viên Sales|
+start
+:1. Chọn mục "Quản lý đơn hàng" trên thanh menu;
+
+|Hệ thống|
+:2. Thiết lập bộ lọc mặc định là "Pending";
+if (3. Truy vấn danh sách đơn hàng từ CSDL?) then (Không có đơn hàng)
+    :4. Hiển thị bảng trống và thông báo không có đơn mới;
+else (Có đơn hàng)
+    :5. Hiển thị danh sách đơn hàng dưới dạng bảng;
+endif
+
+
+
+
+|Nhân viên Sales|
+stop
+@enduml

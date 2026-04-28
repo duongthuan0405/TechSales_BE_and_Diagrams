@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 title UC-42: Đăng sản phẩm mới
 
 |Business Admin|
@@ -14,11 +14,14 @@ start
 |Hệ thống|
 if (4. Kiểm tra dữ liệu đầu vào?) then (Hợp lệ)
     :5. Lưu trữ tệp hình ảnh vào hệ thống;
-    :6. Ghi nhận dữ liệu sản phẩm vào cơ sở dữ liệu;
+    :6. Ghi nhận dữ liệu sản phẩm vào CSDL;
     :7. Hiển thị thông báo tạo sản phẩm thành công;
 else (Sai định dạng)
     :8. Hiển thị cảnh báo lỗi tại các trường tương ứng;
 endif
+
+
+
 
 |Business Admin|
 stop

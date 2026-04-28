@@ -1,0 +1,60 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-61: Thanh toán trực tuyến
+
+|Khách hàng|
+start
+:1. Chọn phương thức thanh toán trực tuyến và nhấn "Thanh toán";
+
+|Hệ thống|
+:2. Khởi tạo yêu cầu giao dịch, mã hóa dữ liệu đơn hàng và tạo mã băm bảo mật (Checksum);
+if (3. Kết nối đến Cổng thanh toán?) then (Thất bại)
+    :4. Hiển thị thông báo lỗi kỹ thuật và yêu cầu thử lại;
+endif
+
+:5. Gửi yêu cầu thanh toán sang Cổng thanh toán;
+:6. Điều hướng khách hàng sang trang web hoặc ứng dụng của Cổng thanh toán;
+
+|Cổng thanh toán|
+:7. Hiển thị giao diện thanh toán;
+
+|Khách hàng|
+if (8. Quyết định thanh toán?) then (Hủy bỏ)
+    |Cổng thanh toán|
+    :9. Trả kết quả hủy về hệ thống thông qua URL phản hồi;
+    
+    |Hệ thống|
+    :10. Cập nhật trạng thái giao dịch là "Đã hủy";
+    :11. Điều hướng người dùng quay lại trang thanh toán;
+endif
+
+|Khách hàng|
+:12. Nhập thông tin, xác thực OTP/QR và nhấn xác nhận;
+
+|Cổng thanh toán|
+:13. Xử lý giao dịch thanh toán;
+if (14. Giao dịch thành công?) then (Thất bại)
+    :15. Trả kết quả thất bại về hệ thống thông qua URL phản hồi;
+    
+    |Hệ thống|
+    :16. Cập nhật trạng thái giao dịch là "Thất bại";
+    :17. Hiển thị thông báo lỗi và cho phép thực hiện lại thanh toán;
+endif
+
+|Cổng thanh toán|
+:18. Trả kết quả thành công về hệ thống thông qua URL phản hồi;
+
+|Hệ thống|
+:19. Tiếp nhận kết quả, kiểm tra tính hợp lệ chữ ký số và dữ liệu;
+:20. Lưu trữ thông tin giao dịch vào CSDL;
+:21. Cập nhật trạng thái đơn hàng thành "Đã thanh toán";
+:22. Tự động gửi email thông báo xác nhận cho khách hàng;
+:23. Điều hướng khách hàng quay lại website và hiển thị thông báo thành công;
+
+
+
+
+|Khách hàng|
+stop
+@enduml

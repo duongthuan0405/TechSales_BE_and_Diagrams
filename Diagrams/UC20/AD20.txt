@@ -1,0 +1,28 @@
+﻿@startuml
+skinparam style strictuml
+skinparam monochrome true
+title UC-20: Xác nhận mua hàng
+
+|Khách hàng|
+start
+:1. Nhấn nút "Xác nhận đặt hàng";
+
+|Hệ thống|
+if (2. Kiểm tra tồn kho thực tế toàn bộ sản phẩm?) then (Thiếu hàng)
+    :3. Thông báo lỗi thiếu hàng;
+else (Đủ hàng)
+    :4. Thực hiện trừ kho;
+    :5. Tạo đơn hàng;
+    if (6. Kiểm tra phương thức thanh toán?) then (Thanh toán online)
+        :7. Thực hiện thanh toán online;
+    endif
+    :8. Xóa giỏ hàng;
+    :9. Gửi thông báo đặt hàng thành công và gửi email;
+endif
+
+
+
+
+|Khách hàng|
+stop
+@enduml

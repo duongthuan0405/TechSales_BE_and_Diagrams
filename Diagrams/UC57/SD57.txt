@@ -9,11 +9,11 @@ control Admin_Controller
 database DB
 
 activate Admin
-Admin -> Admin_UI: 1. Nhập Email, Họ tên, Mật khẩu tạm thời
 activate Admin_UI
+Admin -> Admin_UI: 1. Nhập Email, Họ tên, Mật khẩu tạm thời
 Admin -> Admin_UI: 2. Chọn vai trò Business Admin và nhấn tạo
-Admin_UI -> Admin_Controller: 3. Gửi yêu cầu khởi tạo tài khoản
 activate Admin_Controller
+Admin_UI -> Admin_Controller: 3. Gửi yêu cầu khởi tạo tài khoản
 Admin_Controller -> Admin_Controller: 4. validateEmailFormat(email)
 
 alt [x Email cung cấp sai định dạng]
@@ -21,15 +21,15 @@ alt [x Email cung cấp sai định dạng]
     Admin_UI --> Admin: 6. Hiển thị cảnh báo lỗi định dạng
 else [x Email hợp lệ]
     Admin_Controller -> Admin_Controller: 7. encryptPassword(password)
-    Admin_Controller -> DB: 8. saveAdminAccount(data)
     activate DB
+    Admin_Controller -> DB: 8. saveAdminAccount(data)
     DB --> Admin_Controller: 9. success
+    deactivate DB
     Admin_Controller --> Admin_UI: 10. Báo lỗi khởi tạo thành công
+    deactivate Admin_Controller
     Admin_UI --> Admin: 11. Hiển thị thông báo khởi tạo thành công
+    deactivate Admin
+    deactivate Admin_UI
 end
 
-deactivate Admin
-deactivate Admin_UI
-deactivate Admin_Controller
-deactivate DB
 @enduml

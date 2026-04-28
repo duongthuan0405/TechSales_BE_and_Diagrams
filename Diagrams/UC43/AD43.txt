@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam defaultFontColor black
 title UC-43: Cập nhật giá sản phẩm
 
@@ -8,13 +8,15 @@ start
 :2. Nhập mức giá mới;
 :3. Nhấn nút xác nhận lưu;
 |Hệ thống|
-:4. Kiểm tra tính hợp lệ của dữ liệu;
-if (Giá hợp lệ?) then (Đúng)
+if (4. Kiểm tra tính hợp lệ của dữ liệu?) then (Hợp lệ)
     :5. Cập nhật giá trị vào CSDL;
     :6. Thông báo cập nhật giá thành công;
-else (Sai)
+else (Không hợp lệ)
     :7. Cảnh báo dữ liệu không hợp lệ;
 endif
+
+
+
 |Business Admin|
 stop
 @enduml
