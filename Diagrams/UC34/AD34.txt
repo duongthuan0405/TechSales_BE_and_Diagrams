@@ -9,7 +9,7 @@ start
 :2. Hiển thị danh sách lý do hủy chuẩn hóa;
 
 |Nhân viên Sales|
-:3. Chọn lý do và nhấn xác nhận;
+:3. Xác nhận;
 
 |Hệ thống|
 if (4. Kiểm tra việc chọn lý do?) then (Đã chọn)
