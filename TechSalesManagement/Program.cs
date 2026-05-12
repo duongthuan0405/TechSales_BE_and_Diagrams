@@ -1,4 +1,5 @@
 using TechSalesManagement.Presentation_WebAPI.Extensions;
+using TechSalesManagement.Infrastructure.Persistence;
 
 namespace TechSalesManagement;
 
@@ -6,6 +7,9 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // Load environment variables from .env.development
+        DotNetEnv.Env.Load(".env.development");
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Enable Serilog Logging
@@ -22,6 +26,8 @@ public class Program
         builder.Services.AddMiddlewares();
         // Configure Validation
         builder.Services.AddValidationConfiguration();
+        // Register Persistence (Database)
+        builder.Services.AddPersistence();
 
         var app = builder.Build();
 

@@ -1,34 +1,16 @@
+using System;
 using TechSalesManagement.Domain.Common;
-using TechSalesManagement.Domain.Constants;
 
 namespace TechSalesManagement.Domain.Entities;
 
 public class Category : BaseEntity
 {
-    private string _name = string.Empty;
-    private List<Product> _products = new();
+    public string name { get; set; } = string.Empty;
 
-    public string Name
+    public Category(string name)
     {
-        get => _name;
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException(DomainErrors.Category.NameRequired);
-            _name = value;
-        }
+        this.name = name;
     }
 
-    public List<Product> Products
-    {
-        get => _products;
-        set => _products = value ?? new();
-    }
-
-    public Category(string name) : base()
-    {
-        Name = name;
-    }
-
-    public Category() : base() { }
+    public Category() { }
 }

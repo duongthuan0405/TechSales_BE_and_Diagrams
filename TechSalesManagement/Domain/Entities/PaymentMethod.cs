@@ -1,3 +1,4 @@
+using System;
 using TechSalesManagement.Domain.Common;
 using TechSalesManagement.Domain.Enums;
 
@@ -5,26 +6,14 @@ namespace TechSalesManagement.Domain.Entities;
 
 public class PaymentMethod : BaseEntity
 {
-    private string _name = string.Empty;
-    private PaymentMethodType _type;
+    public string name { get; set; } = string.Empty;
+    public PaymentMethodType type { get; set; }
 
-    public string Name
+    public PaymentMethod(string name, PaymentMethodType type)
     {
-        get => _name;
-        set => _name = value ?? string.Empty;
+        this.name = name;
+        this.type = type;
     }
 
-    public PaymentMethodType Type
-    {
-        get => _type;
-        set => _type = value;
-    }
-
-    public PaymentMethod(string name, PaymentMethodType type) : base()
-    {
-        Name = name;
-        Type = type;
-    }
-
-    public PaymentMethod() : base() { }
+    public PaymentMethod() { }
 }

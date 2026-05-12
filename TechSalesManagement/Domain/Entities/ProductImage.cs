@@ -5,34 +5,16 @@ namespace TechSalesManagement.Domain.Entities;
 
 public class ProductImage : BaseEntity
 {
-    private Guid _productId;
-    private string _imageUrl = string.Empty;
-    private bool _isPrimary;
+    public Guid product_id { get; set; }
+    public string image_url { get; set; } = string.Empty;
+    public bool is_primary { get; set; }
 
-    public Guid ProductId
+    public ProductImage(Guid productId, string imageUrl, bool isPrimary = false)
     {
-        get => _productId;
-        set => _productId = value;
+        product_id = productId;
+        image_url = imageUrl;
+        is_primary = isPrimary;
     }
 
-    public string ImageUrl
-    {
-        get => _imageUrl;
-        set => _imageUrl = value ?? string.Empty;
-    }
-
-    public bool IsPrimary
-    {
-        get => _isPrimary;
-        set => _isPrimary = value;
-    }
-
-    public ProductImage(Guid productId, string imageUrl, bool isPrimary = false) : base()
-    {
-        ProductId = productId;
-        ImageUrl = imageUrl;
-        IsPrimary = isPrimary;
-    }
-
-    public ProductImage() : base() { }
+    public ProductImage() { }
 }

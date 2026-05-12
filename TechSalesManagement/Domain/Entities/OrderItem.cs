@@ -1,57 +1,21 @@
 using System;
-using TechSalesManagement.Domain.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class OrderItem : BaseEntity
+public class OrderItem
 {
-    private Guid _orderId;
-    private Guid _productId;
-    private decimal _price;
-    private int _quantity;
+    public Guid order_id { get; set; }
+    public Guid product_id { get; set; }
+    public decimal price { get; set; }
+    public int quantity { get; set; }
 
-    // Navigation Properties
-    private Product? _product;
-
-    public Guid OrderId
+    public OrderItem(Guid orderId, Guid productId, decimal price, int quantity)
     {
-        get => _orderId;
-        set => _orderId = value;
+        order_id = orderId;
+        product_id = productId;
+        this.price = price;
+        this.quantity = quantity;
     }
 
-    public Guid ProductId
-    {
-        get => _productId;
-        set => _productId = value;
-    }
-
-    public decimal Price
-    {
-        get => _price;
-        set => _price = value < 0 ? 0 : value;
-    }
-
-    public int Quantity
-    {
-        get => _quantity;
-        set => _quantity = value < 1 ? 1 : value;
-    }
-
-    public Product? Product
-    {
-        get => _product;
-        set => _product = value;
-    }
-
-    public decimal SubTotal => _price * _quantity;
-
-    public OrderItem(Guid orderId, Guid productId, decimal price, int quantity) : base()
-    {
-        OrderId = orderId;
-        ProductId = productId;
-        Price = price;
-        Quantity = quantity;
-    }
-
-    public OrderItem() : base() { }
+    public OrderItem() { }
 }

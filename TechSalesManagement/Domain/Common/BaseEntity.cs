@@ -5,30 +5,30 @@ namespace TechSalesManagement.Domain.Common;
 public abstract class BaseEntity
 {
     private Guid _id;
-    private DateTime _createdAt;
-    private DateTime? _updatedAt;
+    private DateTimeOffset _created_at;
+    private DateTimeOffset? _updated_at;
 
-    public Guid Id
+    public Guid id
     {
         get => _id;
         set => _id = value;
     }
 
-    public DateTime CreatedAt
+    public DateTimeOffset created_at
     {
-        get => _createdAt;
-        set => _createdAt = value;
+        get => _created_at;
+        set => _created_at = value;
     }
 
-    public DateTime? UpdatedAt
+    public DateTimeOffset? updated_at
     {
-        get => _updatedAt;
-        set => _updatedAt = value;
+        get => _updated_at;
+        set => _updated_at = value;
     }
 
     protected BaseEntity()
     {
         _id = Guid.NewGuid();
-        _createdAt = DateTime.UtcNow;
+        _created_at = DateTimeOffset.UtcNow;
     }
 }
