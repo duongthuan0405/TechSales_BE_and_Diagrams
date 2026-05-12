@@ -5,49 +5,20 @@ namespace TechSalesManagement.Domain.Entities;
 
 public class ShippingAddress : BaseEntity
 {
-    private Guid _userId;
-    private string _province = string.Empty;
-    private string _ward = string.Empty;
-    private string _detail = string.Empty;
-    private bool _isDefault;
+    public Guid user_id { get; set; }
+    public string province { get; set; } = string.Empty;
+    public string ward { get; set; } = string.Empty;
+    public string detail { get; set; } = string.Empty;
+    public bool is_default { get; set; }
+    public DateTimeOffset? deleted_at { get; set; }
 
-    public Guid UserId
+    public ShippingAddress(Guid userId, string province, string ward, string detail)
     {
-        get => _userId;
-        set => _userId = value;
+        user_id = userId;
+        this.province = province;
+        this.ward = ward;
+        this.detail = detail;
     }
 
-    public string Province
-    {
-        get => _province;
-        set => _province = value ?? string.Empty;
-    }
-
-    public string Ward
-    {
-        get => _ward;
-        set => _ward = value ?? string.Empty;
-    }
-
-    public string Detail
-    {
-        get => _detail;
-        set => _detail = value ?? string.Empty;
-    }
-
-    public bool IsDefault
-    {
-        get => _isDefault;
-        set => _isDefault = value;
-    }
-
-    public ShippingAddress(Guid userId, string province, string ward, string detail) : base()
-    {
-        UserId = userId;
-        Province = province;
-        Ward = ward;
-        Detail = detail;
-    }
-
-    public ShippingAddress() : base() { }
+    public ShippingAddress() { }
 }

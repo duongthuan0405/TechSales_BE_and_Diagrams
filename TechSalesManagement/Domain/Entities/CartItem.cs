@@ -1,38 +1,23 @@
 using System;
-using TechSalesManagement.Domain.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class CartItem : BaseEntity
+public class CartItem
 {
-    private Guid _cartId;
-    private Guid _productId;
-    private int _quantity;
+    public Guid cart_id { get; set; }
+    public Guid product_id { get; set; }
+    public int quantity { get; set; }
+    public DateTimeOffset created_at { get; set; }
+    public DateTimeOffset updated_at { get; set; }
 
-    public Guid CartId
+    public CartItem(Guid cartId, Guid productId, int quantity)
     {
-        get => _cartId;
-        set => _cartId = value;
+        cart_id = cartId;
+        product_id = productId;
+        this.quantity = quantity;
+        created_at = DateTimeOffset.UtcNow;
+        updated_at = DateTimeOffset.UtcNow;
     }
 
-    public Guid ProductId
-    {
-        get => _productId;
-        set => _productId = value;
-    }
-
-    public int Quantity
-    {
-        get => _quantity;
-        set => _quantity = value < 1 ? 1 : value;
-    }
-
-    public CartItem(Guid cartId, Guid productId, int quantity) : base()
-    {
-        CartId = cartId;
-        ProductId = productId;
-        Quantity = quantity;
-    }
-
-    public CartItem() : base() { }
+    public CartItem() { }
 }

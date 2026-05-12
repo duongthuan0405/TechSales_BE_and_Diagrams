@@ -10,9 +10,9 @@ public class User : BaseEntity
     private string _email = string.Empty;
     private string _password = string.Empty;
     private UserStatus _status;
-    private int _failedLoginAttempts;
-    private DateTime? _lastFailedAt;
-    private DateTime? _lockedUntil;
+    private int _failed_login_attempts;
+    private DateTimeOffset? _last_failed_at;
+    private DateTimeOffset? _locked_until;
 
     // Navigation Properties
     private UserProfile? _profile;
@@ -20,7 +20,7 @@ public class User : BaseEntity
     private List<ShippingAddress> _addresses = new();
     private List<Order> _orders = new();
 
-    public string Email
+    public string email
     {
         get => _email;
         set
@@ -31,7 +31,7 @@ public class User : BaseEntity
         }
     }
 
-    public string Password
+    public string password
     {
         get => _password;
         set
@@ -42,49 +42,49 @@ public class User : BaseEntity
         }
     }
 
-    public UserStatus Status
+    public UserStatus status
     {
         get => _status;
         set => _status = value;
     }
 
-    public int FailedLoginAttempts
+    public int failed_login_attempts
     {
-        get => _failedLoginAttempts;
-        set => _failedLoginAttempts = value < 0 ? 0 : value;
+        get => _failed_login_attempts;
+        set => _failed_login_attempts = value < 0 ? 0 : value;
     }
 
-    public DateTime? LastFailedAt
+    public DateTimeOffset? last_failed_at
     {
-        get => _lastFailedAt;
-        set => _lastFailedAt = value;
+        get => _last_failed_at;
+        set => _last_failed_at = value;
     }
 
-    public DateTime? LockedUntil
+    public DateTimeOffset? locked_until
     {
-        get => _lockedUntil;
-        set => _lockedUntil = value;
+        get => _locked_until;
+        set => _locked_until = value;
     }
 
-    public UserProfile? Profile
+    public UserProfile? profile
     {
         get => _profile;
         set => _profile = value;
     }
 
-    public List<Role> Roles
+    public List<Role> roles
     {
         get => _roles;
         set => _roles = value ?? new();
     }
 
-    public List<ShippingAddress> Addresses
+    public List<ShippingAddress> addresses
     {
         get => _addresses;
         set => _addresses = value ?? new();
     }
 
-    public List<Order> Orders
+    public List<Order> orders
     {
         get => _orders;
         set => _orders = value ?? new();
@@ -92,10 +92,10 @@ public class User : BaseEntity
 
     public User(string email, string password) : base()
     {
-        Email = email;
-        Password = password;
-        Status = UserStatus.PENDING;
-        FailedLoginAttempts = 0;
+        this.email = email;
+        this.password = password;
+        this.status = UserStatus.PENDING;
+        this.failed_login_attempts = 0;
     }
 
     public User() : base() { }

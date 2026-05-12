@@ -1,43 +1,20 @@
+using System;
 using TechSalesManagement.Domain.Common;
-using TechSalesManagement.Domain.Constants;
 
 namespace TechSalesManagement.Domain.Entities;
 
 public class ReviewResponse : BaseEntity
 {
-    private Guid _reviewId;
-    private Guid _userId;
-    private string _content = string.Empty;
+    public Guid review_id { get; set; }
+    public Guid user_id { get; set; }
+    public string content { get; set; } = string.Empty;
 
-    public Guid ReviewId
+    public ReviewResponse(Guid reviewId, Guid userId, string content)
     {
-        get => _reviewId;
-        set => _reviewId = value;
+        review_id = reviewId;
+        user_id = userId;
+        this.content = content;
     }
 
-    public Guid UserId
-    {
-        get => _userId; // Người phản hồi (thường là Staff)
-        set => _userId = value;
-    }
-
-    public string Content
-    {
-        get => _content;
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException(DomainErrors.ReviewResponse.ContentRequired);
-            _content = value;
-        }
-    }
-
-    public ReviewResponse(Guid reviewId, Guid userId, string content) : base()
-    {
-        ReviewId = reviewId;
-        UserId = userId;
-        Content = content;
-    }
-
-    public ReviewResponse() : base() { }
+    public ReviewResponse() { }
 }
