@@ -1,34 +1,27 @@
 namespace TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 
-public class ApiResponse<T>
+public abstract class ApiResponse
 {
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
+}
+
+public class ApiSuccessResponse<T> : ApiResponse
+{
     public T? Data { get; set; }
 
-    public static ApiResponse<T> SuccessResult(T data, string message = "Operation successful")
+    public ApiSuccessResponse(T? data, string message = "Operation successful")
     {
-        return new ApiResponse<T>
-        {
-            Success = true,
-            Message = message,
-            Data = data
-        };
-    }
-
-    public static ApiResponse<T> FailureResult(string message, T? data = default)
-    {
-        return new ApiResponse<T>
-        {
-            Success = false,
-            Message = message,
-            Data = data
-        };
+        Success = true;
+        Message = message;
+        Data = data;
     }
 }
 
-public class ApiErrorResponse : ApiResponse<Dictionary<string, List<string>>>
+public class ApiErrorResponse : ApiResponse
 {
+    public Dictionary<string, List<string>>? Data { get; set; }
+
     public ApiErrorResponse(string message, Dictionary<string, List<string>>? errors = null)
     {
         Success = false;

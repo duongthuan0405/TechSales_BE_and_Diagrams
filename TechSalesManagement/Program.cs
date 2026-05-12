@@ -8,19 +8,25 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Enable Serilog Logging
+        builder.Host.UseSerilogConfiguration();
+
         // Add services to the container.
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 
-        // Cấu hình Swagger thông qua Extension Method
+        // Configure Swagger via Extension Method
         builder.Services.AddSwaggerConfiguration();
+        
+        // Configure Middleware services
+        builder.Services.AddMiddlewares();
+        // Configure Validation
+        builder.Services.AddValidationConfiguration();
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
-        app.UseSwaggerConfiguration(app.Environment);
-
-        app.UseAuthorization();
+        // Configure Middleware Pipeline
+        app.UseMiddlewares(app.Environment);
 
         app.MapControllers();
         app.Run();
