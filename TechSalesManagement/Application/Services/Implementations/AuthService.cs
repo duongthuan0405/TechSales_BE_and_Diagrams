@@ -23,6 +23,7 @@ public class AuthService : IAuthService
     private readonly IOtpService _otpService;
     private readonly IUserTokenRepository _userTokenRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IUserProfileRepository _userProfileRepository;
     private readonly FrontendCO _frontendCO;
 
     public AuthService(
@@ -34,6 +35,7 @@ public class AuthService : IAuthService
         IOtpService otpService,
         IUserTokenRepository userTokenRepository,
         IRoleRepository roleRepository,
+        IUserProfileRepository userProfileRepository,
         IOptions<FrontendCO> frontendOptions)
     {
         _userRepository = userRepository;
@@ -44,6 +46,7 @@ public class AuthService : IAuthService
         _otpService = otpService;
         _userTokenRepository = userTokenRepository;
         _roleRepository = roleRepository;
+        _userProfileRepository = userProfileRepository;
         _frontendCO = frontendOptions.Value;
     }
 
@@ -82,7 +85,18 @@ public class AuthService : IAuthService
                     newUser.roles.Add(customerRole);
                 }
 
+                // Khởi tạo Profile trống
+                var userProfile = new UserProfile
+                {
+                    fullName = string.Empty,
+                    phone = string.Empty
+                };
+
                 await _userRepository.AddAsync(newUser);
+
+                // Lưu trữ Profile thông qua repository riêng biệt
+                userProfile.userId = newUser.id;
+                await _userProfileRepository.AddAsync(userProfile);
             }
 
             // Tạo OTP mới
@@ -297,20 +311,32 @@ public class AuthService : IAuthService
 
     public async Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null) throw new NotFoundException(MessageConstants.MSG117);
-
-        if (!_passwordHasher.VerifyPassword(currentPassword, user.password))
+        try
         {
-            throw new BadRequestException(MessageConstants.MSG18);
-        }
+            await _unitOfWork.BeginAsync();
 
-        if (newPassword == currentPassword)
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) throw new NotFoundException(MessageConstants.MSG117);
+
+            if (!_passwordHasher.VerifyPassword(currentPassword, user.password))
+            {
+                throw new BadRequestException(MessageConstants.MSG18);
+            }
+
+            if (newPassword == currentPassword)
+            {
+                throw new BadRequestException(MessageConstants.MSG19);
+            }
+
+            user.password = _passwordHasher.HashPassword(newPassword);
+            await _userRepository.UpdateAsync(user);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
         {
-            throw new BadRequestException(MessageConstants.MSG19);
+            await _unitOfWork.RollbackAsync();
+            throw;
         }
-
-        user.password = _passwordHasher.HashPassword(newPassword);
-        await _userRepository.UpdateAsync(user);
     }
 }

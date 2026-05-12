@@ -16,6 +16,7 @@ public class Program
         builder.Host.UseSerilogConfiguration();
 
         // Add services to the container.
+        builder.Services.AddAuthenticationConfiguration(builder.Configuration);
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 

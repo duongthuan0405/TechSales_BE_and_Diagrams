@@ -23,6 +23,7 @@ public static class MiddlewareExtensions
         app.UseSwaggerConfiguration(env);
 
         // 4. Security & Auth
+        app.UseAuthentication();
         app.UseAuthorization();
 
         return app;

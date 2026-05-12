@@ -1,14 +1,16 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechSalesManagement.Application.Common;
+using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
-using LoginResponseDto = TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs.LoginResponseDto;
+using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
+using TechSalesManagement.Presentation_WebAPI.Extensions;
 
 namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
@@ -80,12 +82,10 @@ public class AuthController : ControllerBase
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordRequestDto request)
     {
-        var userIdClaim = User.FindFirst("id")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
         
-        var userId = Guid.Parse(userIdClaim);
-        
-        await _authService.ChangePasswordAsync(userId, request.currentPassword, request.newPassword);
+        await _authService.ChangePasswordAsync(userId.Value, request.currentPassword, request.newPassword);
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG20));
     }

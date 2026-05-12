@@ -25,8 +25,7 @@ public class JwtService : IJwtService
     {
         var claims = new List<Claim>
         {
-            new Claim("id", user.id.ToString()),
-            new Claim(ClaimTypes.Email, user.email)
+            new Claim(ClaimTypes.NameIdentifier, user.id.ToString())
         };
 
         // Thêm role vào claims
