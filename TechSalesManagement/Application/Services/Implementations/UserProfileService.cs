@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.Exceptions;
@@ -39,30 +40,31 @@ public class UserProfileService : IUserProfileService
             }
 
             // Xử lý FullName (Bắt buộc)
-            if (fullName != null)
+            if (string.IsNullOrWhiteSpace(fullName))
             {
-                if (string.IsNullOrWhiteSpace(fullName)) throw new BadRequestException(MessageConstants.MSG1);
-                profile.fullName = fullName;
+                if (string.IsNullOrWhiteSpace(profile.fullName)) 
+                    throw new BadRequestException(MessageConstants.MSG1);
+                else {
+                    fullName = profile.fullName; 
+                }
             }
-            else
+            
+            if (string.IsNullOrWhiteSpace(phone))
             {
-                // Nếu request null, kiểm tra xem bản ghi hiện tại có hợp lệ không
-                if (string.IsNullOrWhiteSpace(profile.fullName)) throw new BadRequestException(MessageConstants.MSG1);
-            }
-
-            // Xử lý Phone (Bắt buộc)
-            if (phone != null)
-            {
-                if (string.IsNullOrWhiteSpace(phone)) throw new BadRequestException(MessageConstants.MSG16);
-                profile.phone = phone;
-            }
-            else
-            {
-                // Nếu request null, kiểm tra xem bản ghi hiện tại có dữ liệu chưa
-                if (string.IsNullOrWhiteSpace(profile.phone)) throw new BadRequestException(MessageConstants.MSG16);
+                if (string.IsNullOrWhiteSpace(profile.phone)) 
+                    throw new BadRequestException(MessageConstants.MSG16);
+                else {
+                    phone = profile.phone; 
+                }
+                
             }
 
-            // Cập nhật các trường tùy chọn nếu được truyền vào (Partial Update)
+            if(!Regex.IsMatch(phone, @"^[0-9]{10,11}$")) {
+                    throw new BadRequestException(MessageConstants.MSG16);
+            }
+
+            profile.fullName = fullName;
+            profile.phone = phone;            
             if (avatarUrl != null) profile.avatarUrl = avatarUrl;
             if (dateOfBirth != null) profile.dateOfBirth = dateOfBirth;
 

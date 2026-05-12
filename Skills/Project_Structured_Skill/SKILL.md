@@ -55,7 +55,6 @@ TechSalesManagement/
 │   ├───Entities
 │   ├───Enums
 │   ├───Exceptions
-│   ├───Interfaces
 │   └───ValueObjects
 │
 ├───Infrastructure
@@ -110,7 +109,6 @@ It defines:
 - Domain models
 - Enums
 - Value objects
-- Domain contracts
 
 The Domain layer must remain independent from:
 - Database technologies
@@ -129,7 +127,6 @@ Domain/
 ├───Entities
 ├───Enums
 ├───Exceptions
-├───Interfaces
 └───ValueObjects
 ```
 
@@ -169,11 +166,6 @@ Examples:
 
 ### Exceptions/
 Contains domain-specific exceptions.
-
----
-
-### Interfaces/
-Contains domain contracts and abstractions.
 
 ---
 
@@ -666,6 +658,25 @@ Interfaces must be defined inside Application layer.
 
 ## Rule 8
 Infrastructure must implement interfaces defined in Application layer.
+
+---
+
+## Rule 9
+Entity IDs (Guid) must be generated in the Infrastructure layer (Repository) upon creation, not in the Domain layer. The Repository's `AddAsync` method must return the generated ID.
+
+---
+
+## Rule 10
+Domain entities MUST use `camelCase` for their public property names. Database entities (Persistence/DbModels) MUST use `snake_case`. Inheritance from a global `BaseEntity` in Domain is forbidden; all entities must explicitly declare their common fields (like `id`, `createdAt`, `updatedAt`).
+
+---
+
+## Rule 11
+Dependency registrations in `Program.cs` MUST be separated into distinct extension methods located within the `Presentation_WebAPI.Extensions` layer:
+- `AddConfigurationOptions`: To map system configurations from appsettings sections to Configuration Objects (CO).
+- `AddRepositories`: To register data persistence constructs (UnitOfWork, Repositories).
+- `AddExternalAndHelperServices`: To register miscellaneous helper services like OTP, Email, PasswordHashing, and JWT.
+- `AddApplicationServices`: To register domain logic handling business services.
 
 ---
 
