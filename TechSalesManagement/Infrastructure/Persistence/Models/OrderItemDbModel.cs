@@ -8,4 +8,8 @@ public class OrderItemDbModel
     public Guid product_id { get; set; }
     public decimal price { get; set; }
     public int quantity { get; set; }
+
+    // Navigation properties
+    public OrderDbModel order { get; set; } = null!;
+    public ProductDbModel product { get; set; } = null!;
 }

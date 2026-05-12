@@ -15,5 +15,13 @@ public class PaymentConfiguration : IEntityTypeConfiguration<PaymentDbModel>
         builder.HasIndex(x => x.order_id);
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
         builder.Property(x => x.updated_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.order)
+            .WithMany(o => o.payments)
+            .HasForeignKey(x => x.order_id);
+
+        builder.HasOne(x => x.payment_method)
+            .WithMany(pm => pm.payments)
+            .HasForeignKey(x => x.payment_method_id);
     }
 }

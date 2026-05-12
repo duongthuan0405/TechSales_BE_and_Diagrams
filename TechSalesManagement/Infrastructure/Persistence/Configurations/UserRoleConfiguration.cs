@@ -10,5 +10,13 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRoleDbModel>
     {
         builder.ToTable("UserRole");
         builder.HasKey(x => new { x.user_id, x.role_id });
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.user_roles)
+            .HasForeignKey(x => x.user_id);
+
+        builder.HasOne(x => x.role)
+            .WithMany(r => r.user_roles)
+            .HasForeignKey(x => x.role_id);
     }
 }

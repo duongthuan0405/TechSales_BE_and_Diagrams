@@ -10,5 +10,13 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
     {
         builder.ToTable("RolePermission");
         builder.HasKey(x => new { x.role_id, x.permission_id });
+
+        builder.HasOne(x => x.role)
+            .WithMany(r => r.role_permissions)
+            .HasForeignKey(x => x.role_id);
+
+        builder.HasOne(x => x.permission)
+            .WithMany(p => p.role_permissions)
+            .HasForeignKey(x => x.permission_id);
     }
 }

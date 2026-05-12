@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TechSalesManagement.Application.Exceptions;
-using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
+using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 
 namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 

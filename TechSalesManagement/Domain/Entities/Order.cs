@@ -4,24 +4,28 @@ using TechSalesManagement.Domain.Enums;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class Order : BaseEntity
+public class Order
 {
-    public Guid user_id { get; set; }
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
+    public Guid userId { get; set; }
     public OrderStatus status { get; set; } = OrderStatus.PENDING;
-    public decimal total_product_amount { get; set; }
-    public decimal shipping_fee { get; set; }
-    public decimal discount_amount { get; set; }
-    public decimal total_amount { get; set; }
-    public string shipping_address_snapshot { get; set; } = string.Empty;
+    public decimal totalProductAmount { get; set; }
+    public decimal shippingFee { get; set; }
+    public decimal discountAmount { get; set; }
+    public decimal totalAmount { get; set; }
+    public string shippingAddressSnapshot { get; set; } = string.Empty;
 
     public List<OrderItem> items { get; set; } = new();
     public List<Voucher> vouchers { get; set; } = new();
 
     public Order(Guid userId, decimal totalAmount, string addressSnapshot)
     {
-        user_id = userId;
-        total_amount = totalAmount;
-        shipping_address_snapshot = addressSnapshot;
+        this.userId = userId;
+        this.totalAmount = totalAmount;
+        this.shippingAddressSnapshot = addressSnapshot;
     }
 
     public Order() { }

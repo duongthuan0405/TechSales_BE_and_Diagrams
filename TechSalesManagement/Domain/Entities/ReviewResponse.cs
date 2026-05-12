@@ -3,16 +3,20 @@ using TechSalesManagement.Domain.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class ReviewResponse : BaseEntity
+public class ReviewResponse
 {
-    public Guid review_id { get; set; }
-    public Guid user_id { get; set; }
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
+    public Guid reviewId { get; set; }
+    public Guid userId { get; set; }
     public string content { get; set; } = string.Empty;
 
     public ReviewResponse(Guid reviewId, Guid userId, string content)
     {
-        review_id = reviewId;
-        user_id = userId;
+        this.reviewId = reviewId;
+        this.userId = userId;
         this.content = content;
     }
 

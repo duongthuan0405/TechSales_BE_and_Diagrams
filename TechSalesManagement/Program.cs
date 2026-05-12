@@ -26,6 +26,15 @@ public class Program
         builder.Services.AddMiddlewares();
         // Configure Validation
         builder.Services.AddValidationConfiguration();
+        // Configure Options
+        builder.Services.AddConfigurationOptions(builder.Configuration);
+        // Configure Repositories
+        builder.Services.AddRepositories();
+        // Configure External and Helper Services
+        builder.Services.AddExternalAndHelperServices();
+        // Configure Application Services
+        builder.Services.AddApplicationServices();
+
         // Register Persistence (Database)
         builder.Services.AddPersistence();
 

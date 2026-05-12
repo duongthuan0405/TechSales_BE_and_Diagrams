@@ -10,4 +10,8 @@ public class ReviewResponseDbModel
     public string? content { get; set; }
     public DateTimeOffset? created_at { get; set; }
     public DateTimeOffset? updated_at { get; set; }
+
+    // Navigation properties
+    public ReviewDbModel review { get; set; } = null!;
+    public UserDbModel user { get; set; } = null!;
 }

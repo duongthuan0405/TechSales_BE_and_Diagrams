@@ -14,5 +14,9 @@ public class InventoryConfiguration : IEntityTypeConfiguration<InventoryDbModel>
         
         builder.Property(x => x.quantity).IsRequired();
         builder.Property(x => x.reserved_quantity).HasDefaultValue(0);
+
+        builder.HasOne(x => x.product)
+            .WithOne(p => p.inventory)
+            .HasForeignKey<InventoryDbModel>(x => x.product_id);
     }
 }

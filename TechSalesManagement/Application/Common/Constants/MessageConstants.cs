@@ -1,4 +1,4 @@
-namespace TechSalesManagement.Application.Common;
+namespace TechSalesManagement.Application.Common.Constants;
 
 public static class MessageConstants
 {
@@ -118,4 +118,5 @@ public static class MessageConstants
     public const string MSG114 = "CRITICAL: Database backup failed. Maintenance mode has been cancelled for safety.";
     public const string MSG115 = "System configuration updated successfully. Changes have been applied to the live environment.";
     public const string MSG116 = "Invalid format. This parameter requires a numeric value.";
+    public const string MSG117 = "User not found.";
 }

@@ -1,4 +1,6 @@
-namespace TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
+using System.Collections.Generic;
+
+namespace TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 
 public abstract class ApiResponse
 {
@@ -24,6 +26,7 @@ public class ApiErrorResponse : ApiResponse
 
     public ApiErrorResponse(string message, Dictionary<string, List<string>>? errors = null)
     {
+        Success = true;
         Success = false;
         Message = message;
         Data = errors;

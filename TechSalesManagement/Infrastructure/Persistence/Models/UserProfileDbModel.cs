@@ -11,4 +11,7 @@ public class UserProfileDbModel
     public DateTimeOffset? date_of_birth { get; set; }
     public DateTimeOffset created_at { get; set; }
     public DateTimeOffset? updated_at { get; set; }
+
+    // Navigation properties
+    public UserDbModel user { get; set; } = null!;
 }

@@ -5,8 +5,11 @@ using TechSalesManagement.Domain.Constants;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class User : BaseEntity
+public class User
 {
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
     private string _email = string.Empty;
     private string _password = string.Empty;
     private UserStatus _status;
@@ -48,19 +51,19 @@ public class User : BaseEntity
         set => _status = value;
     }
 
-    public int failed_login_attempts
+    public int failedLoginAttempts
     {
         get => _failed_login_attempts;
         set => _failed_login_attempts = value < 0 ? 0 : value;
     }
 
-    public DateTimeOffset? last_failed_at
+    public DateTimeOffset? lastFailedAt
     {
         get => _last_failed_at;
         set => _last_failed_at = value;
     }
 
-    public DateTimeOffset? locked_until
+    public DateTimeOffset? lockedUntil
     {
         get => _locked_until;
         set => _locked_until = value;
@@ -90,13 +93,13 @@ public class User : BaseEntity
         set => _orders = value ?? new();
     }
 
-    public User(string email, string password) : base()
+    public User(string email, string password)
     {
         this.email = email;
         this.password = password;
         this.status = UserStatus.PENDING;
-        this.failed_login_attempts = 0;
+        this.failedLoginAttempts = 0;
     }
 
-    public User() : base() { }
+    public User() { }
 }

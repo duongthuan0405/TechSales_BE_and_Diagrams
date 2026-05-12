@@ -11,4 +11,7 @@ public class NotificationDbModel
     public bool is_read { get; set; }
     public Guid? ref_to { get; set; }
     public DateTimeOffset created_at { get; set; }
+
+    // Navigation properties
+    public UserDbModel user { get; set; } = null!;
 }

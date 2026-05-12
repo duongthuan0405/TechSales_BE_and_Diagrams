@@ -62,6 +62,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("user_id");
+
                     b.ToTable("AuditLog", (string)null);
                 });
 
@@ -110,6 +112,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("cart_id", "product_id");
 
+                    b.HasIndex("product_id");
+
                     b.ToTable("CartItem", (string)null);
                 });
 
@@ -137,7 +141,6 @@ namespace TechSalesManagement.Migrations
             modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.InventoryDbModel", b =>
                 {
                     b.Property<Guid>("product_id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("quantity")
@@ -233,6 +236,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("user_id");
+
                     b.ToTable("Order", (string)null);
                 });
 
@@ -253,6 +258,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("order_id", "product_id");
 
+                    b.HasIndex("product_id");
+
                     b.ToTable("OrderItem", (string)null);
                 });
 
@@ -265,6 +272,8 @@ namespace TechSalesManagement.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("order_id", "voucher_id");
+
+                    b.HasIndex("voucher_id");
 
                     b.ToTable("OrderVoucher", (string)null);
                 });
@@ -306,6 +315,8 @@ namespace TechSalesManagement.Migrations
                     b.HasKey("id");
 
                     b.HasIndex("order_id");
+
+                    b.HasIndex("payment_method_id");
 
                     b.ToTable("Payment", (string)null);
                 });
@@ -412,6 +423,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("category_id");
+
                     b.ToTable("Product", (string)null);
                 });
 
@@ -480,6 +493,8 @@ namespace TechSalesManagement.Migrations
 
                     b.HasIndex("product_id");
 
+                    b.HasIndex("user_id");
+
                     b.ToTable("Review", (string)null);
                 });
 
@@ -509,6 +524,10 @@ namespace TechSalesManagement.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("review_id");
+
+                    b.HasIndex("user_id");
+
                     b.ToTable("ReviewResponse", (string)null);
                 });
 
@@ -518,7 +537,7 @@ namespace TechSalesManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("created_at")
+                    b.Property<DateTimeOffset>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -538,6 +557,36 @@ namespace TechSalesManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            id = new Guid("668a08c6-9b2d-4189-96f9-7cc07e5a3b5a"),
+                            created_at = new DateTimeOffset(new DateTime(2026, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            description = "Technical Administrator with full system access",
+                            name = "Technical Admin"
+                        },
+                        new
+                        {
+                            id = new Guid("75595ed2-8e03-476c-a59c-864fbc57b1a9"),
+                            created_at = new DateTimeOffset(new DateTime(2026, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            description = "Default customer access",
+                            name = "Customer"
+                        },
+                        new
+                        {
+                            id = new Guid("8e2a0a54-e882-4174-ae34-32f299096d13"),
+                            created_at = new DateTimeOffset(new DateTime(2026, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            description = "Sales Staff member access",
+                            name = "Staff"
+                        },
+                        new
+                        {
+                            id = new Guid("c22cf7a1-67f6-479c-a3df-9504f8270fa6"),
+                            created_at = new DateTimeOffset(new DateTime(2026, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            description = "Business Administrator for management tasks",
+                            name = "Business Admin"
+                        });
                 });
 
             modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.RolePermissionDbModel", b =>
@@ -549,6 +598,8 @@ namespace TechSalesManagement.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("role_id", "permission_id");
+
+                    b.HasIndex("permission_id");
 
                     b.ToTable("RolePermission", (string)null);
                 });
@@ -648,7 +699,6 @@ namespace TechSalesManagement.Migrations
             modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.UserProfileDbModel", b =>
                 {
                     b.Property<Guid>("user_id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("avatar_url")
@@ -689,6 +739,8 @@ namespace TechSalesManagement.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("user_id", "role_id");
+
+                    b.HasIndex("role_id");
 
                     b.ToTable("UserRole", (string)null);
                 });
@@ -786,6 +838,348 @@ namespace TechSalesManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("Voucher", (string)null);
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.AuditLogDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("audit_logs")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.CartDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithOne("cart")
+                        .HasForeignKey("TechSalesManagement.Infrastructure.Persistence.Models.CartDbModel", "user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.CartItemDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.CartDbModel", "cart")
+                        .WithMany("cart_items")
+                        .HasForeignKey("cart_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", "product")
+                        .WithMany("cart_items")
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("cart");
+
+                    b.Navigation("product");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.InventoryDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", "product")
+                        .WithOne("inventory")
+                        .HasForeignKey("TechSalesManagement.Infrastructure.Persistence.Models.InventoryDbModel", "product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("product");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.NotificationDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("notifications")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.OrderDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("orders")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.OrderItemDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.OrderDbModel", "order")
+                        .WithMany("order_items")
+                        .HasForeignKey("order_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", "product")
+                        .WithMany("order_items")
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("order");
+
+                    b.Navigation("product");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.OrderVoucherDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.OrderDbModel", "order")
+                        .WithMany("order_vouchers")
+                        .HasForeignKey("order_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.VoucherDbModel", "voucher")
+                        .WithMany("order_vouchers")
+                        .HasForeignKey("voucher_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("order");
+
+                    b.Navigation("voucher");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.PaymentDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.OrderDbModel", "order")
+                        .WithMany("payments")
+                        .HasForeignKey("order_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.PaymentMethodDbModel", "payment_method")
+                        .WithMany("payments")
+                        .HasForeignKey("payment_method_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("order");
+
+                    b.Navigation("payment_method");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.CategoryDbModel", "category")
+                        .WithMany("products")
+                        .HasForeignKey("category_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("category");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ProductImageDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", "product")
+                        .WithMany("product_images")
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("product");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ReviewDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", "product")
+                        .WithMany("reviews")
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("reviews")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("product");
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ReviewResponseDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.ReviewDbModel", "review")
+                        .WithMany("review_responses")
+                        .HasForeignKey("review_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("review_responses")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("review");
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.RolePermissionDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.PermissionDbModel", "permission")
+                        .WithMany("role_permissions")
+                        .HasForeignKey("permission_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.RoleDbModel", "role")
+                        .WithMany("role_permissions")
+                        .HasForeignKey("role_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("permission");
+
+                    b.Navigation("role");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ShippingAddressDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("shipping_addresses")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.UserProfileDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithOne("user_profile")
+                        .HasForeignKey("TechSalesManagement.Infrastructure.Persistence.Models.UserProfileDbModel", "user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.UserRoleDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.RoleDbModel", "role")
+                        .WithMany("user_roles")
+                        .HasForeignKey("role_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("user_roles")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("role");
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.UserTokenDbModel", b =>
+                {
+                    b.HasOne("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", "user")
+                        .WithMany("user_tokens")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.CartDbModel", b =>
+                {
+                    b.Navigation("cart_items");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.CategoryDbModel", b =>
+                {
+                    b.Navigation("products");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.OrderDbModel", b =>
+                {
+                    b.Navigation("order_items");
+
+                    b.Navigation("order_vouchers");
+
+                    b.Navigation("payments");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.PaymentMethodDbModel", b =>
+                {
+                    b.Navigation("payments");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.PermissionDbModel", b =>
+                {
+                    b.Navigation("role_permissions");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ProductDbModel", b =>
+                {
+                    b.Navigation("cart_items");
+
+                    b.Navigation("inventory");
+
+                    b.Navigation("order_items");
+
+                    b.Navigation("product_images");
+
+                    b.Navigation("reviews");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.ReviewDbModel", b =>
+                {
+                    b.Navigation("review_responses");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.RoleDbModel", b =>
+                {
+                    b.Navigation("role_permissions");
+
+                    b.Navigation("user_roles");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.UserDbModel", b =>
+                {
+                    b.Navigation("audit_logs");
+
+                    b.Navigation("cart");
+
+                    b.Navigation("notifications");
+
+                    b.Navigation("orders");
+
+                    b.Navigation("review_responses");
+
+                    b.Navigation("reviews");
+
+                    b.Navigation("shipping_addresses");
+
+                    b.Navigation("user_profile");
+
+                    b.Navigation("user_roles");
+
+                    b.Navigation("user_tokens");
+                });
+
+            modelBuilder.Entity("TechSalesManagement.Infrastructure.Persistence.Models.VoucherDbModel", b =>
+                {
+                    b.Navigation("order_vouchers");
                 });
 #pragma warning restore 612, 618
         }
