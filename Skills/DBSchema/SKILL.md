@@ -338,3 +338,18 @@ Table Notification {
 
   created_at timestamp
 }
+
+Table AuditLog {
+  id UUID [pk]
+  user_id UUID [ref: > User.id] // Người thực hiện (null nếu là hệ thống)
+  
+  action varchar [not null]    // CREATE, UPDATE, DELETE
+  table_name varchar [not null] // Tên bảng (User, Product, Order...)
+  primary_key varchar [not null] // ID của bản ghi bị tác động
+  
+  old_values text              // JSON chứa dữ liệu cũ
+  new_values text              // JSON chứa dữ liệu mới
+  affected_columns text       // Danh sách các cột thay đổi
+  
+  created_at timestamp [not null, default: `now()`]
+}

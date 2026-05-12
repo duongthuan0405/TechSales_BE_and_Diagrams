@@ -2,6 +2,8 @@ using System.Net;
 using System.Text.Json;
 using TechSalesManagement.Application.Exceptions;
 using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
+using TechSalesManagement.Presentation_WebAPI.Constants;
+using TechSalesManagement.Domain.Constants;
 
 namespace TechSalesManagement.Presentation_WebAPI.Middlewares;
 
@@ -32,7 +34,7 @@ public class GlobalExceptionMiddleware : IMiddleware
         context.Response.ContentType = "application/json";
         
         var statusCode = HttpStatusCode.InternalServerError;
-        var message = "An internal server error occurred. Please try again later.";
+        var message = ApiMessages.InternalServerError;
         Dictionary<string, List<string>>? errors = null;
 
         // Map custom business exceptions to HTTP status codes
@@ -72,6 +74,13 @@ public class GlobalExceptionMiddleware : IMiddleware
                 statusCode = HttpStatusCode.BadRequest;
                 message = businessEx.Message;
                 errors = businessEx.Errors;
+                break;
+
+            default:
+                errors = new Dictionary<string, List<string>>
+                {
+                    { "server errors", new List<string> { exception.Message } }
+                };
                 break;
         }
 

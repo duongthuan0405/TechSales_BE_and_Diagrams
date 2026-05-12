@@ -511,3 +511,60 @@ This architecture ensures:
 - Standardized error responses
 - Clean separation of concerns
 - Safer production systems
+
+---
+
+# 24. Constants Organization for Exception Messages
+
+To ensure maintainability and support future localization (i18n), all user-facing strings must be organized into constant classes based on their layer and purpose.
+
+## 24.1. Domain Layer: DomainErrors
+
+Used for core business rule violations inside Domain Entities (usually thrown via `ArgumentException`).
+
+- **Location**: `Domain/Constants/DomainErrors.cs`
+- **Structure**: Flat nested classes based on Entity name.
+- **Example**: `DomainErrors.Product.NameRequired`
+
+## 24.2. Application Layer: ApplicationMessages (Summaries)
+
+Used for high-level summary messages in `BusinessException` (the `message` property).
+
+- **Location**: `Application/Common/ApplicationMessages.cs`
+- **Structure**: Flat constants.
+- **Example**: `ApplicationMessages.ValidationError`
+
+## 24.3. Application Layer: ErrorDetailMessages (Details)
+
+Used for specific, detailed error messages inside the `Errors` dictionary of `BusinessException`.
+
+- **Location**: `Application/Common/ErrorDetailMessages.cs`
+- **Structure**: Nested classes based on feature/module.
+- **Example**: `ErrorDetailMessages.Auth.InvalidCredentials`
+
+## 24.4. Presentation Layer: ApiMessages
+
+Used for technical system messages or API-specific responses.
+
+- **Location**: `Presentation_WebAPI/Constants/ApiMessages.cs`
+- **Structure**: Flat constants.
+- **Example**: `ApiMessages.InternalServerError`
+
+---
+
+# 25. Usage Example with Constants
+
+```csharp
+// Domain Entity
+if (price < 0) throw new ArgumentException(DomainErrors.Product.PriceNegative);
+
+// Application Service
+var errors = new Dictionary<string, List<string>>
+{
+    { "Email", new List<string> { ErrorDetailMessages.Auth.InvalidCredentials } }
+};
+throw new BadRequestException(ApplicationMessages.ValidationError, errors);
+
+// Global Exception Middleware
+var message = ApiMessages.InternalServerError;
+```
