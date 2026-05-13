@@ -1,10 +1,11 @@
 using System;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Application.Common.Utils;
 using TechSalesManagement.Application.Exceptions;
 using TechSalesManagement.Application.Interfaces;
 using TechSalesManagement.Application.Services.Interfaces;
+using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Domain.Entities;
 
 namespace TechSalesManagement.Application.Services.Implementations;
@@ -22,15 +23,13 @@ public class UserProfileService : IUserProfileService
         _unitOfWork = unitOfWork;
     }
 
-
-
-    public async Task UpdateProfileAsync(Guid userId, string? fullName, string? phone, string? avatarUrl, DateTime? dateOfBirth)
+    public async Task UpdateProfileAsync(UpdateProfileParams parameters)
     {
         try
         {
             await _unitOfWork.BeginAsync();
 
-            var profile = await _userProfileRepository.GetByUserIdAsync(userId);
+            var profile = await _userProfileRepository.GetByUserIdAsync(parameters.UserId);
             
             if (profile == null)
             {
@@ -38,6 +37,9 @@ public class UserProfileService : IUserProfileService
                 // trường hợp không tìm thấy Profile là dữ liệu không đồng nhất.
                 throw new NotFoundException(MessageConstants.MSG117); 
             }
+
+            var fullName = parameters.FullName;
+            var phone = parameters.Phone;
 
             // Xử lý FullName (Bắt buộc)
             if (string.IsNullOrWhiteSpace(fullName))
@@ -56,17 +58,17 @@ public class UserProfileService : IUserProfileService
                 else {
                     phone = profile.phone; 
                 }
-                
             }
 
-            if(!Regex.IsMatch(phone, @"^[0-9]{10,11}$")) {
-                    throw new BadRequestException(MessageConstants.MSG16);
+            if (!ValidationUtils.IsValidPhoneNumber(phone))
+            {
+                throw new BadRequestException(MessageConstants.MSG16);
             }
 
             profile.fullName = fullName;
             profile.phone = phone;            
-            if (avatarUrl != null) profile.avatarUrl = avatarUrl;
-            if (dateOfBirth != null) profile.dateOfBirth = dateOfBirth;
+            if (parameters.AvatarUrl != null) profile.avatarUrl = parameters.AvatarUrl;
+            if (parameters.DateOfBirth != null) profile.dateOfBirth = parameters.DateOfBirth;
 
             await _userProfileRepository.UpdateAsync(profile);
 

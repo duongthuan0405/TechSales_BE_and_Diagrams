@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.Services.Interfaces;
+using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
 using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
@@ -30,7 +31,12 @@ public class UserController : ControllerBase
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
         
-        var user = await _userService.GetByIdAsync(userId.Value);
+        var parameters = new GetUserByIdParams
+        {
+            UserId = userId.Value
+        };
+        
+        var user = await _userService.GetByIdAsync(parameters);
         if (user == null) return NotFound(new ApiSuccessResponse<object>(null, MessageConstants.MSG117));
 
         var response = new UserResponseDto

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.Services.Interfaces;
+using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
 using TechSalesManagement.Presentation_WebAPI.Extensions;
@@ -28,12 +29,16 @@ public class UserProfileController : ControllerBase
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
 
-        await _userProfileService.UpdateProfileAsync(
-            userId.Value, 
-            request.fullName, 
-            request.phone, 
-            request.avatarUrl, 
-            request.dateOfBirth);
+        var parameters = new UpdateProfileParams
+        {
+            UserId = userId.Value,
+            FullName = request.fullName,
+            Phone = request.phone,
+            AvatarUrl = request.avatarUrl,
+            DateOfBirth = request.dateOfBirth
+        };
+
+        await _userProfileService.UpdateProfileAsync(parameters);
 
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG17));
     }

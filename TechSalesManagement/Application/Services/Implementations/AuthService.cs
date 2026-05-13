@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.Common.Configurations;
+using TechSalesManagement.Application.Common.Utils;
 using TechSalesManagement.Application.Exceptions;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.Interfaces;
 using TechSalesManagement.Application.Services.Interfaces;
+using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
 
@@ -50,13 +52,42 @@ public class AuthService : IAuthService
         _frontendCO = frontendOptions.Value;
     }
 
-    public async Task<User> RegisterAsync(User newUser)
+    public async Task<User> RegisterAsync(RegisterParams parameters)
     {
+        if (string.IsNullOrWhiteSpace(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidEmail(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG2);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.Password))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidPasswordFormat(parameters.Password))
+        {
+            throw new BadRequestException(MessageConstants.MSG3);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.ConfirmPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        if (parameters.Password != parameters.ConfirmPassword)
+        {
+            throw new BadRequestException(MessageConstants.MSG4);
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();
 
-            var existingUser = await _userRepository.GetByEmailAsync(newUser.email);
+            var existingUser = await _userRepository.GetByEmailAsync(parameters.Email);
+            User userToReturn;
             
             if (existingUser != null)
             {
@@ -66,17 +97,20 @@ public class AuthService : IAuthService
                 }
 
                 // Cập nhật mật khẩu mới cho user đang chờ xác nhận
-                existingUser.password = _passwordHasher.HashPassword(newUser.password);
+                existingUser.password = _passwordHasher.HashPassword(parameters.Password);
                 await _userRepository.UpdateAsync(existingUser);
                 
-                // Gán newUser thành existingUser để tiếp tục dùng các thông tin chung phía dưới
-                newUser = existingUser;
+                userToReturn = existingUser;
             }
             else
             {
                 // Tạo mới user nếu chưa tồn tại
-                newUser.password = _passwordHasher.HashPassword(newUser.password);
-                newUser.status = UserStatus.PENDING;
+                var newUser = new User
+                {
+                    email = parameters.Email,
+                    password = _passwordHasher.HashPassword(parameters.Password),
+                    status = UserStatus.PENDING
+                };
                 
                 // Gán mặc định vai trò 'Customer' cho người dùng mới
                 var customerRole = await _roleRepository.GetByNameAsync("Customer");
@@ -97,13 +131,15 @@ public class AuthService : IAuthService
                 // Lưu trữ Profile thông qua repository riêng biệt
                 userProfile.userId = newUser.id;
                 await _userProfileRepository.AddAsync(userProfile);
+
+                userToReturn = newUser;
             }
 
             // Tạo OTP mới
             var otpResult = _otpService.GenerateOtp();
 
             // Cập nhật bản ghi OTP cũ nếu có, nếu không thì tạo mới
-            var existingToken = await _userTokenRepository.GetByUserIdAndTypeAsync(newUser.id, TokenType.EMAIL_VERIFICATION);
+            var existingToken = await _userTokenRepository.GetByUserIdAndTypeAsync(userToReturn.id, TokenType.EMAIL_VERIFICATION);
             if (existingToken != null)
             {
                 existingToken.token = otpResult.otp;
@@ -113,16 +149,16 @@ public class AuthService : IAuthService
             }
             else
             {
-                var userToken = new UserToken(newUser.id, otpResult.otp, TokenType.EMAIL_VERIFICATION, otpResult.expiredAt);
+                var userToken = new UserToken(userToReturn.id, otpResult.otp, TokenType.EMAIL_VERIFICATION, otpResult.expiredAt);
                 await _userTokenRepository.AddAsync(userToken);
             }
 
-            var verificationLink = $"{_frontendCO.url}/?email={newUser.email}&token={otpResult.otp}";
-            await _emailService.SendVerificationEmailAsync(newUser.email, verificationLink);
+            var verificationLink = $"{_frontendCO.url}/?email={userToReturn.email}&token={otpResult.otp}";
+            await _emailService.SendVerificationEmailAsync(userToReturn.email, verificationLink);
 
             await _unitOfWork.FinishAsync();
             
-            return newUser;
+            return userToReturn;
         }
         catch (Exception)
         {
@@ -131,9 +167,23 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<User> LoginAsync(string email, string password)
+    public async Task<User> LoginAsync(LoginParams parameters)
     {
-        var user = await _userRepository.GetByEmailAsync(email);
+        if (string.IsNullOrWhiteSpace(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidEmail(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG2);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.Password))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        var user = await _userRepository.GetByEmailAsync(parameters.Email);
 
         if (user == null)
         {
@@ -159,7 +209,7 @@ public class AuthService : IAuthService
         }
 
         // 2. Kiểm tra mật khẩu
-        if (!_passwordHasher.VerifyPassword(password, user.password))
+        if (!_passwordHasher.VerifyPassword(parameters.Password, user.password))
         {
             user.failedLoginAttempts++;
             
@@ -190,13 +240,27 @@ public class AuthService : IAuthService
         return user;
     }
 
-    public async Task VerifyEmailAsync(string email, string token)
+    public async Task VerifyEmailAsync(VerifyEmailParams parameters)
     {
+        if (string.IsNullOrWhiteSpace(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidEmail(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG2);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.Token))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();
 
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(parameters.Email);
             if (user == null)
             {
                 throw new NotFoundException(MessageConstants.MSG12);
@@ -210,7 +274,7 @@ public class AuthService : IAuthService
 
             var userToken = await _userTokenRepository.GetByUserIdAndTypeAsync(user.id, TokenType.EMAIL_VERIFICATION);
             
-            if (userToken == null || userToken.token != token || userToken.usedAt != null || DateTimeOffset.UtcNow > userToken.expiredAt)
+            if (userToken == null || userToken.token != parameters.Token || userToken.usedAt != null || DateTimeOffset.UtcNow > userToken.expiredAt)
             {
                 throw new BadRequestException(MessageConstants.MSG8);
             }
@@ -232,9 +296,18 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task ForgotPasswordAsync(string email)
+    public async Task ForgotPasswordAsync(ForgotPasswordParams parameters)
     {
-        var user = await _userRepository.GetByEmailAsync(email);
+        if (string.IsNullOrWhiteSpace(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidEmail(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG2);
+        }
+
+        var user = await _userRepository.GetByEmailAsync(parameters.Email);
         if (user == null)
         {
             throw new NotFoundException(MessageConstants.MSG12);
@@ -273,13 +346,46 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task ResetPasswordAsync(string email, string token, string newPassword)
+    public async Task ResetPasswordAsync(ResetPasswordParams parameters)
     {
+        if (string.IsNullOrWhiteSpace(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidEmail(parameters.Email))
+        {
+            throw new BadRequestException(MessageConstants.MSG2);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.Token))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.NewPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidPasswordFormat(parameters.NewPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG3);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.ConfirmPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        if (parameters.NewPassword != parameters.ConfirmPassword)
+        {
+            throw new BadRequestException(MessageConstants.MSG4);
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();
 
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(parameters.Email);
             if (user == null)
             {
                 throw new NotFoundException(MessageConstants.MSG12);
@@ -287,12 +393,12 @@ public class AuthService : IAuthService
 
             var userToken = await _userTokenRepository.GetByUserIdAndTypeAsync(user.id, TokenType.RESET_PASSWORD);
             
-            if (userToken == null || userToken.token != token || userToken.usedAt != null || DateTimeOffset.UtcNow > userToken.expiredAt)
+            if (userToken == null || userToken.token != parameters.Token || userToken.usedAt != null || DateTimeOffset.UtcNow > userToken.expiredAt)
             {
                 throw new BadRequestException(MessageConstants.MSG8);
             }
 
-            user.password = _passwordHasher.HashPassword(newPassword);
+            user.password = _passwordHasher.HashPassword(parameters.NewPassword);
             user.failedLoginAttempts = 0;
             user.lockedUntil = null;
             await _userRepository.UpdateAsync(user);
@@ -309,26 +415,50 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+    public async Task ChangePasswordAsync(ChangePasswordParams parameters)
     {
+        if (string.IsNullOrWhiteSpace(parameters.CurrentPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.NewPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+        if (!ValidationUtils.IsValidPasswordFormat(parameters.NewPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG3);
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.ConfirmPassword))
+        {
+            throw new BadRequestException(MessageConstants.MSG1);
+        }
+
+        if (parameters.NewPassword != parameters.ConfirmPassword)
+        {
+            throw new BadRequestException(MessageConstants.MSG4);
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();
 
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userRepository.GetByIdAsync(parameters.UserId);
             if (user == null) throw new NotFoundException(MessageConstants.MSG117);
 
-            if (!_passwordHasher.VerifyPassword(currentPassword, user.password))
+            if (!_passwordHasher.VerifyPassword(parameters.CurrentPassword, user.password))
             {
                 throw new BadRequestException(MessageConstants.MSG18);
             }
 
-            if (newPassword == currentPassword)
+            if (parameters.NewPassword == parameters.CurrentPassword)
             {
                 throw new BadRequestException(MessageConstants.MSG19);
             }
 
-            user.password = _passwordHasher.HashPassword(newPassword);
+            user.password = _passwordHasher.HashPassword(parameters.NewPassword);
             await _userRepository.UpdateAsync(user);
 
             await _unitOfWork.FinishAsync();

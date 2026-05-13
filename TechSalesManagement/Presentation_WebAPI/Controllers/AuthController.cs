@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using TechSalesManagement.Application.Common.Constants;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.Services.Interfaces;
+using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
@@ -30,9 +31,14 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequestDto request)
     {
-        var newUser = new User(request.email, request.password);
+        var parameters = new RegisterParams
+        {
+            Email = request.email,
+            Password = request.password,
+            ConfirmPassword = request.confirmPassword
+        };
         
-        await _authService.RegisterAsync(newUser);
+        await _authService.RegisterAsync(parameters);
         
         return Created("", new ApiSuccessResponse<object>(null, MessageConstants.MSG6));
     }
@@ -40,7 +46,13 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto request)
     {
-        var user = await _authService.LoginAsync(request.email, request.password);
+        var parameters = new LoginParams
+        {
+            Email = request.email,
+            Password = request.password
+        };
+        
+        var user = await _authService.LoginAsync(parameters);
         
         var token = _jwtService.GenerateToken(user, user.roles);
         
@@ -57,7 +69,13 @@ public class AuthController : ControllerBase
     [HttpPost("verify-email")]
     public async Task<IActionResult> VerifyEmailAsync([FromBody] VerifyEmailRequestDto request)
     {
-        await _authService.VerifyEmailAsync(request.email, request.token);
+        var parameters = new VerifyEmailParams
+        {
+            Email = request.email,
+            Token = request.token
+        };
+        
+        await _authService.VerifyEmailAsync(parameters);
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG7));
     }
@@ -65,7 +83,12 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPasswordAsync([FromBody] ForgotPasswordRequestDto request)
     {
-        await _authService.ForgotPasswordAsync(request.email);
+        var parameters = new ForgotPasswordParams
+        {
+            Email = request.email
+        };
+        
+        await _authService.ForgotPasswordAsync(parameters);
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG13));
     }
@@ -73,7 +96,15 @@ public class AuthController : ControllerBase
     [HttpPut("reset-password")]
     public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordRequestDto request)
     {
-        await _authService.ResetPasswordAsync(request.email, request.token, request.newPassword);
+        var parameters = new ResetPasswordParams
+        {
+            Email = request.email,
+            Token = request.token,
+            NewPassword = request.newPassword,
+            ConfirmPassword = request.confirmPassword
+        };
+        
+        await _authService.ResetPasswordAsync(parameters);
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG14));
     }
@@ -85,7 +116,15 @@ public class AuthController : ControllerBase
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
         
-        await _authService.ChangePasswordAsync(userId.Value, request.currentPassword, request.newPassword);
+        var parameters = new ChangePasswordParams
+        {
+            UserId = userId.Value,
+            CurrentPassword = request.currentPassword,
+            NewPassword = request.newPassword,
+            ConfirmPassword = request.confirmPassword
+        };
+        
+        await _authService.ChangePasswordAsync(parameters);
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG20));
     }
