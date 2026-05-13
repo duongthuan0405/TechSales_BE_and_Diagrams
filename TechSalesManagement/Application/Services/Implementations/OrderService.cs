@@ -10,6 +10,7 @@ using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Common;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
+using TechSalesManagement.Application.HelperServices;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -21,6 +22,8 @@ public class OrderService : IOrderService
     private readonly IVoucherRepository _voucherRepository;
     private readonly IInventoryRepository _inventoryRepository;
     private readonly IShippingAddressRepository _addressRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IEmailService _emailService;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -30,6 +33,8 @@ public class OrderService : IOrderService
         IVoucherRepository voucherRepository,
         IInventoryRepository inventoryRepository,
         IShippingAddressRepository addressRepository,
+        IUserRepository userRepository,
+        IEmailService emailService,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -38,6 +43,8 @@ public class OrderService : IOrderService
         _voucherRepository = voucherRepository;
         _inventoryRepository = inventoryRepository;
         _addressRepository = addressRepository;
+        _userRepository = userRepository;
+        _emailService = emailService;
         _unitOfWork = unitOfWork;
     }
 
@@ -195,6 +202,21 @@ public class OrderService : IOrderService
 
             // Global atomic save via unit of work
             await _unitOfWork.FinishAsync();
+
+            // 10. Fire and forget transactional Order Confirmation Email
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(parameters.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.email))
+                {
+                    // Send notification email
+                    _emailService.SendOrderConfirmationEmailAsync(user.email, newOrder.id, newOrder.totalAmount, newOrder.shippingAddressSnapshot);
+                }
+            }
+            catch (Exception)
+            {
+                // Log warning or swallow to guarantee main user request doesn't fail on SMTP downtime
+            }
 
             return newOrder;
         }
