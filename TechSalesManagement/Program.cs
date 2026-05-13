@@ -18,7 +18,11 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthenticationConfiguration(builder.Configuration);
         builder.Services.AddAuthorization();
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
 
         // Configure Swagger via Extension Method
         builder.Services.AddSwaggerConfiguration();
