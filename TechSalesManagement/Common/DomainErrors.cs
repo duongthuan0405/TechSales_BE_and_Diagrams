@@ -1,4 +1,4 @@
-namespace TechSalesManagement.Domain.Constants;
+namespace TechSalesManagement.Common;
 
 public static class DomainErrors
 {

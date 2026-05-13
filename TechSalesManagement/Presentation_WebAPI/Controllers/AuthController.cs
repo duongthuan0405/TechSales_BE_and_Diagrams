@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
@@ -40,7 +40,7 @@ public class AuthController : ControllerBase
         
         await _authService.RegisterAsync(parameters);
         
-        return Created("", new ApiSuccessResponse<object>(null, MessageConstants.MSG6));
+        return Created(string.Empty, new ApiSuccessResponse<object>(null, MessageConstants.MSG6));
     }
 
     [HttpPost("login")]

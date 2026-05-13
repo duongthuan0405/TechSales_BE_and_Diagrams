@@ -9,6 +9,9 @@ public class Order
     public Guid id { get; set; }
     public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? updatedAt { get; set; }
+    public DateTimeOffset? approvedAt { get; set; }
+    public DateTimeOffset? shippedAt { get; set; }
+    public DateTimeOffset? deliveredAt { get; set; }
 
     public Guid userId { get; set; }
     public OrderStatus status { get; set; } = OrderStatus.PENDING;

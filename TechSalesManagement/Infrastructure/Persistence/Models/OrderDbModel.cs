@@ -16,6 +16,9 @@ public class OrderDbModel
     public string shipping_address_snapshot { get; set; } = string.Empty;
     public DateTimeOffset created_at { get; set; }
     public DateTimeOffset? updated_at { get; set; }
+    public DateTimeOffset? approved_at { get; set; }
+    public DateTimeOffset? shipped_at { get; set; }
+    public DateTimeOffset? delivered_at { get; set; }
 
     // Navigation properties
     public UserDbModel user { get; set; } = null!;

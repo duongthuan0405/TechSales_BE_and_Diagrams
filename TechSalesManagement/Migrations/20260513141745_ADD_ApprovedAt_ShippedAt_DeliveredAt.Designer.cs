@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TechSalesManagement.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TechSalesManagement.Infrastructure.Persistence;
 namespace TechSalesManagement.Migrations
 {
     [DbContext(typeof(TechSalesDbContext))]
-    partial class TechSalesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513141745_ADD_ApprovedAt_ShippedAt_DeliveredAt")]
+    partial class ADD_ApprovedAt_ShippedAt_DeliveredAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

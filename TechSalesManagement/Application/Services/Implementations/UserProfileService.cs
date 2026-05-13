@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Common.Utils;
 using TechSalesManagement.Application.Exceptions;
 using TechSalesManagement.Application.Interfaces;

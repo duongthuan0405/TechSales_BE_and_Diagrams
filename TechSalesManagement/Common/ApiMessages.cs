@@ -1,4 +1,4 @@
-namespace TechSalesManagement.Presentation_WebAPI.Constants;
+namespace TechSalesManagement.Common;
 
 public static class ApiMessages
 {

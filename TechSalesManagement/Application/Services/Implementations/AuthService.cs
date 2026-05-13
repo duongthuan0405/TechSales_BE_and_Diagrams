@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Common.Configurations;
 using TechSalesManagement.Application.Common.Utils;
 using TechSalesManagement.Application.Exceptions;

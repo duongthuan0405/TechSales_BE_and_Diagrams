@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
