@@ -29,7 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> RegisterAsync([FromBody] RegisterRequestDto request)
     {
         var parameters = new RegisterParams
         {
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<LoginResponseDto>>> LoginAsync([FromBody] LoginRequestDto request)
     {
         var parameters = new LoginParams
         {
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-email")]
-    public async Task<IActionResult> VerifyEmailAsync([FromBody] VerifyEmailRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> VerifyEmailAsync([FromBody] VerifyEmailRequestDto request)
     {
         var parameters = new VerifyEmailParams
         {
@@ -81,7 +81,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPasswordAsync([FromBody] ForgotPasswordRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ForgotPasswordAsync([FromBody] ForgotPasswordRequestDto request)
     {
         var parameters = new ForgotPasswordParams
         {
@@ -94,7 +94,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("reset-password")]
-    public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ResetPasswordAsync([FromBody] ResetPasswordRequestDto request)
     {
         var parameters = new ResetPasswordParams
         {
@@ -111,7 +111,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPut("change-password")]
-    public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ChangePasswordAsync([FromBody] ChangePasswordRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

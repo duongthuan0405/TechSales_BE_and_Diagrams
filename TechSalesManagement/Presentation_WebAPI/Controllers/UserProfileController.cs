@@ -24,7 +24,7 @@ public class UserProfileController : ControllerBase
 
     [Authorize]
     [HttpPut]
-    public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdateProfileRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> UpdateProfileAsync([FromBody] UpdateProfileRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

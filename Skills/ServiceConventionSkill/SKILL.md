@@ -47,13 +47,13 @@ Examples:
 # 3. Service Architecture
 
 Business Services must be accessed through interfaces.
-
+Each method in Services, must use class xxxParams instead of RequestDTO
 Example:
 
 ```csharp
 public interface IAuthService
 {
-    Task<LoginResponseDto> LoginAsync(LoginRequestDto request);
+    Task<User> LoginAsync(LoginParams parameters);
 }
 ```
 
@@ -62,6 +62,10 @@ Implementation:
 ```csharp
 public class AuthService : IAuthService
 {
+    public async Task<User> LoginAsync(LoginParams parameters)
+    {
+        // Implementation
+    }
 }
 ```
 
@@ -77,6 +81,7 @@ Business Services may depend on:
 - External service interfaces
 - IUnitOfWork
 - Validators
+- Specific parameter classes (xxxParams)
 
 Business Services must NOT depend on:
 - Controllers
@@ -94,6 +99,7 @@ Business Service
     ├── Helper Service Interfaces
     ├── External Service Interfaces
     ├── Validators
+    ├── Parameter Classes (xxxParams)
     └── IUnitOfWork
 ```
 
@@ -131,90 +137,59 @@ Controllers must NOT:
 
 # 8. Validation Architecture
 
-The system separates validation into:
-- Request Format Validation
-- Business Validation
+The system centralizes ALL validation inside Business Services.
 
-Validation responsibilities must follow clean architecture boundaries.
+There is no separate layer boundary for validation. The Business Service is responsible for both:
+- Request Parameter Format Validation
+- Business Rule Validation
 
----
-
-# 9. Controller Validation Rules
-
-Controllers (or FluentValidation) are responsible ONLY for request format validation.
-
-This includes:
-- Required fields
-- Data types
-- Email format
-- String length
-- Regex validation
-- Primitive input validation
-
-Examples:
-
-```text
-✔ Required fields
-✔ Email format
-✔ Password minimum length
-✔ Numeric range validation
-✔ Request body format validation
-```
+Validation of the incoming `xxxParams` must happen explicitly within the service method logic or through validators invoked inside the service.
 
 ---
 
-## Example
+# 9. Validation-Free DTOs
 
-```csharp
-public class RegisterRequestValidator : AbstractValidator<RegisterRequestDto>
-{
-    public RegisterRequestValidator()
-    {
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress();
+Controllers and DTOs must NEVER contain validation logic or attributes.
 
-        RuleFor(x => x.Password)
-            .MinimumLength(8);
-    }
-}
-```
+DTO classes in the Presentation layer must be "naked" - containing only properties with no annotations (e.g., no `[Required]`, no `[EmailAddress]`, no `[Compare]`, etc.).
+
+Controllers must simply receive the DTO, map it straight to the corresponding `xxxParams` object, and forward it to the service. 
+
+Controllers must NOT perform format validation.
 
 ---
 
-# 10. Business Validation Rules
+# 10. Full Service-Side Validation
 
-Business validation MUST occur inside Business Services.
+Business Services are the absolute gatekeepers of the application. They must validate EVERYTHING.
 
-Business validation includes:
+Validations within Business Services include:
+- Required field checks (e.g., Null or Empty)
+- Formatting checks (e.g., Email format, Phone number regex)
+- Structural checks (e.g., Passwords matching)
 - Existence checks
-- Duplicate checks
-- Business state validation
-- Workflow validation
-- Permission validation
+- Duplicate data checks
+- Complex business rules
 
-Examples:
-
-```text
-✔ Email already exists
-✔ Product out of stock
-✔ Voucher expired
-✔ User account blocked
-✔ Order already completed
-✔ Invalid order state transition
-```
-
----
+All format and value errors found must result in a `BadRequestException` (which can carry a structured Dictionary of validation errors).
 
 ## Example
 
 ```csharp
-var existingUser =
-    await _userRepository.GetByEmailAsync(request.Email);
-
-if(existingUser != null)
+if (string.IsNullOrWhiteSpace(parameters.Email))
 {
-    throw new ConflictException("Email already exists");
+    throw new BadRequestException(MessageConstants.MSG1);
+}
+
+if (parameters.Password != parameters.ConfirmPassword)
+{
+    throw new BadRequestException(MessageConstants.MSG4);
+}
+
+var existingUser = await _userRepository.GetByEmailAsync(parameters.Email);
+if (existingUser != null)
+{
+    throw new ConflictException(MessageConstants.MSG5);
 }
 ```
 
@@ -222,48 +197,50 @@ if(existingUser != null)
 
 # 11. Validation Responsibility Rules
 
-## Controllers MUST NOT
+Controllers MUST NOT contain validation logic or rely on ASP.NET built-in Model Validation via DataAnnotations.
 
-```csharp
-await _userRepository.ExistsAsync(email);
-```
+Validators must live in the Application layer and validate the internal parameters classes (`xxxParams`), NOT Request DTOs.
 
 ---
 
-## Controllers MUST NOT
+# 12. FluentValidation & Custom Validation Convention
 
-```csharp
-if(product.StockQuantity < request.Quantity)
-```
+If FluentValidation is used, validators MUST target `xxxParams` objects instead of Request DTOs.
 
----
-
-## Controllers MUST NOT
-
-```csharp
-await _emailService.SendOtpAsync();
-```
-
-These are business workflows and must be handled inside Business Services.
-
----
-
-# 12. FluentValidation Convention
-
-FluentValidation is used for request DTO validation.
-
-Validation classes should be placed inside:
-
+Validation classes should live in:
 ```text
 Application/Validations
 ```
 
-Examples:
+They must be injected into or instantiated inside Business Services, and executed directly at the start of the service method.
 
+---
+
+# 12.1. Format Validation Utility Convention (ValidationUtils)
+
+Common format validation technical rules (like Email regex, Phone number formats, Password minimum complexity) must be encapsulated inside a reusable static class:
 ```text
-RegisterRequestValidator
-CreateOrderValidator
-UpdateProfileValidator
+Application/Common/Utils/ValidationUtils.cs
+```
+
+### Rules for ValidationUtils:
+1. **NO Exception Throwing**: Utility methods inside `ValidationUtils` must NEVER throw Exceptions. They must only return a boolean (`true`/`false`) indicating structural validity.
+2. **Decoupled From Business Rules**: Utility only focuses on technical patterns (Regex/Length). It does NOT decide if a field is "Required" for a particular use case.
+3. **Exception Handled Externally**: The calling Business Service method is responsible for taking action if the utility returns `false` and throwing the appropriate `BadRequestException` using the specific message key from `MessageConstants`.
+
+### Proper Pattern Example in Service:
+```csharp
+// 1. Check Required (Service decides if field is required)
+if (string.IsNullOrWhiteSpace(parameters.Email))
+{
+    throw new BadRequestException(MessageConstants.MSG1); // Missing field
+}
+
+// 2. Check Format (Utility validates structure, Service throws exception)
+if (!ValidationUtils.IsValidEmail(parameters.Email))
+{
+    throw new BadRequestException(MessageConstants.MSG2); // Format issue
+}
 ```
 
 ---
@@ -352,7 +329,7 @@ AuthService
 # 17. Return Value Rules
 
 Business Services should:
-- Receive Request DTOs
+- Receive a specific `xxxParams` parameters class
 - Return Domain Entities or Business Models
 
 Business Services must NOT:
@@ -363,13 +340,50 @@ Business Services must NOT:
 
 # 18. Internal Layer Model Convention
 
-Business Services must use Entity models for core business logic and repository communication.
+Business Services must use specialized Parameter objects for their inputs and Entity models for core business logic/repository communication.
 
-Services receive Request DTOs from Controllers, but they must convert them to Entities or use their properties to interact with Repositories.
+Services must NOT accept Request DTOs from Controllers. The Controller is responsible for mapping the Request DTO into the corresponding `xxxParams` class.
+
+Services must NOT accept primitive types as single arguments, nor should they accept naked Domain Entities as direct arguments for modification operations.
 
 Services must return Entities (or Domain Models) back to the Controller.
 
 The Mapping from Entity to Response DTO must occur ONLY in the Controller.
+
+---
+
+# 18.1. Specific Parameter Object Pattern (xxxParams)
+
+Every service method MUST receive exactly ONE parameter object, named specifically after the method's function: `[MethodName]Params`.
+
+### Reason for this pattern:
+1. **Encapsulation**: Adding or removing fields in the input only changes the specific `Params` class.
+2. **Modularity**: Changing parameters of one method (e.g., `LoginAsync`) does NOT affect any other method's structure.
+3. **Decoupling**: Keeps the Application Layer independent from the Presentation Layer (DTOs) and database entities.
+
+### Example
+
+Correct:
+```csharp
+Task<User> RegisterAsync(RegisterParams parameters);
+Task<User> LoginAsync(LoginParams parameters);
+Task VerifyEmailAsync(VerifyEmailParams parameters);
+```
+
+Forbidden (Single primitive parameters):
+```csharp
+Task<User> LoginAsync(string email, string password);
+```
+
+Forbidden (Exposing Domain Entities as input):
+```csharp
+Task<User> RegisterAsync(User newUser);
+```
+
+Forbidden (Exposing DTOs from Presentation):
+```csharp
+Task<User> RegisterAsync(RegisterRequestDto request);
+```
 
 ---
 
@@ -448,10 +462,15 @@ Application/
 │   │   ├── IProductService.cs
 │   │   └── IOrderService.cs
 │   │
-│   └── Implementations/
-│       ├── AuthService.cs
-│       ├── ProductService.cs
-│       └── OrderService.cs
+│   ├── Implementations/
+│   │   ├── AuthService.cs
+│   │   ├── ProductService.cs
+│   │   └── OrderService.cs
+│   │
+│   └── Params/
+│       ├── AuthParams.cs
+│       ├── ProductParams.cs
+│       └── OrderParams.cs
 │
 └── Validations/
     ├── RegisterRequestValidator.cs

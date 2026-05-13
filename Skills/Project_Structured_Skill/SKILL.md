@@ -39,15 +39,24 @@ This structure improves:
 ```text
 TechSalesManagement/
 │
+├───Common              <--- Centralized String & Message Constants
+│   ├───MessageConstants.cs
+│   ├───DomainErrors.cs
+│   └───ApiMessages.cs
+│
 ├───Application
 │   ├───Common
+│   │   ├───Configurations
+│   │   └───Utils
+│   ├───Enums
 │   ├───Exceptions
 │   ├───ExternalServices
 │   ├───Features
 │   ├───HelperServices
 │   ├───Services
 │   │   ├───Implementations
-│   │   └───Interfaces
+│   │   ├───Interfaces
+│   │   └───Params
 │   └───Validations
 │
 ├───Domain
@@ -72,6 +81,13 @@ TechSalesManagement/
 │
 └───Properties
 ```
+
+## 2.1. Shared Common Folder
+
+The root `Common` folder acts as a shared, zero-dependency namespace (`TechSalesManagement.Common`) globally visible to all projects and layers. It is strictly reserved for aggregating static definitions, including:
+- **`MessageConstants.cs`**: All standard business rules codes (e.g. MSG1).
+- **`DomainErrors.cs`**: Core invariant violation constants.
+- **`ApiMessages.cs`**: WebAPI technical response strings.
 
 ---
 

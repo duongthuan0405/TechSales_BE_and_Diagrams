@@ -32,58 +32,68 @@ public class CartService : ICartService
             throw new BadRequestException(MessageConstants.MSG29);
         }
 
-        // 1. Get or create parent Cart
-        var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
-        if (cart == null)
+        try
         {
-            cart = new Cart
+            await _unitOfWork.BeginAsync();
+
+            // 1. Get or create parent Cart
+            var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
+            if (cart == null)
             {
-                id = Guid.NewGuid(),
-                userId = parameters.UserId,
-                createdAt = DateTimeOffset.UtcNow
-            };
-            await _cartRepository.AddCartAsync(cart);
-        }
+                cart = new Cart
+                {
+                    id = Guid.NewGuid(),
+                    userId = parameters.UserId,
+                    createdAt = DateTimeOffset.UtcNow
+                };
+                await _cartRepository.AddCartAsync(cart);
+            }
 
-        // 2. Check existing items and add up requested quantity
-        var existingItem = await _cartRepository.GetItemAsync(cart.id, parameters.ProductId);
-        var totalRequestedQty = parameters.Quantity + (existingItem?.quantity ?? 0);
+            // 2. Check existing items and add up requested quantity
+            var existingItem = await _cartRepository.GetItemAsync(cart.id, parameters.ProductId);
+            var totalRequestedQty = parameters.Quantity + (existingItem?.quantity ?? 0);
 
-        // 3. Load product to validate stock (BR57)
-        var product = await _productRepository.GetByIdAsync(parameters.ProductId);
-        if (product == null)
-        {
-            throw new NotFoundException(MessageConstants.MSG25);
-        }
-
-        var availableQty = product.inventory?.availableQuantity ?? 0;
-        if (totalRequestedQty > availableQty)
-        {
-            // BR58: Insufficient Stock => Throws MSG27
-            throw new BadRequestException(MessageConstants.MSG27);
-        }
-
-        // 4. Write to relational database
-        if (existingItem != null)
-        {
-            existingItem.quantity = totalRequestedQty;
-            existingItem.updatedAt = DateTimeOffset.UtcNow;
-            await _cartRepository.UpdateItemAsync(existingItem);
-        }
-        else
-        {
-            var newItem = new CartItem
+            // 3. Load product to validate stock (BR57)
+            var product = await _productRepository.GetByIdAsync(parameters.ProductId);
+            if (product == null)
             {
-                cartId = cart.id,
-                productId = parameters.ProductId,
-                quantity = parameters.Quantity,
-                createdAt = DateTimeOffset.UtcNow,
-                updatedAt = DateTimeOffset.UtcNow
-            };
-            await _cartRepository.AddItemAsync(newItem);
-        }
+                throw new NotFoundException(MessageConstants.MSG25);
+            }
 
-        await _unitOfWork.FinishAsync();
+            var availableQty = product.inventory?.availableQuantity ?? 0;
+            if (totalRequestedQty > availableQty)
+            {
+                // BR58: Insufficient Stock => Throws MSG27
+                throw new BadRequestException(MessageConstants.MSG27);
+            }
+
+            // 4. Write to relational database
+            if (existingItem != null)
+            {
+                existingItem.quantity = totalRequestedQty;
+                existingItem.updatedAt = DateTimeOffset.UtcNow;
+                await _cartRepository.UpdateItemAsync(existingItem);
+            }
+            else
+            {
+                var newItem = new CartItem
+                {
+                    cartId = cart.id,
+                    productId = parameters.ProductId,
+                    quantity = parameters.Quantity,
+                    createdAt = DateTimeOffset.UtcNow,
+                    updatedAt = DateTimeOffset.UtcNow
+                };
+                await _cartRepository.AddItemAsync(newItem);
+            }
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task UpdateCartItemAsync(UpdateCartItemParams parameters)
@@ -94,48 +104,72 @@ public class CartService : ICartService
             throw new BadRequestException(MessageConstants.MSG29);
         }
 
-        var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
-        if (cart == null)
+        try
         {
-            throw new NotFoundException("Cart not found.");
-        }
+            await _unitOfWork.BeginAsync();
 
-        var existingItem = await _cartRepository.GetItemAsync(cart.id, parameters.ProductId);
-        if (existingItem == null)
+            var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
+            if (cart == null)
+            {
+                throw new NotFoundException("Cart not found.");
+            }
+
+            var existingItem = await _cartRepository.GetItemAsync(cart.id, parameters.ProductId);
+            if (existingItem == null)
+            {
+                throw new NotFoundException("Product not found in cart.");
+            }
+
+            // BR65: Stock Validation
+            var product = await _productRepository.GetByIdAsync(parameters.ProductId);
+            if (product == null)
+            {
+                throw new NotFoundException(MessageConstants.MSG25);
+            }
+
+            var availableQty = product.inventory?.availableQuantity ?? 0;
+            if (parameters.Quantity > availableQty)
+            {
+                // BR66: Insufficient Stock => MSG27
+                throw new BadRequestException(MessageConstants.MSG27);
+            }
+
+            // Update values
+            existingItem.quantity = parameters.Quantity;
+            existingItem.updatedAt = DateTimeOffset.UtcNow;
+            await _cartRepository.UpdateItemAsync(existingItem);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
         {
-            throw new NotFoundException("Product not found in cart.");
+            await _unitOfWork.RollbackAsync();
+            throw;
         }
-
-        // BR65: Stock Validation
-        var product = await _productRepository.GetByIdAsync(parameters.ProductId);
-        if (product == null)
-        {
-            throw new NotFoundException(MessageConstants.MSG25);
-        }
-
-        var availableQty = product.inventory?.availableQuantity ?? 0;
-        if (parameters.Quantity > availableQty)
-        {
-            // BR66: Insufficient Stock => MSG27
-            throw new BadRequestException(MessageConstants.MSG27);
-        }
-
-        // Update values
-        existingItem.quantity = parameters.Quantity;
-        existingItem.updatedAt = DateTimeOffset.UtcNow;
-        await _cartRepository.UpdateItemAsync(existingItem);
-
-        await _unitOfWork.FinishAsync();
     }
 
     public async Task RemoveCartItemAsync(RemoveCartItemParams parameters)
     {
-        var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
-        if (cart == null) return;
+        try
+        {
+            await _unitOfWork.BeginAsync();
 
-        await _cartRepository.RemoveItemAsync(cart.id, parameters.ProductId);
-        
-        await _unitOfWork.FinishAsync();
+            var cart = await _cartRepository.GetByUserIdAsync(parameters.UserId);
+            if (cart == null)
+            {
+                await _unitOfWork.FinishAsync();
+                return;
+            }
+
+            await _cartRepository.RemoveItemAsync(cart.id, parameters.ProductId);
+            
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<Cart> GetCartAsync(GetCartParams parameters)

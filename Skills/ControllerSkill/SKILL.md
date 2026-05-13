@@ -11,8 +11,7 @@ Controllers are the entry point of the application.
 
 Controllers are responsible for:
 - Receiving HTTP requests
-- Validating request format
-- Calling Business Services
+- Calling Business Services with mapped parameters
 - Returning standardized API responses
 
 Controllers must remain thin.
@@ -25,8 +24,8 @@ Controllers must NOT contain business logic.
 
 Controllers should only:
 1. Receive requests
-2. Validate request format
-3. Call Business Services
+2. Map Request DTOs to Service Parameters (`xxxParams`)
+3. Call Business Services with the mapped parameters
 4. Map Domain Entities/Results to Response DTOs
 5. Return standardized responses
 
@@ -95,32 +94,36 @@ public class AuthController : ControllerBase
 
 ---
 
-# 6. Async-First Architecture
+# 6. Async-First & Strongly-Typed Architecture
 
-All controller endpoints must be asynchronous.
+All controller endpoints must be asynchronous and explicitly define their return schema.
 
-Controllers follow an Async-First architecture.
+Controllers follow a Strongly-Typed Async architecture to support auto-generated OpenAPI (Swagger) documentation.
 
 All endpoints must return:
 
 ```csharp
-Task<IActionResult>
+Task<ActionResult<ApiSuccessResponse<T>>>
+```
+Wait, if there is no returning payload, use `object`:
+```csharp
+Task<ActionResult<ApiSuccessResponse<object>>>
 ```
 
 ---
 
 # 7. Async Endpoint Convention
 
-Correct:
+Correct (Self-Documenting Schema):
 
 ```csharp
 [HttpPost("login")]
-public async Task<IActionResult> LoginAsync(
+public async Task<ActionResult<ApiSuccessResponse<LoginResponseDto>>> LoginAsync(
     [FromBody] LoginRequestDto request)
 {
     var response = await _authService.LoginAsync(request);
 
-    return Ok(response);
+    return Ok(new ApiSuccessResponse<LoginResponseDto>(response));
 }
 ```
 
@@ -179,49 +182,22 @@ These may cause:
 
 # 9. Request Validation Rules
 
-Controllers are responsible ONLY for request format validation.
+Controllers MUST NOT perform request validation.
 
-Controllers may validate:
-- Required fields
-- Request body format
-- Primitive data validation
-- ModelState validation
+Controllers and Request DTOs must remain totally validation-free. There should be no `[Required]`, `[EmailAddress]`, etc., attributes inside Request DTOs.
 
-Controllers must NOT validate:
-- Business rules
-- Workflow rules
-- Database state
+All input format, data structure, and primitive validation must be executed strictly inside the Business Service layer (using FluentValidation on the internal `xxxParams` or via direct checks inside the Service).
 
 ---
 
 # 10. Validation Boundary
 
-## Controller Validation
+All types of validations reside solely inside Business Services. 
 
-Examples:
-
-```text
-✔ Required fields
-✔ Email format
-✔ Password length
-✔ Request DTO structure
-```
-
----
-
-## Business Service Validation
-
-Examples:
-
-```text
-✔ Email already exists
-✔ Product out of stock
-✔ Voucher expired
-✔ User blocked
-✔ Order already completed
-```
-
-Business validation must occur inside Business Services.
+## Business Service Responsibilities:
+- Empty/Required parameter validation
+- Format checks (e.g., Regex, Email formats)
+- Complex business condition validations (e.g., email exists, product in stock)
 
 ---
 
@@ -229,7 +205,8 @@ Business validation must occur inside Business Services.
 
 Controllers must:
 - Receive Request DTOs
-- Call Services to get Domain Entities
+- Map Request DTOs to Service-specific parameter classes (`xxxParams`)
+- Call Services using `xxxParams` to get Domain Entities
 - Map Domain Entities to Response DTOs
 - Wrap Response DTOs in ApiResponse
 
@@ -412,8 +389,16 @@ Correct:
 public async Task<IActionResult> LoginAsync(
     LoginRequestDto request)
 {
-    var result = await _authService.LoginAsync(request);
+    // Map DTO to Params
+    var parameters = new LoginParams 
+    { 
+        Email = request.Email, 
+        Password = request.Password 
+    };
 
+    var result = await _authService.LoginAsync(parameters);
+
+    // Map Entity to Response DTO (if needed, or return encapsulated in ApiResponse)
     return Ok(result);
 }
 ```
@@ -633,6 +618,8 @@ Client
 Controller
     ↓
 Request Validation
+    ↓
+Map DTO to xxxParams
     ↓
 Business Service
     ↓

@@ -28,7 +28,7 @@ public class CartController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCartAsync()
+    public async Task<ActionResult<ApiSuccessResponse<CartResponseDto>>> GetCartAsync()
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -40,7 +40,7 @@ public class CartController : ControllerBase
     }
 
     [HttpPost("items")]
-    public async Task<IActionResult> AddToCartAsync([FromBody] AddToCartRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> AddToCartAsync([FromBody] AddToCartRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -59,7 +59,7 @@ public class CartController : ControllerBase
     }
 
     [HttpPut("items/{productId:guid}")]
-    public async Task<IActionResult> UpdateCartItemAsync(Guid productId, [FromBody] UpdateCartItemRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<CartResponseDto>>> UpdateCartItemAsync(Guid productId, [FromBody] UpdateCartItemRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -79,7 +79,7 @@ public class CartController : ControllerBase
     }
 
     [HttpDelete("items/{productId:guid}")]
-    public async Task<IActionResult> RemoveCartItemAsync(Guid productId)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> RemoveCartItemAsync(Guid productId)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

@@ -22,7 +22,7 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<IActionResult> GetMeAsync()
+    public async Task<ActionResult<ApiSuccessResponse<UserResponseDto>>> GetMeAsync()
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

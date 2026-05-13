@@ -15,6 +15,7 @@ public class Review
     public int rating { get; set; }
     public string? comment { get; set; }
     public ReviewStatus status { get; set; } = ReviewStatus.VISIBLE;
+    public UserProfile? profile { get; set; }
 
     public Review(Guid? userId, Guid productId, int rating, string? comment)
     {

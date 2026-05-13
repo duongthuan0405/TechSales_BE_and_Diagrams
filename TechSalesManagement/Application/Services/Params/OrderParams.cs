@@ -25,3 +25,9 @@ public class GetOrderDetailsParams
     public Guid OrderId { get; set; }
     public Guid UserId { get; set; }
 }
+
+public class CancelOrderParams
+{
+    public Guid OrderId { get; set; }
+    public Guid UserId { get; set; }
+}

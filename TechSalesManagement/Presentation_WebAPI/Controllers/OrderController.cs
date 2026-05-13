@@ -26,7 +26,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> PlaceOrderAsync([FromBody] PlaceOrderRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<OrderResponseDto>>> PlaceOrderAsync([FromBody] PlaceOrderRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -55,7 +55,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetOrderHistoryAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderResponseDto>>>> GetOrderHistoryAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -91,7 +91,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetOrderDetailsAsync([FromRoute] Guid id)
+    public async Task<ActionResult<ApiSuccessResponse<OrderDetailResponseDto>>> GetOrderDetailsAsync([FromRoute] Guid id)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -128,5 +128,23 @@ public class OrderController : ControllerBase
         };
 
         return Ok(new ApiSuccessResponse<OrderDetailResponseDto>(response, "Order details retrieved successfully."));
+    }
+
+    [HttpPost("{id}/cancel")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> CancelOrderAsync([FromRoute] Guid id)
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var parameters = new CancelOrderParams
+        {
+            OrderId = id,
+            UserId = userId.Value
+        };
+
+        await _orderService.CancelOrderAsync(parameters);
+
+        // BR122: Returns 200-OK with MSG46
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG46));
     }
 }

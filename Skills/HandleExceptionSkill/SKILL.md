@@ -514,57 +514,52 @@ This architecture ensures:
 
 ---
 
-# 24. Constants Organization for Exception Messages
+# 24. Centralized Constants Organization for System Messages
 
-To ensure maintainability and support future localization (i18n), all user-facing strings must be organized into constant classes based on their layer and purpose.
+To ensure maintainability, consistent reuse across all layers, and future localization support, all user-facing strings, business rules codes (MSG), domain errors, and system responses MUST be gathered into a single centralized folder named `Common` at the root of the project.
 
-## 24.1. Domain Layer: DomainErrors
+All files in this directory MUST use the global namespace `TechSalesManagement.Common` and be accessible from any layer.
 
-Used for core business rule violations inside Domain Entities (usually thrown via `ArgumentException`).
+## 24.1. Main Message Constants: MessageConstants (MSG)
 
-- **Location**: `Domain/Constants/DomainErrors.cs`
-- **Structure**: Flat nested classes based on Entity name.
+Houses all business flow, success confirmations, and standard user-facing messages mapped via standard codes (e.g., `MSG1`).
+
+- **Location**: `Common/MessageConstants.cs`
+- **Namespace**: `TechSalesManagement.Common`
+- **Structure**: Flat constants list.
+- **Example**: `MessageConstants.MSG1`, `MessageConstants.MSG24`
+
+## 24.2. Domain Validation Errors: DomainErrors
+
+Specifically used for core business validation and invariant violations inside Domain Entities (usually thrown via `ArgumentException`).
+
+- **Location**: `Common/DomainErrors.cs`
+- **Namespace**: `TechSalesManagement.Common`
+- **Structure**: Flat nested classes based on Domain Entity name.
 - **Example**: `DomainErrors.Product.NameRequired`
 
-## 24.2. Application Layer: ApplicationMessages (Summaries)
+## 24.3. Technical System Responses: ApiMessages
 
-Used for high-level summary messages in `BusinessException` (the `message` property).
+Used strictly for system-level failures or WebAPI lifecycle responses.
 
-- **Location**: `Application/Common/ApplicationMessages.cs`
-- **Structure**: Flat constants.
-- **Example**: `ApplicationMessages.ValidationError`
-
-## 24.3. Application Layer: ErrorDetailMessages (Details)
-
-Used for specific, detailed error messages inside the `Errors` dictionary of `BusinessException`.
-
-- **Location**: `Application/Common/ErrorDetailMessages.cs`
-- **Structure**: Nested classes based on feature/module.
-- **Example**: `ErrorDetailMessages.Auth.InvalidCredentials`
-
-## 24.4. Presentation Layer: ApiMessages
-
-Used for technical system messages or API-specific responses.
-
-- **Location**: `Presentation_WebAPI/Constants/ApiMessages.cs`
+- **Location**: `Common/ApiMessages.cs`
+- **Namespace**: `TechSalesManagement.Common`
 - **Structure**: Flat constants.
 - **Example**: `ApiMessages.InternalServerError`
 
 ---
 
-# 25. Usage Example with Constants
+# 25. Centralized Usage Example
 
 ```csharp
-// Domain Entity
+using TechSalesManagement.Common;
+
+// 1. In Domain Entity (e.g. Product.cs)
 if (price < 0) throw new ArgumentException(DomainErrors.Product.PriceNegative);
 
-// Application Service
-var errors = new Dictionary<string, List<string>>
-{
-    { "Email", new List<string> { ErrorDetailMessages.Auth.InvalidCredentials } }
-};
-throw new BadRequestException(ApplicationMessages.ValidationError, errors);
+// 2. In Application Service (e.g. ProductService.cs)
+if (string.IsNullOrWhiteSpace(keyword)) throw new BadRequestException(MessageConstants.MSG1);
 
-// Global Exception Middleware
+// 3. In Global Exception Middleware (e.g. GlobalExceptionMiddleware.cs)
 var message = ApiMessages.InternalServerError;
 ```

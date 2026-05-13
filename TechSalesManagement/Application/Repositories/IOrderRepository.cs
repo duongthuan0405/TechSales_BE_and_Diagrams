@@ -10,4 +10,5 @@ public interface IOrderRepository
     Task AddOrderAsync(Order order, Guid? voucherId, Guid paymentMethodId);
     Task<(System.Collections.Generic.List<Order> orders, int totalCount)> GetOrdersByUserIdAsync(System.Guid userId, int pageNumber, int pageSize);
     Task<Order?> GetOrderDetailsByIdAsync(System.Guid orderId);
+    Task CancelOrderAsync(System.Guid orderId);
 }

@@ -6,4 +6,5 @@ namespace TechSalesManagement.Application.Repositories;
 public interface IInventoryRepository
 {
     Task ReserveStockAsync(Guid productId, int quantity);
+    Task ReleaseStockAsync(Guid productId, int quantity);
 }

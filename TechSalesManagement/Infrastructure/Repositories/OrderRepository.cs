@@ -39,9 +39,18 @@ public class OrderRepository : IOrderRepository
             delivered_at = order.deliveredAt
         };
 
+        var paymentMethod = await _dbContext.PaymentMethods.FindAsync(paymentMethodId);
+
+        if (paymentMethod == null)
+        {
+            throw new System.Exception($"Payment method with ID '{paymentMethodId}' does not exist in the database settings.");
+        }
+
+        await _dbContext.Orders.AddAsync(dbOrder);
+
         foreach (var item in order.items)
         {
-            dbOrder.order_items.Add(new OrderItemDbModel
+            await _dbContext.OrderItems.AddAsync(new OrderItemDbModel
             {
                 order_id = order.id,
                 product_id = item.product_id,
@@ -52,35 +61,23 @@ public class OrderRepository : IOrderRepository
 
         if (voucherId.HasValue)
         {
-            dbOrder.order_vouchers.Add(new OrderVoucherDbModel
+            await _dbContext.OrderVouchers.AddAsync(new OrderVoucherDbModel
             {
                 order_id = order.id,
                 voucher_id = voucherId.Value
             });
         }
 
-        var paymentMethod = await _dbContext.PaymentMethods.FindAsync(paymentMethodId);
-
-        if (paymentMethod == null)
+        await _dbContext.Payments.AddAsync(new PaymentDbModel
         {
-            throw new System.Exception($"Payment method with ID '{paymentMethodId}' does not exist in the database settings.");
-        }
-
-        if (paymentMethod.type == PaymentMethodType.ONLINE)
-        {
-            dbOrder.payments.Add(new PaymentDbModel
-            {
-                id = Guid.NewGuid(),
-                order_id = order.id,
-                payment_method_id = paymentMethod.id,
-                status = PaymentStatus.PENDING,
-                amount = order.totalAmount,
-                created_at = DateTimeOffset.UtcNow,
-                updated_at = DateTimeOffset.UtcNow
-            });
-        }
-
-        await _dbContext.Orders.AddAsync(dbOrder);
+            id = Guid.NewGuid(),
+            order_id = order.id,
+            payment_method_id = paymentMethod.id,
+            status = PaymentStatus.PENDING,
+            amount = order.totalAmount,
+            created_at = DateTimeOffset.UtcNow,
+            updated_at = DateTimeOffset.UtcNow
+        });
     }
 
     public async Task<(List<Order> orders, int totalCount)> GetOrdersByUserIdAsync(Guid userId, int pageNumber, int pageSize)
@@ -107,6 +104,8 @@ public class OrderRepository : IOrderRepository
             .Include(o => o.order_items)
                 .ThenInclude(oi => oi.product)
                     .ThenInclude(p => p.product_images)
+            .Include(o => o.order_vouchers)
+                .ThenInclude(ov => ov.voucher)
             .FirstOrDefaultAsync(o => o.id == orderId);
 
         return MapToEntity(dbModel);
@@ -157,6 +156,38 @@ public class OrderRepository : IOrderRepository
             }).ToList();
         }
 
+        if (dbModel.order_vouchers != null && dbModel.order_vouchers.Any())
+        {
+            order.vouchers = dbModel.order_vouchers.Select(ov => new Voucher
+            {
+                id = ov.voucher.id,
+                code = ov.voucher.code,
+                usedCount = ov.voucher.used_count
+            }).ToList();
+        }
+
         return order;
+    }
+
+    public async Task CancelOrderAsync(Guid orderId)
+    {
+        var dbOrder = await _dbContext.Orders.FindAsync(orderId);
+        if (dbOrder != null)
+        {
+            dbOrder.status = OrderStatus.CANCELLED;
+            dbOrder.updated_at = DateTimeOffset.UtcNow;
+            _dbContext.Orders.Update(dbOrder);
+
+            var payments = await _dbContext.Payments
+                .Where(p => p.order_id == orderId)
+                .ToListAsync();
+
+            foreach (var payment in payments)
+            {
+                payment.status = PaymentStatus.CANCELLED;
+                payment.updated_at = DateTimeOffset.UtcNow;
+                _dbContext.Payments.Update(payment);
+            }
+        }
     }
 }

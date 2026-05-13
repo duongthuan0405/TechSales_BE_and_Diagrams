@@ -26,4 +26,16 @@ public class InventoryRepository : IInventoryRepository
             _dbContext.Inventories.Update(dbModel);
         }
     }
+
+    public async Task ReleaseStockAsync(Guid productId, int quantityToRelease)
+    {
+        var dbModel = await _dbContext.Inventories
+            .FirstOrDefaultAsync(i => i.product_id == productId);
+
+        if (dbModel != null)
+        {
+            dbModel.reserved_quantity = Math.Max(0, dbModel.reserved_quantity - quantityToRelease);
+            _dbContext.Inventories.Update(dbModel);
+        }
+    }
 }

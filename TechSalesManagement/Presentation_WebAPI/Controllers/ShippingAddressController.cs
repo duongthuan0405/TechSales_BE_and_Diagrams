@@ -24,7 +24,7 @@ public class ShippingAddressController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateAddressAsync([FromBody] CreateAddressRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> CreateAddressAsync([FromBody] CreateAddressRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -43,7 +43,7 @@ public class ShippingAddressController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateAddressAsync(Guid id, [FromBody] UpdateAddressRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> UpdateAddressAsync(Guid id, [FromBody] UpdateAddressRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -63,7 +63,7 @@ public class ShippingAddressController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/default")]
-    public async Task<IActionResult> SetDefaultAddressAsync(Guid id)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> SetDefaultAddressAsync(Guid id)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

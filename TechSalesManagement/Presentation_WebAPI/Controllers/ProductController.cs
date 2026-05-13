@@ -23,7 +23,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> SearchProductsAsync(
+    public async Task<ActionResult<ApiSuccessResponse<List<ProductResponseDto>>>> SearchProductsAsync(
         [FromQuery] string? keyword, 
         [FromQuery] List<System.Guid>? categoryIds,
         [FromQuery] SortOrder? sortOrder)
@@ -67,7 +67,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetProductDetailsAsync([FromRoute] System.Guid id)
+    public async Task<ActionResult<ApiSuccessResponse<ProductDetailResponseDto>>> GetProductDetailsAsync([FromRoute] System.Guid id)
     {
         var parameters = new GetProductDetailsParams
         {
