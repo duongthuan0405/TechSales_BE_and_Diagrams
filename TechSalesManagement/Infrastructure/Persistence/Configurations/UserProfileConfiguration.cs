@@ -16,5 +16,9 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfileDbMo
         builder.Property(x => x.phone).IsRequired().HasMaxLength(20);
         
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithOne(u => u.user_profile)
+            .HasForeignKey<UserProfileDbModel>(x => x.user_id);
     }
 }

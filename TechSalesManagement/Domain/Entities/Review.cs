@@ -4,18 +4,22 @@ using TechSalesManagement.Domain.Enums;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class Review : BaseEntity
+public class Review
 {
-    public Guid? user_id { get; set; }
-    public Guid product_id { get; set; }
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
+    public Guid? userId { get; set; }
+    public Guid productId { get; set; }
     public int rating { get; set; }
     public string? comment { get; set; }
     public ReviewStatus status { get; set; } = ReviewStatus.VISIBLE;
 
     public Review(Guid? userId, Guid productId, int rating, string? comment)
     {
-        user_id = userId;
-        product_id = productId;
+        this.userId = userId;
+        this.productId = productId;
         this.rating = rating;
         this.comment = comment;
     }

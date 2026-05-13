@@ -3,17 +3,21 @@ using TechSalesManagement.Domain.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class ProductImage : BaseEntity
+public class ProductImage
 {
-    public Guid product_id { get; set; }
-    public string image_url { get; set; } = string.Empty;
-    public bool is_primary { get; set; }
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
+    public Guid productId { get; set; }
+    public string imageUrl { get; set; } = string.Empty;
+    public bool isPrimary { get; set; }
 
     public ProductImage(Guid productId, string imageUrl, bool isPrimary = false)
     {
-        product_id = productId;
-        image_url = imageUrl;
-        is_primary = isPrimary;
+        this.productId = productId;
+        this.imageUrl = imageUrl;
+        this.isPrimary = isPrimary;
     }
 
     public ProductImage() { }

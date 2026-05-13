@@ -15,5 +15,9 @@ public class ShippingAddressConfiguration : IEntityTypeConfiguration<ShippingAdd
         builder.Property(x => x.detail).IsRequired().HasMaxLength(500);
         builder.HasIndex(x => x.user_id);
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.shipping_addresses)
+            .HasForeignKey(x => x.user_id);
     }
 }

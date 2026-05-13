@@ -18,5 +18,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<NotificationDb
         
         builder.HasIndex(x => x.user_id);
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.notifications)
+            .HasForeignKey(x => x.user_id);
     }
 }

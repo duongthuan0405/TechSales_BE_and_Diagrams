@@ -9,4 +9,8 @@ public class CartItemDbModel
     public int quantity { get; set; }
     public DateTimeOffset created_at { get; set; }
     public DateTimeOffset updated_at { get; set; }
+
+    // Navigation properties
+    public CartDbModel cart { get; set; } = null!;
+    public ProductDbModel product { get; set; } = null!;
 }

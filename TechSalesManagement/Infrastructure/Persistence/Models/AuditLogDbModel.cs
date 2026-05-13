@@ -13,4 +13,7 @@ public class AuditLogDbModel
     public string? new_values { get; set; }
     public string? affected_columns { get; set; }
     public DateTimeOffset created_at { get; set; }
+
+    // Navigation properties
+    public UserDbModel? user { get; set; }
 }

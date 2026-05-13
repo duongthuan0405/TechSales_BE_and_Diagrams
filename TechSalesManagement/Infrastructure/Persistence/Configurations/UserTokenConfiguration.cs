@@ -18,5 +18,9 @@ public class UserTokenConfiguration : IEntityTypeConfiguration<UserTokenDbModel>
         builder.HasIndex(x => x.token).IsUnique();
         
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.user_tokens)
+            .HasForeignKey(x => x.user_id);
     }
 }

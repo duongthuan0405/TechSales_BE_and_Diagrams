@@ -28,7 +28,6 @@ public abstract class BaseEntity
 
     protected BaseEntity()
     {
-        _id = Guid.NewGuid();
         _created_at = DateTimeOffset.UtcNow;
     }
 }

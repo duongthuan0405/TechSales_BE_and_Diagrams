@@ -27,5 +27,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<OrderDbModel>
         builder.Property(x => x.created_at)
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.orders) // Wait, I haven't added orders collection to User entity yet! I must do that now.
+            .HasForeignKey(x => x.user_id);
     }
 }

@@ -4,17 +4,17 @@ namespace TechSalesManagement.Domain.Entities;
 
 public class Inventory
 {
-    public Guid product_id { get; set; }
+    public Guid productId { get; set; }
     public int quantity { get; set; }
-    public int reserved_quantity { get; set; }
+    public int reservedQuantity { get; set; }
 
-    public int available_quantity => quantity - reserved_quantity;
+    public int availableQuantity => quantity - reservedQuantity;
 
     public Inventory(Guid productId, int quantity)
     {
-        product_id = productId;
+        this.productId = productId;
         this.quantity = quantity;
-        reserved_quantity = 0;
+        reservedQuantity = 0;
     }
 
     public Inventory() { }

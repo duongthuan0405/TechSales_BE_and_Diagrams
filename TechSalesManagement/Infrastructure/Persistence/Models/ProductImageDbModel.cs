@@ -9,4 +9,7 @@ public class ProductImageDbModel
     public string image_url { get; set; } = string.Empty;
     public bool is_primary { get; set; }
     public DateTimeOffset created_at { get; set; }
+
+    // Navigation properties
+    public ProductDbModel product { get; set; } = null!;
 }

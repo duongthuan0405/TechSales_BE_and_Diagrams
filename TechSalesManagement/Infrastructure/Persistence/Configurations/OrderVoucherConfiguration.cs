@@ -10,5 +10,13 @@ public class OrderVoucherConfiguration : IEntityTypeConfiguration<OrderVoucherDb
     {
         builder.ToTable("OrderVoucher");
         builder.HasKey(x => new { x.order_id, x.voucher_id });
+
+        builder.HasOne(x => x.order)
+            .WithMany(o => o.order_vouchers)
+            .HasForeignKey(x => x.order_id);
+
+        builder.HasOne(x => x.voucher)
+            .WithMany(v => v.order_vouchers)
+            .HasForeignKey(x => x.voucher_id);
     }
 }

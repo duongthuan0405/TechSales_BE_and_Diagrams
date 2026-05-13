@@ -45,9 +45,11 @@ Repositories must not contain:
 
 # 3. Repository Architecture
 
-Repository interfaces are defined inside the Application layer.
+Repository interfaces MUST be defined inside the Application layer.
 
 Repository implementations are defined inside the Infrastructure layer.
+
+The Domain layer MUST NOT know about Repository interfaces (Dependency Inversion).
 
 ---
 
@@ -108,6 +110,14 @@ Infrastructure/
     ├── ProductRepository.cs
     └── OrderRepository.cs
 ```
+
+---
+
+# 6. Strict Layering Rule
+
+Repository interfaces MUST NOT be placed in the Domain layer.
+
+This ensures that the Domain layer remains pure and focuses only on business logic, while the Application layer defines how data is accessed.
 
 ---
 
@@ -398,7 +408,27 @@ Repositories should only work with:
 
 ---
 
-# 16. Entity Rules
+# 16. Internal Layer Model Convention
+
+Repositories must only communicate using Entity models.
+
+Repositories must remain completely unaware of the Presentation layer (DTOs).
+
+Correct:
+```csharp
+Task AddAsync(User user);
+Task<User?> GetByIdAsync(Guid id);
+```
+
+Forbidden:
+```csharp
+Task AddAsync(RegisterRequestDto request);
+Task<UserResponseDto> GetByIdAsync(Guid id);
+```
+
+---
+
+# 17. Entity Rules
 
 Repositories should:
 - Return entities
@@ -525,3 +555,56 @@ Repositories should remain:
 - Predictable
 - Persistence-focused
 - Fully asynchronous
+
+---
+
+# 24. Data Mapping Rules (Entity to DbModel & Vice-Versa)
+
+To strictly enforce separation of persistence structure and domain logic, follow these mapping guidelines:
+
+## Direction 1: DbModel → Domain Model (READ)
+- **Goal:** To fully reconstitute the Aggregate for domain processing.
+- **Rule:** You NEED to map all relevant properties, including navigation collections (e.g., `.Include()` results) to faithfully recreate the object graph in the memory.
+
+## Direction 2: Domain Model → DbModel (WRITE/MAPPER)
+- **Goal:** To flatten data for target table representation.
+- **Rule:** Mappers from Domain to DbModel **MUST BE FLAT**. 
+- **NO NAVIGATION MAPPING:** Do NOT map navigation collections (e.g., lists of nested entities) inside the generic mapper function (`MapToDbModel`). Navigators are purely for data consumption/representation.
+- **Explicit Persistence:** Persistence of related entities or bridge records (like Many-to-Many linkages) should be performed **explicitly** inside the persistence method (e.g., `AddAsync`) using their respective DbSets, rather than relying on nested recursive mapping.
+
+### Example Correct Pattern:
+
+**Flat Mapper:**
+```csharp
+private UserDbModel MapToDbModel(User user)
+{
+    return new UserDbModel
+    {
+        id = user.id,
+        email = user.email,
+        // ... ONLY flat atomic scalar properties, NO user.roles collection mapping!
+    };
+}
+```
+
+**Explicit Collection Persistence in Repository Method:**
+```csharp
+public async Task AddAsync(User user)
+{
+    var dbModel = MapToDbModel(user); // Flat object
+    await _dbContext.Users.AddAsync(dbModel);
+
+    // Explicit persistence of relations!
+    if (user.roles != null && user.roles.Any())
+    {
+        foreach (var role in user.roles)
+        {
+            await _dbContext.UserRoles.AddAsync(new UserRoleDbModel 
+            { 
+                user_id = user.id, 
+                role_id = role.id 
+            });
+        }
+    }
+}
+```

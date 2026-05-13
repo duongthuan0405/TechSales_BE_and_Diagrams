@@ -361,7 +361,19 @@ Business Services must NOT:
 
 ---
 
-# 18. Error Handling Rules
+# 18. Internal Layer Model Convention
+
+Business Services must use Entity models for core business logic and repository communication.
+
+Services receive Request DTOs from Controllers, but they must convert them to Entities or use their properties to interact with Repositories.
+
+Services must return Entities (or Domain Models) back to the Controller.
+
+The Mapping from Entity to Response DTO must occur ONLY in the Controller.
+
+---
+
+# 19. Error Handling Rules
 
 Business Services should:
 - Throw custom exceptions

@@ -13,4 +13,8 @@ public class PaymentDbModel
     public string? transaction_ref { get; set; }
     public DateTimeOffset created_at { get; set; }
     public DateTimeOffset updated_at { get; set; }
+
+    // Navigation properties
+    public OrderDbModel order { get; set; } = null!;
+    public PaymentMethodDbModel payment_method { get; set; } = null!;
 }

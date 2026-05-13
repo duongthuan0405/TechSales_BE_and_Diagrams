@@ -16,5 +16,9 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImageDb
         
         builder.HasIndex(x => x.product_id);
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.product)
+            .WithMany(p => p.product_images)
+            .HasForeignKey(x => x.product_id);
     }
 }

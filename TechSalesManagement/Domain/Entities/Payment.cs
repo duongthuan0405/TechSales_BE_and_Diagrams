@@ -4,18 +4,22 @@ using TechSalesManagement.Domain.Enums;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class Payment : BaseEntity
+public class Payment
 {
-    public Guid order_id { get; set; }
-    public Guid payment_method_id { get; set; }
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
+    public Guid orderId { get; set; }
+    public Guid paymentMethodId { get; set; }
     public PaymentStatus status { get; set; } = PaymentStatus.PENDING;
     public decimal amount { get; set; }
-    public string? transaction_ref { get; set; }
+    public string? transactionRef { get; set; }
 
     public Payment(Guid orderId, Guid paymentMethodId, decimal amount)
     {
-        order_id = orderId;
-        payment_method_id = paymentMethodId;
+        this.orderId = orderId;
+        this.paymentMethodId = paymentMethodId;
         this.amount = amount;
     }
 

@@ -12,5 +12,9 @@ public class CartConfiguration : IEntityTypeConfiguration<CartDbModel>
         builder.HasKey(x => x.id);
         builder.HasIndex(x => x.user_id).IsUnique();
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithOne(u => u.cart)
+            .HasForeignKey<CartDbModel>(x => x.user_id);
     }
 }

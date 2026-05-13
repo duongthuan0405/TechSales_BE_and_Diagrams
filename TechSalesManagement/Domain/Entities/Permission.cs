@@ -3,8 +3,12 @@ using TechSalesManagement.Domain.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
-public class Permission : BaseEntity
+public class Permission
 {
+    public Guid id { get; set; }
+    public DateTimeOffset createdAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? updatedAt { get; set; }
+
     public string code { get; set; } = string.Empty;
     public string name { get; set; } = string.Empty;
     public string module { get; set; } = string.Empty;

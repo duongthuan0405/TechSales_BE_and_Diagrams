@@ -17,5 +17,10 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLogDbModel>
         builder.Property(x => x.primary_key).IsRequired().HasMaxLength(100);
         
         builder.Property(x => x.created_at).HasDefaultValueSql("now()");
+
+        builder.HasOne(x => x.user)
+            .WithMany(u => u.audit_logs)
+            .HasForeignKey(x => x.user_id)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using TechSalesManagement.Application.Exceptions;
-using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
+using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.Constants;
 using TechSalesManagement.Domain.Constants;
 
