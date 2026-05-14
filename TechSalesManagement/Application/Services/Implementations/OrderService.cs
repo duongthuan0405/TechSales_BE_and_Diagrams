@@ -11,6 +11,8 @@ using TechSalesManagement.Common;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
+using TechSalesManagement.Application.VoucherStrategies;
+
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -24,6 +26,7 @@ public class OrderService : IOrderService
     private readonly IShippingAddressRepository _addressRepository;
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
+    private readonly IDiscountStrategyFactory _discountStrategyFactory;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -35,6 +38,7 @@ public class OrderService : IOrderService
         IShippingAddressRepository addressRepository,
         IUserRepository userRepository,
         IEmailService emailService,
+        IDiscountStrategyFactory discountStrategyFactory,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -45,6 +49,7 @@ public class OrderService : IOrderService
         _addressRepository = addressRepository;
         _userRepository = userRepository;
         _emailService = emailService;
+        _discountStrategyFactory = discountStrategyFactory;
         _unitOfWork = unitOfWork;
     }
 
@@ -147,15 +152,9 @@ public class OrderService : IOrderService
                     throw new BadRequestException(MessageConstants.MSG33);
                 }
 
-                // Calculate discount values
-                if (appliedVoucher.type == VoucherType.FIXED)
-                {
-                    discountAmount = Math.Min(appliedVoucher.value, totalProductAmount);
-                }
-                else if (appliedVoucher.type == VoucherType.PERCENT)
-                {
-                    discountAmount = totalProductAmount * (appliedVoucher.value / 100m);
-                }
+                // Calculate discount values using Strategy Pattern
+                var strategy = _discountStrategyFactory.GetStrategy(appliedVoucher.type);
+                discountAmount = strategy.CalculateDiscount(totalProductAmount, appliedVoucher.value);
             }
 
             // 7. Total calculations

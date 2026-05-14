@@ -8,6 +8,8 @@ using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Infrastructure.HelperServices;
 using TechSalesManagement.Application.Repositories;
 using TechSalesManagement.Infrastructure.Repositories;
+using TechSalesManagement.Application.VoucherStrategies;
+
 
 namespace TechSalesManagement.Presentation_WebAPI.Extensions;
 
@@ -32,6 +34,12 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IReviewService, ReviewService>();
+
+        // Discount Strategies
+        services.AddScoped<IDiscountStrategy, FixedDiscountStrategy>();
+        services.AddScoped<IDiscountStrategy, PercentDiscountStrategy>();
+        services.AddScoped<IDiscountStrategyFactory, DiscountStrategyFactory>();
+
         return services;
     }
 
