@@ -198,14 +198,23 @@ namespace TechSalesManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("approved_at")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<DateTimeOffset?>("delivered_at")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("discount_amount")
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTimeOffset?>("shipped_at")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("shipping_address_snapshot")
                         .IsRequired()

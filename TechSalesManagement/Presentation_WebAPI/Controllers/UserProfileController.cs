@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
@@ -24,7 +24,7 @@ public class UserProfileController : ControllerBase
 
     [Authorize]
     [HttpPut]
-    public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdateProfileRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> UpdateProfileAsync([FromBody] UpdateProfileRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();

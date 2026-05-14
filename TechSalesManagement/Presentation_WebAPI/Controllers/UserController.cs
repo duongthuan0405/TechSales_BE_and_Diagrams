@@ -1,13 +1,9 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
-using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
 using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 using TechSalesManagement.Presentation_WebAPI.Extensions;
 
@@ -26,7 +22,7 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<IActionResult> GetMeAsync()
+    public async Task<ActionResult<ApiSuccessResponse<UserResponseDto>>> GetMeAsync()
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -55,6 +51,6 @@ public class UserController : ControllerBase
             }
         };
 
-        return Ok(new ApiSuccessResponse<UserResponseDto>(response, "Get personal info successfully"));
+        return Ok(new ApiSuccessResponse<UserResponseDto>(response, MessageConstants.MSG118));
     }
 }

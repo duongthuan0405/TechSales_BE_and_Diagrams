@@ -9,6 +9,7 @@ public class CartItem
     public int quantity { get; set; }
     public DateTimeOffset createdAt { get; set; }
     public DateTimeOffset updatedAt { get; set; }
+    public Product? product { get; set; }
 
     public CartItem(Guid cartId, Guid productId, int quantity)
     {

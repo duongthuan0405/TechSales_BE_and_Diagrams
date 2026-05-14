@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using TechSalesManagement.Application.Common.Constants;
+using TechSalesManagement.Common;
 using TechSalesManagement.Application.Common.Configurations;
 using TechSalesManagement.Application.Common.Utils;
 using TechSalesManagement.Application.Exceptions;
@@ -169,75 +169,95 @@ public class AuthService : IAuthService
 
     public async Task<User> LoginAsync(LoginParams parameters)
     {
-        if (string.IsNullOrWhiteSpace(parameters.Email))
-        {
-            throw new BadRequestException(MessageConstants.MSG1);
-        }
-        if (!ValidationUtils.IsValidEmail(parameters.Email))
-        {
-            throw new BadRequestException(MessageConstants.MSG2);
-        }
-
-        if (string.IsNullOrWhiteSpace(parameters.Password))
-        {
-            throw new BadRequestException(MessageConstants.MSG1);
-        }
-
-        var user = await _userRepository.GetByEmailAsync(parameters.Email);
-
-        if (user == null)
-        {
-            throw new UnauthorizedException(MessageConstants.MSG10);
-        }
-
-        // 1. Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
-        if (user.status == UserStatus.BLOCKED)
-        {
-            if (user.lockedUntil.HasValue && user.lockedUntil.Value > DateTimeOffset.UtcNow)
+        try {
+            await _unitOfWork.BeginAsync();
+            if (string.IsNullOrWhiteSpace(parameters.Email))
             {
-                // Vẫn đang trong thời gian bị khóa
-                throw new ForbiddenException(MessageConstants.MSG9);
+                throw new BadRequestException(MessageConstants.MSG1);
             }
-            else
+            if (!ValidationUtils.IsValidEmail(parameters.Email))
             {
-                // Đã hết thời gian khóa, tự động gỡ khóa và reset lượt đếm
-                user.status = UserStatus.ACTIVE;
+                throw new BadRequestException(MessageConstants.MSG2);
+            }
+
+            if (string.IsNullOrWhiteSpace(parameters.Password))
+            {
+                throw new BadRequestException(MessageConstants.MSG1);
+            }
+
+            var user = await _userRepository.GetByEmailAsync(parameters.Email);
+
+            if (user == null)
+            {
+                throw new UnauthorizedException(MessageConstants.MSG10);
+            }
+
+            // 1. Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
+            if (user.status == UserStatus.BLOCKED)
+            {
+                if (user.lockedUntil.HasValue && user.lockedUntil.Value > DateTimeOffset.UtcNow)
+                {
+                    // Vẫn đang trong thời gian bị khóa
+                    throw new ForbiddenException(MessageConstants.MSG9);
+                }
+                else
+                {
+                    // Đã hết thời gian khóa, tự động gỡ khóa và reset lượt đếm
+                    user.status = UserStatus.ACTIVE;
+                    user.failedLoginAttempts = 0;
+                    user.lockedUntil = null;
+                    // Sẽ được lưu xuống Database khi thực hiện flow bên dưới (dù mật khẩu sai hay đúng)
+                }
+            }
+
+            if(user.lastFailedAt.HasValue && DateTimeOffset.UtcNow > user.lastFailedAt.Value.AddMinutes(30))
+            {
                 user.failedLoginAttempts = 0;
                 user.lockedUntil = null;
-                // Sẽ được lưu xuống Database khi thực hiện flow bên dưới (dù mật khẩu sai hay đúng)
             }
-        }
 
-        // 2. Kiểm tra mật khẩu
-        if (!_passwordHasher.VerifyPassword(parameters.Password, user.password))
-        {
-            user.failedLoginAttempts++;
-            
-            if (user.failedLoginAttempts >= 5)
+            // 2. Kiểm tra mật khẩu
+            if (!_passwordHasher.VerifyPassword(parameters.Password, user.password))
             {
-                user.status = UserStatus.BLOCKED;
-                user.lockedUntil = DateTimeOffset.UtcNow.AddMinutes(30);
+                user.failedLoginAttempts++;
+                user.lastFailedAt = DateTimeOffset.UtcNow;
+                
+                if (user.failedLoginAttempts >= 5)
+                {
+                    user.status = UserStatus.BLOCKED;
+                    user.lockedUntil = DateTimeOffset.UtcNow.AddMinutes(30);
+                    await _userRepository.UpdateAsync(user);
+                    throw new ForbiddenException(MessageConstants.MSG9);
+                }
+
+                
                 await _userRepository.UpdateAsync(user);
-                throw new ForbiddenException(MessageConstants.MSG9);
+
+                throw new UnauthorizedException(MessageConstants.MSG10);
             }
 
-            await _userRepository.UpdateAsync(user);
-            throw new UnauthorizedException(MessageConstants.MSG10);
+            // 3. Kiểm tra trạng thái PENDING khi đăng nhập thành công
+            if (user.status == UserStatus.PENDING)
+            {
+                throw new UnauthorizedException(MessageConstants.MSG10);
+            }
+
+            // Reset hoàn toàn khi đăng nhập thành công để xóa dấu vết các lần lỗi cũ (nếu có)
+            user.failedLoginAttempts = 0;
+            user.lockedUntil = null;
+            user.status = UserStatus.ACTIVE; 
+            
+            await _unitOfWork.FinishAsync();
+
+            return user;
         }
-
-        // 3. Kiểm tra trạng thái PENDING khi đăng nhập thành công
-        if (user.status == UserStatus.PENDING)
-        {
-            throw new UnauthorizedException(MessageConstants.MSG10);
+        catch (Exception) {
+            await _unitOfWork.RollbackAsync();
+            throw;
         }
-
-        // Reset hoàn toàn khi đăng nhập thành công để xóa dấu vết các lần lỗi cũ (nếu có)
-        user.failedLoginAttempts = 0;
-        user.lockedUntil = null;
-        user.status = UserStatus.ACTIVE; 
-        await _userRepository.UpdateAsync(user);
-
-        return user;
+        finally {
+            await _unitOfWork.FinishAsync();
+        }
     }
 
     public async Task VerifyEmailAsync(VerifyEmailParams parameters)

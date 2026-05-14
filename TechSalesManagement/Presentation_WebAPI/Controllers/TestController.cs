@@ -27,14 +27,14 @@ public class TestCreateProductValidator : AbstractValidator<TestCreateProductReq
 public class TestController : ControllerBase
 {
     [HttpPost("validate")]
-    public IActionResult TestValidation([FromBody] TestCreateProductRequest request)
+    public ActionResult<ApiSuccessResponse<object>> TestValidation([FromBody] TestCreateProductRequest request)
     {
         // If it reaches here, validation has passed
         return Ok(new ApiSuccessResponse<object>(null, "Validation passed successfully"));
     }
 
     [HttpGet("success")]
-    public IActionResult GetSuccess()
+    public ActionResult<ApiSuccessResponse<object>> GetSuccess()
     {
         var data = new { Id = 1, Name = "Test Product", Price = 100.00 };
         return Ok(new ApiSuccessResponse<object>(data, "Data retrieved successfully"));

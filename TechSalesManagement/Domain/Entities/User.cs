@@ -1,7 +1,7 @@
 using System;
 using TechSalesManagement.Domain.Common;
 using TechSalesManagement.Domain.Enums;
-using TechSalesManagement.Domain.Constants;
+using TechSalesManagement.Common;
 
 namespace TechSalesManagement.Domain.Entities;
 
