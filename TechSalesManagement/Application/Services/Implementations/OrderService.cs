@@ -13,7 +13,6 @@ using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.VoucherStrategies;
 
-
 namespace TechSalesManagement.Application.Services.Implementations;
 
 public class OrderService : IOrderService
@@ -27,6 +26,7 @@ public class OrderService : IOrderService
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
     private readonly IDiscountStrategyFactory _discountStrategyFactory;
+    private readonly IAuditLogRepository _auditLogRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -39,6 +39,7 @@ public class OrderService : IOrderService
         IUserRepository userRepository,
         IEmailService emailService,
         IDiscountStrategyFactory discountStrategyFactory,
+        IAuditLogRepository auditLogRepository,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -50,12 +51,12 @@ public class OrderService : IOrderService
         _userRepository = userRepository;
         _emailService = emailService;
         _discountStrategyFactory = discountStrategyFactory;
+        _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Order> PlaceOrderAsync(PlaceOrderParams parameters)
     {
-        // 1. Check empty selection (BR74)
         if (parameters.ProductsWithQuantity == null || !parameters.ProductsWithQuantity.Any())
         {
             throw new BadRequestException(MessageConstants.MSG32);
@@ -75,7 +76,6 @@ public class OrderService : IOrderService
         {
             await _unitOfWork.BeginAsync();
 
-            // 4. Verify Stock & Real-time Calculations (BR86 / BR87)
             decimal totalProductAmount = 0;
             var orderItems = new List<OrderItem>();
             var orderId = Guid.NewGuid();
@@ -99,7 +99,6 @@ public class OrderService : IOrderService
                 var availableQty = product.inventory?.availableQuantity ?? 0;
                 if (requestedQty > availableQty)
                 {
-                    // BR87: Insufficient stock MSG36
                     throw new BadRequestException(MessageConstants.MSG36);
                 }
 
@@ -114,7 +113,6 @@ public class OrderService : IOrderService
                 });
             }
 
-            // 5. Extract and Build Address Snapshot for Order history persistence
             var address = await _addressRepository.GetByIdAsync(parameters.ShippingAddressId);
             if (address == null || address.userId != parameters.UserId)
             {
@@ -122,7 +120,6 @@ public class OrderService : IOrderService
             }
             string addressSnapshot = $"{address.detail}, {address.ward}, {address.province}";
 
-            // 6. Voucher Verification & Discount Logic (BR78 / BR79 / BR81)
             Voucher? appliedVoucher = null;
             decimal discountAmount = 0;
 
@@ -152,16 +149,13 @@ public class OrderService : IOrderService
                     throw new BadRequestException(MessageConstants.MSG33);
                 }
 
-                // Calculate discount values using Strategy Pattern
                 var strategy = _discountStrategyFactory.GetStrategy(appliedVoucher.type);
                 discountAmount = strategy.CalculateDiscount(totalProductAmount, appliedVoucher.value);
             }
 
-            // 7. Total calculations
-            decimal shippingFee = 0; // Standard zero-fee fallback or configurable value
+            decimal shippingFee = 0;
             decimal totalAmount = totalProductAmount + shippingFee - discountAmount;
 
-            // 8. Model domain order mapping
             var newOrder = new Order
             {
                 id = orderId,
@@ -176,7 +170,6 @@ public class OrderService : IOrderService
                 items = orderItems
             };
 
-            // 9. ATOMIC TRANSACTIONS (Save Order, Deduct Stock, Clear Cart, Increment Voucher usage)
             await _orderRepository.AddOrderAsync(newOrder, appliedVoucher?.id, parameters.PaymentMethodId);
 
             foreach (var item in orderItems)
@@ -199,22 +192,18 @@ public class OrderService : IOrderService
                 await _voucherRepository.UpdateVoucherAsync(appliedVoucher);
             }
 
-            // Global atomic save via unit of work
             await _unitOfWork.FinishAsync();
 
-            // 10. Fire and forget transactional Order Confirmation Email
             try
             {
                 var user = await _userRepository.GetByIdAsync(parameters.UserId);
                 if (user != null && !string.IsNullOrEmpty(user.email))
                 {
-                    // Send notification email
-                    _emailService.SendOrderConfirmationEmailAsync(user.email, newOrder.id, newOrder.totalAmount, newOrder.shippingAddressSnapshot);
+                    await _emailService.SendOrderConfirmationEmailAsync(user.email, newOrder.id, newOrder.totalAmount, newOrder.shippingAddressSnapshot);
                 }
             }
             catch (Exception)
             {
-                // Log warning or swallow to guarantee main user request doesn't fail on SMTP downtime
             }
 
             return newOrder;
@@ -260,7 +249,6 @@ public class OrderService : IOrderService
             throw new NotFoundException(MessageConstants.MSG43);
         }
 
-        // BR120: If not PENDING then cannot cancel
         if (order.status != OrderStatus.PENDING)
         {
             throw new BadRequestException(MessageConstants.MSG45);
@@ -270,10 +258,8 @@ public class OrderService : IOrderService
         {
             await _unitOfWork.BeginAsync();
 
-            // 1. Cancel order and associated payments
             await _orderRepository.CancelOrderAsync(order.id);
 
-            // 2. Release Stock (Decrease reserved quantity!)
             if (order.items != null && order.items.Any())
             {
                 foreach (var item in order.items)
@@ -282,7 +268,6 @@ public class OrderService : IOrderService
                 }
             }
 
-            // 3. Refund Voucher (Increase limit!)
             if (order.vouchers != null && order.vouchers.Any())
             {
                 foreach (var voucher in order.vouchers)
@@ -291,6 +276,64 @@ public class OrderService : IOrderService
                     await _voucherRepository.UpdateVoucherAsync(voucher);
                 }
             }
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    // Staff methods
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
+    {
+        if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
+        if (parameters.PageSize <= 0) parameters.PageSize = 20;
+
+        return await _orderRepository.GetOrdersByStatusAsync(OrderStatus.PENDING, parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<(Order order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
+    {
+        var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+
+        if (result == null || result.Value.order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        return (result.Value.order, result.Value.user, result.Value.payments);
+    }
+
+    public async Task ApproveOrderAsync(ApproveOrderParams parameters)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(parameters.OrderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.PENDING)
+        {
+            throw new BadRequestException("Only pending orders can be approved.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(parameters.OrderId, OrderStatus.APPROVED);
+
+            var auditLog = new AuditLog(
+                parameters.StaffId,
+                "APPROVE_ORDER",
+                "Orders",
+                parameters.OrderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
         }

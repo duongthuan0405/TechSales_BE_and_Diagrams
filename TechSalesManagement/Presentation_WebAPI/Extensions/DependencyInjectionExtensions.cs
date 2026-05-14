@@ -66,6 +66,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IVoucherRepository, VoucherRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         return services;
     }
 }

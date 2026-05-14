@@ -147,4 +147,101 @@ public class OrderController : ControllerBase
         // BR122: Returns 200-OK with MSG46
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG46));
     }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpGet("pending")]
+    public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetPendingOrdersAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    {
+        var parameters = new GetPendingOrdersParams
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var (orders, totalCount) = await _orderService.GetPendingOrdersAsync(parameters);
+
+        var items = orders.Select(x => new OrderStaffResponseDto
+        {
+            id = x.order.id,
+            status = x.order.status,
+            totalAmount = x.order.totalAmount,
+            createdAt = x.order.createdAt,
+            customerName = x.user?.profile?.fullName ?? "Unknown",
+            customerPhone = x.user?.profile?.phone ?? "N/A"
+        }).ToList();
+
+        var response = new PagedResponseDto<OrderStaffResponseDto>
+        {
+            items = items,
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            totalCount = totalCount
+        };
+
+        // BR143: Empty state returns MSG52
+        string message = totalCount == 0 ? MessageConstants.MSG52 : "Pending orders retrieved successfully.";
+        return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, message));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpGet("{id}/staff")]
+    public async Task<ActionResult<ApiSuccessResponse<OrderStaffDetailResponseDto>>> GetOrderWithFullDetailsAsync([FromRoute] Guid id)
+    {
+        var (order, user, payments) = await _orderService.GetOrderWithFullDetailsAsync(id);
+
+        var response = new OrderStaffDetailResponseDto
+        {
+            id = order.id,
+            status = order.status,
+            totalProductAmount = order.totalProductAmount,
+            shippingFee = order.shippingFee,
+            discountAmount = order.discountAmount,
+            totalAmount = order.totalAmount,
+            shippingAddressSnapshot = order.shippingAddressSnapshot,
+            createdAt = order.createdAt,
+            approvedAt = order.approvedAt,
+            shippedAt = order.shippedAt,
+            deliveredAt = order.deliveredAt,
+            customerEmail = user?.email ?? string.Empty,
+            customerFullName = user?.profile?.fullName ?? string.Empty,
+            customerPhone = user?.profile?.phone ?? string.Empty,
+            items = order.items.Select(i => new OrderItemResponseDto
+            {
+                productId = i.product_id,
+                productName = i.product?.name ?? "Unknown Product",
+                productImageUrl = i.product?.images?.FirstOrDefault(img => img.isPrimary)?.imageUrl ?? i.product?.images?.FirstOrDefault()?.imageUrl,
+                price = i.price,
+                quantity = i.quantity
+            }).ToList(),
+            payments = payments.Select(x => new PaymentResponseDto
+            {
+                id = x.payment.id,
+                paymentMethodName = x.methodName,
+                status = x.payment.status,
+                amount = x.payment.amount,
+                transactionRef = x.payment.transactionRef
+            }).ToList()
+        };
+
+        return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, "Order details for staff retrieved successfully."));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/approve")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ApproveOrderAsync([FromRoute] Guid id)
+    {
+        var staffId = User.GetUserId();
+        if (staffId == null) return Unauthorized();
+
+        var parameters = new ApproveOrderParams
+        {
+            OrderId = id,
+            StaffId = staffId.Value
+        };
+
+        await _orderService.ApproveOrderAsync(parameters);
+
+        // BR145: Returns 200-OK with MSG55
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG55));
+    }
 }

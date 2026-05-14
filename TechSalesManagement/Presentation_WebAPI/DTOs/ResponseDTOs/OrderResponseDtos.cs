@@ -37,3 +37,26 @@ public class OrderItemResponseDto
     public int quantity { get; set; }
     public decimal subtotal => price * quantity;
 }
+
+public class OrderStaffResponseDto : OrderResponseDto
+{
+    public string customerName { get; set; } = string.Empty;
+    public string customerPhone { get; set; } = string.Empty;
+}
+
+public class OrderStaffDetailResponseDto : OrderDetailResponseDto
+{
+    public string customerEmail { get; set; } = string.Empty;
+    public string customerPhone { get; set; } = string.Empty;
+    public string customerFullName { get; set; } = string.Empty;
+    public List<PaymentResponseDto> payments { get; set; } = new();
+}
+
+public class PaymentResponseDto
+{
+    public Guid id { get; set; }
+    public string paymentMethodName { get; set; } = string.Empty;
+    public PaymentStatus status { get; set; }
+    public decimal amount { get; set; }
+    public string? transactionRef { get; set; }
+}
