@@ -179,7 +179,7 @@ public class OrderController : ControllerBase
         };
 
         // BR143: Empty state returns MSG52
-        string message = totalCount == 0 ? MessageConstants.MSG52 : "Pending orders retrieved successfully.";
+        string message = totalCount == 0 ? MessageConstants.MSG52 : MessageConstants.MSG119;
         return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, message));
     }
 
@@ -223,7 +223,7 @@ public class OrderController : ControllerBase
             }).ToList()
         };
 
-        return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, "Order details for staff retrieved successfully."));
+        return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, MessageConstants.MSG120));
     }
 
     [Authorize(Roles = "Staff,Admin")]
@@ -243,5 +243,112 @@ public class OrderController : ControllerBase
 
         // BR145: Returns 200-OK with MSG55
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG55));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/ship")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ShipOrderAsync([FromRoute] Guid id)
+    {
+        var staffId = User.GetUserId();
+        if (staffId == null) return Unauthorized();
+
+        await _orderService.ShipOrderAsync(id, staffId.Value);
+
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG121));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/confirm-delivery")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> ConfirmDeliveryAsync([FromRoute] Guid id)
+    {
+        var staffId = User.GetUserId();
+        if (staffId == null) return Unauthorized();
+
+        await _orderService.ConfirmDeliveryAsync(id, staffId.Value);
+
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG122));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/staff-cancel")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> StaffCancelOrderAsync([FromRoute] Guid id, [FromBody] OrderStaffCancelRequestDto request)
+    {
+        var staffId = User.GetUserId();
+        if (staffId == null) return Unauthorized();
+
+        await _orderService.StaffCancelOrderAsync(id, staffId.Value, request.reason);
+
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG58));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/refund")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> InitiateRefundAsync([FromRoute] Guid id)
+    {
+        var staffId = User.GetUserId();
+        if (staffId == null) return Unauthorized();
+
+        await _orderService.InitiateRefundAsync(id, staffId.Value);
+
+        return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG62));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpGet("refund-requests")]
+    public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetRefundRequestsAsync([FromQuery] GetPendingOrdersParams parameters)
+    {
+        var (orders, totalCount) = await _orderService.GetRefundRequestsAsync(parameters.PageNumber, parameters.PageSize);
+
+        var response = new PagedResponseDto<OrderStaffResponseDto>
+        {
+            items = orders.Select(o => new OrderStaffResponseDto
+            {
+                id = o.order.id,
+                customerName = o.user?.profile?.fullName ?? "Unknown",
+                totalAmount = o.order.totalAmount,
+                status = o.order.status,
+                createdAt = o.order.createdAt
+            }).ToList(),
+            totalCount = totalCount,
+            pageNumber = parameters.PageNumber,
+            pageSize = parameters.PageSize
+        };
+
+        return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, "Refund requests retrieved successfully."));
+    }
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpGet("search")]
+    public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> SearchOrdersAsync([FromQuery] OrderSearchRequestDto request)
+    {
+        var parameters = new TechSalesManagement.Domain.Specifications.OrderSearchParameters
+        {
+            OrderCode = request.orderCode,
+            CustomerName = request.customerName,
+            PhoneNumber = request.phoneNumber,
+            FromDate = request.fromDate,
+            ToDate = request.toDate,
+            PageNumber = request.pageNumber,
+            PageSize = request.pageSize
+        };
+
+        var (orders, totalCount) = await _orderService.SearchOrdersAsync(parameters);
+
+        var response = new PagedResponseDto<OrderStaffResponseDto>
+        {
+            items = orders.Select(o => new OrderStaffResponseDto
+            {
+                id = o.order.id,
+                customerName = o.user?.profile?.fullName ?? "Unknown",
+                totalAmount = o.order.totalAmount,
+                status = o.order.status,
+                createdAt = o.order.createdAt
+            }).ToList(),
+            totalCount = totalCount,
+            pageNumber = request.pageNumber,
+            pageSize = request.pageSize
+        };
+
+        return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, "Orders searched successfully."));
     }
 }

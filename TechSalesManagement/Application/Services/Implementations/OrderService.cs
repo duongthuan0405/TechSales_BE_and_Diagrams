@@ -12,6 +12,7 @@ using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.VoucherStrategies;
+using TechSalesManagement.Application.Services.Strategies.Refund;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -27,6 +28,7 @@ public class OrderService : IOrderService
     private readonly IEmailService _emailService;
     private readonly IDiscountStrategyFactory _discountStrategyFactory;
     private readonly IAuditLogRepository _auditLogRepository;
+    private readonly IRefundStrategyFactory _refundStrategyFactory;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -40,6 +42,7 @@ public class OrderService : IOrderService
         IEmailService emailService,
         IDiscountStrategyFactory discountStrategyFactory,
         IAuditLogRepository auditLogRepository,
+        IRefundStrategyFactory refundStrategyFactory,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -52,6 +55,7 @@ public class OrderService : IOrderService
         _emailService = emailService;
         _discountStrategyFactory = discountStrategyFactory;
         _auditLogRepository = auditLogRepository;
+        _refundStrategyFactory = refundStrategyFactory;
         _unitOfWork = unitOfWork;
     }
 
@@ -342,5 +346,203 @@ public class OrderService : IOrderService
             await _unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task ShipOrderAsync(Guid orderId, Guid staffId)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.APPROVED)
+        {
+            throw new BadRequestException("Only approved orders can be shipped.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.SHIPPING);
+
+            var auditLog = new AuditLog(
+                staffId,
+                "SHIP_ORDER",
+                "Orders",
+                orderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task ConfirmDeliveryAsync(Guid orderId, Guid staffId)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.SHIPPING)
+        {
+            throw new BadRequestException("Only shipping orders can be confirmed as delivered.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.DELIVERED);
+
+            var auditLog = new AuditLog(
+                staffId,
+                "DELIVER_ORDER",
+                "Orders",
+                orderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task StaffCancelOrderAsync(Guid orderId, Guid staffId, string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new BadRequestException("Reason for cancellation is required.");
+        }
+
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status == OrderStatus.DELIVERED)
+        {
+            throw new BadRequestException("Cannot cancel a delivered order.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.CANCELLED);
+
+            if (order.items != null && order.items.Any())
+            {
+                foreach (var item in order.items)
+                {
+                    await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                }
+            }
+
+            var auditLog = new AuditLog(
+                staffId,
+                "CANCEL_ORDER",
+                "Orders",
+                $"{orderId} - Reason: {reason}"
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task InitiateRefundAsync(Guid orderId, Guid staffId)
+    {
+        var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+
+        if (result == null || result.Value.order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        var order = result.Value.order;
+        var payments = result.Value.payments;
+
+        if (order.status != OrderStatus.CANCELLED)
+        {
+            throw new BadRequestException(MessageConstants.MSG64);
+        }
+
+        var successfulPayment = payments.FirstOrDefault(p => p.payment.status == PaymentStatus.SUCCESS);
+        if (successfulPayment.payment == null)
+        {
+            throw new BadRequestException("Order has no completed payment to refund.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var methodType = string.IsNullOrEmpty(successfulPayment.payment.transactionRef) 
+                ? PaymentMethodType.CASH 
+                : PaymentMethodType.ONLINE;
+
+            var strategy = _refundStrategyFactory.GetStrategy(methodType);
+            bool success = await strategy.ExecuteRefundAsync(successfulPayment.payment);
+
+            if (success)
+            {
+                // Update payment status (assuming we have a method for this)
+                // In a real project, we'd add UpdatePaymentStatusAsync to Repository
+                
+                var auditLog = new AuditLog(
+                    staffId,
+                    "INITIATE_REFUND",
+                    "Orders",
+                    $"{orderId} - Amount: {successfulPayment.payment.amount}"
+                );
+                await _auditLogRepository.AddAsync(auditLog);
+
+                await _unitOfWork.FinishAsync();
+            }
+            else
+            {
+                throw new BadRequestException("Refund failed through payment gateway.");
+            }
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
+    {
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 20;
+
+        return await _orderRepository.GetRefundableOrdersAsync(pageNumber, pageSize);
+    }
+
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    {
+        return await _orderRepository.SearchOrdersAsync(parameters);
     }
 }

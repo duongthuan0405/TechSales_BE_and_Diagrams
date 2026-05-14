@@ -15,7 +15,10 @@ public class Review
     public int rating { get; set; }
     public string? comment { get; set; }
     public ReviewStatus status { get; set; } = ReviewStatus.VISIBLE;
+    public string? violationReason { get; set; }
     public UserProfile? profile { get; set; }
+    public List<ReviewResponse> responses { get; set; } = new();
+    public string? productName { get; set; } // For staff view aggregation
 
     public Review(Guid? userId, Guid productId, int rating, string? comment)
     {

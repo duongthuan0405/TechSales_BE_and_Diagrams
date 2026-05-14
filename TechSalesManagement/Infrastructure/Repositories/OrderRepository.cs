@@ -275,11 +275,82 @@ public class OrderRepository : IOrderRepository
         {
             dbOrder.status = status;
             dbOrder.updated_at = DateTimeOffset.UtcNow;
-            if (status == OrderStatus.APPROVED)
+            
+            switch (status)
             {
-                dbOrder.approved_at = DateTimeOffset.UtcNow;
+                case OrderStatus.APPROVED:
+                    dbOrder.approved_at = DateTimeOffset.UtcNow;
+                    break;
+                case OrderStatus.SHIPPING:
+                    dbOrder.shipped_at = DateTimeOffset.UtcNow;
+                    break;
+                case OrderStatus.DELIVERED:
+                    dbOrder.delivered_at = DateTimeOffset.UtcNow;
+                    break;
             }
+
             _dbContext.Orders.Update(dbOrder);
         }
+    }
+
+    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundableOrdersAsync(int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
+            .Where(o => o.status == OrderStatus.CANCELLED);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(o => o.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var results = dbModels.Select(m => (
+            MapToEntity(m)!,
+            MapUserToEntity(m.user),
+            m.payments.Select(p => new Payment
+            {
+                id = p.id,
+                orderId = p.order_id,
+                paymentMethodId = p.payment_method_id,
+                status = p.status,
+                amount = p.amount,
+                transactionRef = p.transaction_ref,
+                createdAt = p.created_at,
+                updatedAt = p.updated_at
+            }).ToList()
+        )).ToList();
+
+        return (results, totalCount);
+    }
+
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    {
+        var query = _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .AsQueryable();
+
+        query = TechSalesManagement.Domain.Specifications.OrderSearchSpecification.ApplyFilters(query, parameters);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(o => o.created_at)
+            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .ToListAsync();
+
+        var results = dbModels.Select(m => (
+            MapToEntity(m)!,
+            MapUserToEntity(m.user)
+        )).ToList();
+
+        return (results, totalCount);
     }
 }

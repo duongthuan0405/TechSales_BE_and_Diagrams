@@ -120,4 +120,8 @@ public static class MessageConstants
     public const string MSG116 = "Invalid format. This parameter requires a numeric value.";
     public const string MSG117 = "User not found.";
     public const string MSG118 = "Get personal info successfully.";
+    public const string MSG119 = "Get pending orders successfully.";
+    public const string MSG120 = "Get order details for staff successfully.";
+    public const string MSG121 = "Order has been shipped successfully.";
+    public const string MSG122 = "Order has been delivered successfully.";
 }

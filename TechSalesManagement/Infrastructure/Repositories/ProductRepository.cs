@@ -66,6 +66,13 @@ public class ProductRepository : IProductRepository
         return MapToEntity(dbModel);
     }
 
+    public async Task MigrateProductsAsync(Guid oldCategoryId, Guid newCategoryId)
+    {
+        await _dbContext.Products
+            .Where(p => p.category_id == oldCategoryId)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.category_id, newCategoryId));
+    }
+
     private Product? MapToEntity(ProductDbModel? dbModel)
     {
         if (dbModel == null) return null;

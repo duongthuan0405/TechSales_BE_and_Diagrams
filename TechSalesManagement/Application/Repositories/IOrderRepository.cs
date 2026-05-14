@@ -16,4 +16,6 @@ public interface IOrderRepository
     Task<(System.Collections.Generic.List<(Order order, User? user)> orders, int totalCount)> GetOrdersByStatusAsync(OrderStatus status, int pageNumber, int pageSize);
     Task<(Order? order, User? user, System.Collections.Generic.List<(Payment payment, string methodName)> payments)?> GetOrderWithFullDetailsByIdAsync(System.Guid orderId);
     Task UpdateStatusAsync(System.Guid orderId, OrderStatus status);
+    Task<(System.Collections.Generic.List<(Order order, User? user, System.Collections.Generic.List<Payment> payments)> orders, int totalCount)> GetRefundableOrdersAsync(int pageNumber, int pageSize);
+    Task<(System.Collections.Generic.List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters);
 }

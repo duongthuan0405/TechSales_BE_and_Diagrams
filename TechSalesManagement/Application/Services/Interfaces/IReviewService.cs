@@ -16,4 +16,7 @@ public interface IReviewService
 {
     Task AddReviewAsync(AddReviewParams parameters);
     Task<ProductReviewsResult> GetProductReviewsAsync(GetProductReviewsParams parameters);
+    Task<(List<Review> reviews, int totalCount)> GetLatestReviewsAsync(int pageNumber, int pageSize);
+    Task ReplyToReviewAsync(Guid reviewId, string replyContent, Guid staffId);
+    Task HideReviewAsync(Guid reviewId, string reason, Guid staffId);
 }
