@@ -353,4 +353,18 @@ public class OrderRepository : IOrderRepository
 
         return (results, totalCount);
     }
+
+    public async Task UpdateOrderAsync(Order order)
+    {
+        var dbModel = await _dbContext.Orders.FindAsync(order.id);
+        if (dbModel != null)
+        {
+            dbModel.status = order.status;
+            dbModel.updated_at = order.updatedAt;
+            dbModel.approved_at = order.approvedAt;
+            dbModel.shipped_at = order.shippedAt;
+            dbModel.delivered_at = order.deliveredAt;
+            _dbContext.Orders.Update(dbModel);
+        }
+    }
 }
