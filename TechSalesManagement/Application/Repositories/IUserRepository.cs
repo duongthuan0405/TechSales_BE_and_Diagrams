@@ -1,4 +1,5 @@
 using TechSalesManagement.Domain.Entities;
+using TechSalesManagement.Domain.Enums;
 
 namespace TechSalesManagement.Application.Interfaces;
 
@@ -9,4 +10,7 @@ public interface IUserRepository
     Task<Guid> AddAsync(User user);
     Task UpdateAsync(User user);
     Task<bool> ExistsByEmailAsync(string email);
+    Task<List<User>> GetUsersByRoleAsync(string roleName, int pageNumber, int pageSize);
+    Task<(List<User> items, int totalCount)> GetPagedUsersByRoleAsync(string roleName, int pageNumber, int pageSize);
+    Task UpdateStatusAsync(Guid userId, UserStatus status, DateTimeOffset? lockedUntil);
 }

@@ -29,4 +29,24 @@ public class Voucher
     }
 
     public Voucher() { }
+
+    public bool IsValid(decimal orderAmount)
+    {
+        return isActive && 
+               usedCount < maxUsage && 
+               orderAmount >= minOrderAmount && 
+               (!startDate.HasValue || startDate <= DateTimeOffset.UtcNow) && 
+               (!endDate.HasValue || endDate >= DateTimeOffset.UtcNow);
+    }
+
+    public bool IsExpired()
+    {
+        return endDate.HasValue && endDate < DateTimeOffset.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        this.isActive = false;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
 }

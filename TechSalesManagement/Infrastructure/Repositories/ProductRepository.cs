@@ -73,6 +73,101 @@ public class ProductRepository : IProductRepository
             .ExecuteUpdateAsync(s => s.SetProperty(p => p.category_id, newCategoryId));
     }
 
+    public async Task AddAsync(Product product)
+    {
+        var dbModel = new ProductDbModel
+        {
+            id = product.id,
+            name = product.name,
+            description = product.description,
+            price = product.price,
+            brand = product.brand,
+            category_id = product.categoryId,
+            status = product.status,
+            created_at = product.createdAt,
+            updated_at = product.updatedAt
+        };
+
+        if (product.inventory != null)
+        {
+            dbModel.inventory = new InventoryDbModel
+            {
+                product_id = product.id,
+                quantity = product.inventory.quantity,
+                reserved_quantity = product.inventory.reservedQuantity
+            };
+        }
+
+        dbModel.product_images = product.images.Select(img => new ProductImageDbModel
+        {
+            id = Guid.NewGuid(),
+            product_id = product.id,
+            image_url = img.imageUrl,
+            is_primary = img.isPrimary
+        }).ToList();
+
+        await _dbContext.Products.AddAsync(dbModel);
+    }
+
+    public async Task UpdateAsync(Product product)
+    {
+        var dbModel = await _dbContext.Products
+            .Include(p => p.product_images)
+            .FirstOrDefaultAsync(p => p.id == product.id);
+
+        if (dbModel != null)
+        {
+            dbModel.name = product.name;
+            dbModel.description = product.description;
+            dbModel.price = product.price;
+            dbModel.brand = product.brand;
+            dbModel.category_id = product.categoryId;
+            dbModel.status = product.status;
+            dbModel.updated_at = DateTimeOffset.UtcNow;
+
+            // Sync images (simplified: replace all)
+            _dbContext.ProductImages.RemoveRange(dbModel.product_images);
+            dbModel.product_images = product.images.Select(img => new ProductImageDbModel
+            {
+                id = Guid.NewGuid(),
+                product_id = product.id,
+                image_url = img.imageUrl,
+                is_primary = img.isPrimary
+            }).ToList();
+
+            _dbContext.Products.Update(dbModel);
+        }
+    }
+
+    public async Task<(List<Product> products, int totalCount)> GetAdminProductsAsync(string? keyword, Guid? categoryId, ProductStatus? status, int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Products
+            .Include(p => p.product_images)
+            .Include(p => p.inventory)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+            query = query.Where(p => p.name.Contains(keyword) || p.brand.Contains(keyword));
+
+        if (categoryId.HasValue)
+            query = query.Where(p => p.category_id == categoryId.Value);
+
+        if (status.HasValue)
+            query = query.Where(p => p.status == status.Value);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(p => p.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var entities = dbModels.Select(m => MapToEntity(m)!).ToList();
+
+        return (entities, totalCount);
+    }
+
     private Product? MapToEntity(ProductDbModel? dbModel)
     {
         if (dbModel == null) return null;

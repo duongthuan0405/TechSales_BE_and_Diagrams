@@ -18,4 +18,10 @@ public class Inventory
     }
 
     public Inventory() { }
+
+    public void UpdateStock(int newQuantity)
+    {
+        if (newQuantity < 0) throw new InvalidOperationException("Stock quantity cannot be negative.");
+        this.quantity = newQuantity;
+    }
 }

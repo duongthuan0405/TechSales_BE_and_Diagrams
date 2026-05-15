@@ -35,6 +35,10 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductManagementService, ProductManagementService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IVoucherManagementService, VoucherManagementService>();
 
         // Discount Strategies
         services.AddScoped<IDiscountStrategy, FixedDiscountStrategy>();
@@ -69,6 +73,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         return services;
     }
 }
