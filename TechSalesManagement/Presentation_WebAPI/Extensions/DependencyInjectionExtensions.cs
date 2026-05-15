@@ -34,6 +34,16 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductManagementService, ProductManagementService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IVoucherManagementService, VoucherManagementService>();
+        services.AddScoped<IContentManagementService, ContentManagementService>();
+        services.AddScoped<ISystemSettingService, SystemSettingService>();
+        services.AddScoped<IRbacService, RbacService>();
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IOrderManagementService, OrderManagementService>();
 
         // Discount Strategies
         services.AddScoped<IDiscountStrategy, FixedDiscountStrategy>();
@@ -58,6 +68,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserTokenRepository, UserTokenRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
@@ -66,6 +77,11 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IVoucherRepository, VoucherRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+        services.AddScoped<IArticleRepository, ArticleRepository>();
+        services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
         return services;
     }
 }

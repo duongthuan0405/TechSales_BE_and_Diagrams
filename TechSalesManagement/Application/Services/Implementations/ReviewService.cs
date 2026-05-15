@@ -16,15 +16,18 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IOrderRepository _orderRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ReviewService(
         IReviewRepository reviewRepository,
         IOrderRepository orderRepository,
+        IAuditLogRepository auditLogRepository,
         IUnitOfWork unitOfWork)
     {
         _reviewRepository = reviewRepository;
         _orderRepository = orderRepository;
+        _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -110,5 +113,90 @@ public class ReviewService : IReviewService
             TotalCount = totalCount,
             AverageRating = averageRating
         };
+    }
+
+    public async Task<(List<Review> reviews, int totalCount)> GetLatestReviewsAsync(int pageNumber, int pageSize)
+    {
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 20;
+
+        return await _reviewRepository.GetLatestReviewsAsync(pageNumber, pageSize);
+    }
+
+    public async Task ReplyToReviewAsync(Guid reviewId, string replyContent, Guid staffId)
+    {
+        if (string.IsNullOrWhiteSpace(replyContent))
+        {
+            throw new BadRequestException(MessageConstants.MSG68);
+        }
+
+        var review = await _reviewRepository.GetReviewByIdAsync(reviewId);
+        if (review == null)
+        {
+            throw new NotFoundException("Review not found.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var response = new ReviewResponse(reviewId, staffId, replyContent);
+            await _reviewRepository.AddReviewResponseAsync(response);
+
+            // Ghi log hành động (Part of Observer logic)
+            var auditLog = new AuditLog(
+                staffId,
+                "REPLY_REVIEW",
+                "Reviews",
+                $"ReviewId: {reviewId}"
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task HideReviewAsync(Guid reviewId, string reason, Guid staffId)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new BadRequestException(MessageConstants.MSG70);
+        }
+
+        var review = await _reviewRepository.GetReviewByIdAsync(reviewId);
+        if (review == null)
+        {
+            throw new NotFoundException("Review not found.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            review.status = ReviewStatus.HIDDEN;
+            review.violationReason = reason;
+
+            await _reviewRepository.UpdateReviewAsync(review);
+
+            var auditLog = new AuditLog(
+                staffId,
+                "HIDE_REVIEW",
+                "Reviews",
+                $"ReviewId: {reviewId} - Reason: {reason}"
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 }

@@ -43,6 +43,10 @@ public class TechSalesDbContext : DbContext
     public DbSet<NotificationDbModel> Notifications { get; set; }
     public DbSet<AuditLogDbModel> AuditLogs { get; set; }
 
+    // Content & Configuration Group
+    public DbSet<ArticleDbModel> Articles { get; set; }
+    public DbSet<SystemSettingDbModel> SystemSettings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

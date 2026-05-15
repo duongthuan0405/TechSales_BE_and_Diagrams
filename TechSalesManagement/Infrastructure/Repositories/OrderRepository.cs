@@ -111,6 +111,86 @@ public class OrderRepository : IOrderRepository
         return MapToEntity(dbModel);
     }
 
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetOrdersByStatusAsync(OrderStatus status, int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .Where(o => o.status == status);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(o => o.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var results = dbModels.Select(m => (MapToEntity(m)!, MapUserToEntity(m.user))).ToList();
+
+        return (results, totalCount);
+    }
+
+    public async Task<(Order? order, User? user, List<(Payment payment, string methodName)> payments)?> GetOrderWithFullDetailsByIdAsync(Guid orderId)
+    {
+        var dbModel = await _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .Include(o => o.order_items)
+                .ThenInclude(oi => oi.product)
+                    .ThenInclude(p => p.product_images)
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
+            .Include(o => o.order_vouchers)
+                .ThenInclude(ov => ov.voucher)
+            .FirstOrDefaultAsync(o => o.id == orderId);
+
+        if (dbModel == null) return null;
+
+        var order = MapToEntity(dbModel);
+        var user = MapUserToEntity(dbModel.user);
+        var payments = dbModel.payments.Select(p => (new Payment
+        {
+            id = p.id,
+            orderId = p.order_id,
+            paymentMethodId = p.payment_method_id,
+            status = p.status,
+            amount = p.amount,
+            transactionRef = p.transaction_ref,
+            createdAt = p.created_at,
+            updatedAt = p.updated_at
+        }, p.payment_method?.name ?? "Unknown")).ToList();
+
+        return (order, user, payments);
+    }
+
+    private User? MapUserToEntity(UserDbModel? dbModel)
+    {
+        if (dbModel == null) return null;
+        var user = new User
+        {
+            id = dbModel.id,
+            email = dbModel.email,
+            status = dbModel.status,
+            createdAt = dbModel.created_at,
+            updatedAt = dbModel.updated_at
+        };
+
+        if (dbModel.user_profile != null)
+        {
+            user.profile = new UserProfile
+            {
+                userId = dbModel.user_profile.user_id,
+                fullName = dbModel.user_profile.full_name,
+                phone = dbModel.user_profile.phone,
+                avatarUrl = dbModel.user_profile.avatar_url,
+                dateOfBirth = dbModel.user_profile.date_of_birth
+            };
+        }
+
+        return user;
+    }
+
     private Order? MapToEntity(OrderDbModel? dbModel)
     {
         if (dbModel == null) return null;
@@ -144,8 +224,6 @@ public class OrderRepository : IOrderRepository
                 {
                     id = oi.product.id,
                     name = oi.product.name,
-                    brand = oi.product.brand,
-                    price = oi.product.price,
                     images = oi.product.product_images != null ? oi.product.product_images.Select(img => new ProductImage
                     {
                         id = img.id,
@@ -160,9 +238,8 @@ public class OrderRepository : IOrderRepository
         {
             order.vouchers = dbModel.order_vouchers.Select(ov => new Voucher
             {
-                id = ov.voucher.id,
-                code = ov.voucher.code,
-                usedCount = ov.voucher.used_count
+                id = ov.voucher_id,
+                code = ov.voucher?.code ?? string.Empty
             }).ToList();
         }
 
@@ -188,6 +265,106 @@ public class OrderRepository : IOrderRepository
                 payment.updated_at = DateTimeOffset.UtcNow;
                 _dbContext.Payments.Update(payment);
             }
+        }
+    }
+
+    public async Task UpdateStatusAsync(Guid orderId, OrderStatus status)
+    {
+        var dbOrder = await _dbContext.Orders.FindAsync(orderId);
+        if (dbOrder != null)
+        {
+            dbOrder.status = status;
+            dbOrder.updated_at = DateTimeOffset.UtcNow;
+            
+            switch (status)
+            {
+                case OrderStatus.APPROVED:
+                    dbOrder.approved_at = DateTimeOffset.UtcNow;
+                    break;
+                case OrderStatus.SHIPPING:
+                    dbOrder.shipped_at = DateTimeOffset.UtcNow;
+                    break;
+                case OrderStatus.DELIVERED:
+                    dbOrder.delivered_at = DateTimeOffset.UtcNow;
+                    break;
+            }
+
+            _dbContext.Orders.Update(dbOrder);
+        }
+    }
+
+    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundableOrdersAsync(int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
+            .Where(o => o.status == OrderStatus.CANCELLED);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(o => o.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var results = dbModels.Select(m => (
+            MapToEntity(m)!,
+            MapUserToEntity(m.user),
+            m.payments.Select(p => new Payment
+            {
+                id = p.id,
+                orderId = p.order_id,
+                paymentMethodId = p.payment_method_id,
+                status = p.status,
+                amount = p.amount,
+                transactionRef = p.transaction_ref,
+                createdAt = p.created_at,
+                updatedAt = p.updated_at
+            }).ToList()
+        )).ToList();
+
+        return (results, totalCount);
+    }
+
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    {
+        var query = _dbContext.Orders
+            .Include(o => o.user)
+                .ThenInclude(u => u.user_profile)
+            .AsQueryable();
+
+        query = TechSalesManagement.Domain.Specifications.OrderSearchSpecification.ApplyFilters(query, parameters);
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(o => o.created_at)
+            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .ToListAsync();
+
+        var results = dbModels.Select(m => (
+            MapToEntity(m)!,
+            MapUserToEntity(m.user)
+        )).ToList();
+
+        return (results, totalCount);
+    }
+
+    public async Task UpdateOrderAsync(Order order)
+    {
+        var dbModel = await _dbContext.Orders.FindAsync(order.id);
+        if (dbModel != null)
+        {
+            dbModel.status = order.status;
+            dbModel.updated_at = order.updatedAt;
+            dbModel.approved_at = order.approvedAt;
+            dbModel.shipped_at = order.shippedAt;
+            dbModel.delivered_at = order.deliveredAt;
+            _dbContext.Orders.Update(dbModel);
         }
     }
 }

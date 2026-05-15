@@ -32,4 +32,35 @@ public class Order
     }
 
     public Order() { }
+
+    public void Approve()
+    {
+        if (this.status != OrderStatus.PENDING) return;
+        this.status = OrderStatus.APPROVED;
+        this.approvedAt = DateTimeOffset.UtcNow;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void Ship()
+    {
+        if (this.status != OrderStatus.APPROVED) return;
+        this.status = OrderStatus.SHIPPING;
+        this.shippedAt = DateTimeOffset.UtcNow;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void Deliver()
+    {
+        if (this.status != OrderStatus.SHIPPING) return;
+        this.status = OrderStatus.DELIVERED;
+        this.deliveredAt = DateTimeOffset.UtcNow;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void Cancel()
+    {
+        if (this.status == OrderStatus.DELIVERED) return;
+        this.status = OrderStatus.CANCELLED;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
 }

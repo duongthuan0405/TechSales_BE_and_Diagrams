@@ -88,6 +88,54 @@ public class UserRepository : IUserRepository
             .AnyAsync(u => u.email == email);
     }
 
+    public async Task<System.Collections.Generic.List<User>> GetUsersByRoleAsync(string roleName, int pageNumber, int pageSize)
+    {
+        var dbModels = await _dbContext.Users
+            .Include(u => u.user_roles)
+                .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
+            .Where(u => u.user_roles.Any(ur => ur.role.name == roleName))
+            .OrderByDescending(u => u.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return dbModels.Select(m => MapToEntity(m)!).ToList();
+    }
+
+    public async Task<(System.Collections.Generic.List<User> items, int totalCount)> GetPagedUsersByRoleAsync(string roleName, int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Users
+            .Include(u => u.user_roles)
+                .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
+            .Where(u => u.user_roles.Any(ur => ur.role.name == roleName));
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(u => u.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var items = dbModels.Select(m => MapToEntity(m)!).ToList();
+
+        return (items, totalCount);
+    }
+
+    public async Task UpdateStatusAsync(Guid userId, TechSalesManagement.Domain.Enums.UserStatus status, DateTimeOffset? lockedUntil)
+    {
+        var dbModel = await _dbContext.Users.FindAsync(userId);
+        if (dbModel != null)
+        {
+            dbModel.status = status;
+            dbModel.locked_until = lockedUntil;
+            dbModel.updated_at = DateTimeOffset.UtcNow;
+            _dbContext.Users.Update(dbModel);
+        }
+    }
+
     private User? MapToEntity(UserDbModel? dbModel)
     {
         if (dbModel == null) return null;

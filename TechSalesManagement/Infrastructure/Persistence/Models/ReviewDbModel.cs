@@ -14,6 +14,7 @@ public class ReviewDbModel
     public ReviewStatus? status { get; set; }
     public DateTimeOffset? created_at { get; set; }
     public DateTimeOffset? updated_at { get; set; }
+    public string? violation_reason { get; set; }
 
     // Navigation properties
     public UserDbModel? user { get; set; }

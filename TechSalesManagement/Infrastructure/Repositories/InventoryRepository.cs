@@ -38,4 +38,31 @@ public class InventoryRepository : IInventoryRepository
             _dbContext.Inventories.Update(dbModel);
         }
     }
+
+    public async Task<TechSalesManagement.Domain.Entities.Inventory?> GetByProductIdAsync(Guid productId)
+    {
+        var dbModel = await _dbContext.Inventories
+            .FirstOrDefaultAsync(i => i.product_id == productId);
+
+        if (dbModel == null) return null;
+
+        return new TechSalesManagement.Domain.Entities.Inventory
+        {
+            productId = dbModel.product_id,
+            quantity = dbModel.quantity,
+            reservedQuantity = dbModel.reserved_quantity
+        };
+    }
+
+    public async Task UpdateStockAsync(Guid productId, int quantity)
+    {
+        var dbModel = await _dbContext.Inventories
+            .FirstOrDefaultAsync(i => i.product_id == productId);
+
+        if (dbModel != null)
+        {
+            dbModel.quantity = quantity;
+            _dbContext.Inventories.Update(dbModel);
+        }
+    }
 }

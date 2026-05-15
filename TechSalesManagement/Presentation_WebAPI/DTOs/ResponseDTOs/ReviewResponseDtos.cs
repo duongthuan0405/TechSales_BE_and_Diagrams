@@ -20,3 +20,10 @@ public class ProductReviewsResponseDto
     public int pageSize { get; set; }
     public List<ReviewItemResponseDto> items { get; set; } = new();
 }
+
+public class ReviewStaffResponseDto : ReviewItemResponseDto
+{
+    public string? productName { get; set; }
+    public string status { get; set; } = string.Empty;
+    public string? violationReason { get; set; }
+}

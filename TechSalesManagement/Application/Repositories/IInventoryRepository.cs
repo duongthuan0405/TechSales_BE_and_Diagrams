@@ -7,4 +7,6 @@ public interface IInventoryRepository
 {
     Task ReserveStockAsync(Guid productId, int quantity);
     Task ReleaseStockAsync(Guid productId, int quantity);
+    Task<TechSalesManagement.Domain.Entities.Inventory?> GetByProductIdAsync(Guid productId);
+    Task UpdateStockAsync(Guid productId, int quantity);
 }

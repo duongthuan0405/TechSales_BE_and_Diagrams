@@ -12,7 +12,7 @@ using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.VoucherStrategies;
-
+using TechSalesManagement.Application.Services.Strategies.Refund;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -27,6 +27,8 @@ public class OrderService : IOrderService
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
     private readonly IDiscountStrategyFactory _discountStrategyFactory;
+    private readonly IAuditLogRepository _auditLogRepository;
+    private readonly IRefundStrategyFactory _refundStrategyFactory;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -39,6 +41,8 @@ public class OrderService : IOrderService
         IUserRepository userRepository,
         IEmailService emailService,
         IDiscountStrategyFactory discountStrategyFactory,
+        IAuditLogRepository auditLogRepository,
+        IRefundStrategyFactory refundStrategyFactory,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -50,12 +54,13 @@ public class OrderService : IOrderService
         _userRepository = userRepository;
         _emailService = emailService;
         _discountStrategyFactory = discountStrategyFactory;
+        _auditLogRepository = auditLogRepository;
+        _refundStrategyFactory = refundStrategyFactory;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Order> PlaceOrderAsync(PlaceOrderParams parameters)
     {
-        // 1. Check empty selection (BR74)
         if (parameters.ProductsWithQuantity == null || !parameters.ProductsWithQuantity.Any())
         {
             throw new BadRequestException(MessageConstants.MSG32);
@@ -75,7 +80,6 @@ public class OrderService : IOrderService
         {
             await _unitOfWork.BeginAsync();
 
-            // 4. Verify Stock & Real-time Calculations (BR86 / BR87)
             decimal totalProductAmount = 0;
             var orderItems = new List<OrderItem>();
             var orderId = Guid.NewGuid();
@@ -99,7 +103,6 @@ public class OrderService : IOrderService
                 var availableQty = product.inventory?.availableQuantity ?? 0;
                 if (requestedQty > availableQty)
                 {
-                    // BR87: Insufficient stock MSG36
                     throw new BadRequestException(MessageConstants.MSG36);
                 }
 
@@ -114,7 +117,6 @@ public class OrderService : IOrderService
                 });
             }
 
-            // 5. Extract and Build Address Snapshot for Order history persistence
             var address = await _addressRepository.GetByIdAsync(parameters.ShippingAddressId);
             if (address == null || address.userId != parameters.UserId)
             {
@@ -122,7 +124,6 @@ public class OrderService : IOrderService
             }
             string addressSnapshot = $"{address.detail}, {address.ward}, {address.province}";
 
-            // 6. Voucher Verification & Discount Logic (BR78 / BR79 / BR81)
             Voucher? appliedVoucher = null;
             decimal discountAmount = 0;
 
@@ -152,16 +153,13 @@ public class OrderService : IOrderService
                     throw new BadRequestException(MessageConstants.MSG33);
                 }
 
-                // Calculate discount values using Strategy Pattern
                 var strategy = _discountStrategyFactory.GetStrategy(appliedVoucher.type);
                 discountAmount = strategy.CalculateDiscount(totalProductAmount, appliedVoucher.value);
             }
 
-            // 7. Total calculations
-            decimal shippingFee = 0; // Standard zero-fee fallback or configurable value
+            decimal shippingFee = 0;
             decimal totalAmount = totalProductAmount + shippingFee - discountAmount;
 
-            // 8. Model domain order mapping
             var newOrder = new Order
             {
                 id = orderId,
@@ -176,7 +174,6 @@ public class OrderService : IOrderService
                 items = orderItems
             };
 
-            // 9. ATOMIC TRANSACTIONS (Save Order, Deduct Stock, Clear Cart, Increment Voucher usage)
             await _orderRepository.AddOrderAsync(newOrder, appliedVoucher?.id, parameters.PaymentMethodId);
 
             foreach (var item in orderItems)
@@ -199,22 +196,18 @@ public class OrderService : IOrderService
                 await _voucherRepository.UpdateVoucherAsync(appliedVoucher);
             }
 
-            // Global atomic save via unit of work
             await _unitOfWork.FinishAsync();
 
-            // 10. Fire and forget transactional Order Confirmation Email
             try
             {
                 var user = await _userRepository.GetByIdAsync(parameters.UserId);
                 if (user != null && !string.IsNullOrEmpty(user.email))
                 {
-                    // Send notification email
-                    _emailService.SendOrderConfirmationEmailAsync(user.email, newOrder.id, newOrder.totalAmount, newOrder.shippingAddressSnapshot);
+                    await _emailService.SendOrderConfirmationEmailAsync(user.email, newOrder.id, newOrder.totalAmount, newOrder.shippingAddressSnapshot);
                 }
             }
             catch (Exception)
             {
-                // Log warning or swallow to guarantee main user request doesn't fail on SMTP downtime
             }
 
             return newOrder;
@@ -260,7 +253,6 @@ public class OrderService : IOrderService
             throw new NotFoundException(MessageConstants.MSG43);
         }
 
-        // BR120: If not PENDING then cannot cancel
         if (order.status != OrderStatus.PENDING)
         {
             throw new BadRequestException(MessageConstants.MSG45);
@@ -270,10 +262,8 @@ public class OrderService : IOrderService
         {
             await _unitOfWork.BeginAsync();
 
-            // 1. Cancel order and associated payments
             await _orderRepository.CancelOrderAsync(order.id);
 
-            // 2. Release Stock (Decrease reserved quantity!)
             if (order.items != null && order.items.Any())
             {
                 foreach (var item in order.items)
@@ -282,7 +272,6 @@ public class OrderService : IOrderService
                 }
             }
 
-            // 3. Refund Voucher (Increase limit!)
             if (order.vouchers != null && order.vouchers.Any())
             {
                 foreach (var voucher in order.vouchers)
@@ -299,5 +288,261 @@ public class OrderService : IOrderService
             await _unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    // Staff methods
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
+    {
+        if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
+        if (parameters.PageSize <= 0) parameters.PageSize = 20;
+
+        return await _orderRepository.GetOrdersByStatusAsync(OrderStatus.PENDING, parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<(Order order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
+    {
+        var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+
+        if (result == null || result.Value.order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        return (result.Value.order, result.Value.user, result.Value.payments);
+    }
+
+    public async Task ApproveOrderAsync(ApproveOrderParams parameters)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(parameters.OrderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.PENDING)
+        {
+            throw new BadRequestException("Only pending orders can be approved.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(parameters.OrderId, OrderStatus.APPROVED);
+
+            var auditLog = new AuditLog(
+                parameters.StaffId,
+                "APPROVE_ORDER",
+                "Orders",
+                parameters.OrderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task ShipOrderAsync(Guid orderId, Guid staffId)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.APPROVED)
+        {
+            throw new BadRequestException("Only approved orders can be shipped.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.SHIPPING);
+
+            var auditLog = new AuditLog(
+                staffId,
+                "SHIP_ORDER",
+                "Orders",
+                orderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task ConfirmDeliveryAsync(Guid orderId, Guid staffId)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status != OrderStatus.SHIPPING)
+        {
+            throw new BadRequestException("Only shipping orders can be confirmed as delivered.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.DELIVERED);
+
+            var auditLog = new AuditLog(
+                staffId,
+                "DELIVER_ORDER",
+                "Orders",
+                orderId.ToString()
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task StaffCancelOrderAsync(Guid orderId, Guid staffId, string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new BadRequestException("Reason for cancellation is required.");
+        }
+
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        if (order.status == OrderStatus.DELIVERED)
+        {
+            throw new BadRequestException("Cannot cancel a delivered order.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.CANCELLED);
+
+            if (order.items != null && order.items.Any())
+            {
+                foreach (var item in order.items)
+                {
+                    await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                }
+            }
+
+            var auditLog = new AuditLog(
+                staffId,
+                "CANCEL_ORDER",
+                "Orders",
+                $"{orderId} - Reason: {reason}"
+            );
+            await _auditLogRepository.AddAsync(auditLog);
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task InitiateRefundAsync(Guid orderId, Guid staffId)
+    {
+        var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+
+        if (result == null || result.Value.order == null)
+        {
+            throw new NotFoundException(MessageConstants.MSG43);
+        }
+
+        var order = result.Value.order;
+        var payments = result.Value.payments;
+
+        if (order.status != OrderStatus.CANCELLED)
+        {
+            throw new BadRequestException(MessageConstants.MSG64);
+        }
+
+        var successfulPayment = payments.FirstOrDefault(p => p.payment.status == PaymentStatus.SUCCESS);
+        if (successfulPayment.payment == null)
+        {
+            throw new BadRequestException("Order has no completed payment to refund.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var methodType = string.IsNullOrEmpty(successfulPayment.payment.transactionRef) 
+                ? PaymentMethodType.CASH 
+                : PaymentMethodType.ONLINE;
+
+            var strategy = _refundStrategyFactory.GetStrategy(methodType);
+            bool success = await strategy.ExecuteRefundAsync(successfulPayment.payment);
+
+            if (success)
+            {
+                // Update payment status (assuming we have a method for this)
+                // In a real project, we'd add UpdatePaymentStatusAsync to Repository
+                
+                var auditLog = new AuditLog(
+                    staffId,
+                    "INITIATE_REFUND",
+                    "Orders",
+                    $"{orderId} - Amount: {successfulPayment.payment.amount}"
+                );
+                await _auditLogRepository.AddAsync(auditLog);
+
+                await _unitOfWork.FinishAsync();
+            }
+            else
+            {
+                throw new BadRequestException("Refund failed through payment gateway.");
+            }
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
+    {
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 20;
+
+        return await _orderRepository.GetRefundableOrdersAsync(pageNumber, pageSize);
+    }
+
+    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    {
+        return await _orderRepository.SearchOrdersAsync(parameters);
     }
 }

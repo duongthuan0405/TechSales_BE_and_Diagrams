@@ -21,4 +21,10 @@ public class Role
     }
 
     public Role() { }
+
+    public void UpdatePermissions(List<Permission> newPermissions)
+    {
+        this.permissions = newPermissions ?? new();
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
 }

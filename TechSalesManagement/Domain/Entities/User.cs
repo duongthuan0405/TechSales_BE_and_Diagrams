@@ -102,4 +102,18 @@ public class User
     }
 
     public User() { }
+
+    public void LockAccount(DateTimeOffset? until = null)
+    {
+        this.status = UserStatus.BLOCKED;
+        this.lockedUntil = until;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void UnlockAccount()
+    {
+        this.status = UserStatus.ACTIVE;
+        this.lockedUntil = null;
+        this.updatedAt = DateTimeOffset.UtcNow;
+    }
 }

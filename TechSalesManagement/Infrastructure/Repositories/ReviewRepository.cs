@@ -81,4 +81,89 @@ public class ReviewRepository : IReviewRepository
 
         return (mappedReviews, totalCount, averageRating);
     }
+
+    public async Task<(List<Review> reviews, int totalCount)> GetLatestReviewsAsync(int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Reviews
+            .Include(r => r.user)
+                .ThenInclude(u => u!.user_profile)
+            .Include(r => r.product);
+
+        int totalCount = await query.CountAsync();
+
+        var dbReviews = await query
+            .OrderByDescending(r => r.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var mappedReviews = dbReviews.Select(db => new Review
+        {
+            id = db.id,
+            userId = db.user_id,
+            productId = db.product_id,
+            productName = db.product?.name,
+            rating = db.rating,
+            comment = db.comment,
+            status = db.status ?? ReviewStatus.VISIBLE,
+            createdAt = db.created_at ?? DateTimeOffset.UtcNow,
+            updatedAt = db.updated_at,
+            violationReason = db.violation_reason,
+            profile = new UserProfile
+            {
+                fullName = db.user?.user_profile?.full_name ?? db.user?.email ?? "Anonymous",
+                avatarUrl = db.user?.user_profile?.avatar_url
+            }
+        }).ToList();
+
+        return (mappedReviews, totalCount);
+    }
+
+    public async Task<Review?> GetReviewByIdAsync(Guid id)
+    {
+        var db = await _dbContext.Reviews
+            .Include(r => r.user)
+            .FirstOrDefaultAsync(r => r.id == id);
+
+        if (db == null) return null;
+
+        return new Review
+        {
+            id = db.id,
+            userId = db.user_id,
+            productId = db.product_id,
+            rating = db.rating,
+            comment = db.comment,
+            status = db.status ?? ReviewStatus.VISIBLE,
+            createdAt = db.created_at ?? DateTimeOffset.UtcNow,
+            violationReason = db.violation_reason
+        };
+    }
+
+    public async Task UpdateReviewAsync(Review review)
+    {
+        var db = await _dbContext.Reviews.FindAsync(review.id);
+        if (db != null)
+        {
+            db.status = review.status;
+            db.violation_reason = review.violationReason;
+            db.updated_at = DateTimeOffset.UtcNow;
+            _dbContext.Reviews.Update(db);
+        }
+    }
+
+    public async Task AddReviewResponseAsync(ReviewResponse response)
+    {
+        var dbModel = new ReviewResponseDbModel
+        {
+            id = Guid.NewGuid(),
+            review_id = response.reviewId,
+            user_id = response.userId,
+            content = response.content,
+            created_at = DateTimeOffset.UtcNow,
+            updated_at = DateTimeOffset.UtcNow
+        };
+
+        await _dbContext.ReviewResponses.AddAsync(dbModel);
+    }
 }
