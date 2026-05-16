@@ -8,7 +8,9 @@ using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Infrastructure.HelperServices;
 using TechSalesManagement.Application.Repositories;
 using TechSalesManagement.Infrastructure.Repositories;
+using TechSalesManagement.Infrastructure.Services;
 using TechSalesManagement.Application.VoucherStrategies;
+using TechSalesManagement.Application.Services.Strategies.Refund;
 
 
 namespace TechSalesManagement.Presentation_WebAPI.Extensions;
@@ -50,6 +52,11 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IDiscountStrategy, PercentDiscountStrategy>();
         services.AddScoped<IDiscountStrategyFactory, DiscountStrategyFactory>();
 
+        // Refund Strategies
+        services.AddScoped<IRefundStrategy, CodRefundStrategy>();
+        services.AddScoped<IRefundStrategy, VnPayRefundStrategy>();
+        services.AddScoped<IRefundStrategyFactory, RefundStrategyFactory>();
+
         return services;
     }
 
@@ -59,6 +66,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
         return services;
     }
 
