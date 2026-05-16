@@ -20,17 +20,15 @@ public class StatisticsRepository : IStatisticsRepository
 
     public async Task<List<RevenueDataPoint>> GetDailyRevenueAsync(DateTimeOffset startDate, DateTimeOffset endDate)
     {
-        // Aggregate revenue from orders that are PAID or DELIVERED
-        var data = await _dbContext.Orders
-            .Where(o => o.created_at >= startDate && o.created_at <= endDate)
-            .Where(o => o.status == OrderStatus.DELIVERED || o.status == OrderStatus.APPROVED || o.status == OrderStatus.SHIPPING) 
-            // Note: Strictly PAID orders would be better, but based on current statuses, 
-            // APPROVED/SHIPPING/DELIVERED usually imply payment or intent to collect.
-            .GroupBy(o => o.created_at.Date)
+        // Aggregate revenue from successful payments
+        var data = await _dbContext.Payments
+            .Where(p => p.status == PaymentStatus.SUCCESS)
+            .Where(p => p.created_at >= startDate && p.created_at <= endDate)
+            .GroupBy(p => p.created_at.Date)
             .Select(g => new RevenueDataPoint
             {
                 Date = g.Key,
-                Revenue = g.Sum(o => o.total_amount)
+                Revenue = g.Sum(p => p.amount)
             })
             .OrderBy(d => d.Date)
             .ToListAsync();

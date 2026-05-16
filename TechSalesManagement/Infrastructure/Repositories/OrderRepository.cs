@@ -286,6 +286,14 @@ public class OrderRepository : IOrderRepository
                     break;
                 case OrderStatus.DELIVERED:
                     dbOrder.delivered_at = DateTimeOffset.UtcNow;
+                    var pendingPayments = await _dbContext.Payments
+                        .Where(p => p.order_id == orderId && p.status == PaymentStatus.PENDING)
+                        .ToListAsync();
+                    foreach (var payment in pendingPayments)
+                    {
+                        payment.status = PaymentStatus.SUCCESS;
+                        payment.updated_at = DateTimeOffset.UtcNow;
+                    }
                     break;
             }
 
@@ -329,11 +337,13 @@ public class OrderRepository : IOrderRepository
         return (results, totalCount);
     }
 
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
     {
         var query = _dbContext.Orders
             .Include(o => o.user)
                 .ThenInclude(u => u.user_profile)
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
             .AsQueryable();
 
         query = TechSalesManagement.Domain.Specifications.OrderSearchSpecification.ApplyFilters(query, parameters);
@@ -348,7 +358,18 @@ public class OrderRepository : IOrderRepository
 
         var results = dbModels.Select(m => (
             MapToEntity(m)!,
-            MapUserToEntity(m.user)
+            MapUserToEntity(m.user),
+            m.payments.Select(p => (new Payment
+            {
+                id = p.id,
+                orderId = p.order_id,
+                paymentMethodId = p.payment_method_id,
+                status = p.status,
+                amount = p.amount,
+                transactionRef = p.transaction_ref,
+                createdAt = p.created_at,
+                updatedAt = p.updated_at
+            }, p.payment_method?.name ?? "Unknown")).ToList()
         )).ToList();
 
         return (results, totalCount);

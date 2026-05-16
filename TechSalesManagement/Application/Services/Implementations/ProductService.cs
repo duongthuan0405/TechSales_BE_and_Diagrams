@@ -22,7 +22,7 @@ public class ProductService : IProductService
     {
         var keyword = parameters.Keyword?.Trim();
         
-        return await _productRepository.GetProductsAsync(keyword, parameters.CategoryIds, parameters.SortOrder);
+        return await _productRepository.GetProductsAsync(keyword, parameters.CategoryIds, parameters.SortOrder, TechSalesManagement.Domain.Enums.ProductStatus.ACTIVE);
     }
 
     public async Task<Product> GetProductDetailsAsync(GetProductDetailsParams parameters)

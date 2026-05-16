@@ -24,7 +24,7 @@ public class ReviewController : ControllerBase
         _reviewService = reviewService;
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("latest")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<ReviewStaffResponseDto>>>> GetLatestReviewsAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
@@ -55,7 +55,7 @@ public class ReviewController : ControllerBase
         return Ok(new ApiSuccessResponse<PagedResponseDto<ReviewStaffResponseDto>>(response, "Latest reviews retrieved successfully."));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/reply")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ReplyToReviewAsync([FromRoute] Guid id, [FromBody] ReviewReplyRequestDto request)
     {
@@ -67,7 +67,7 @@ public class ReviewController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG67));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPut("{id}/hide")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> HideReviewAsync([FromRoute] Guid id, [FromBody] ReviewHideRequestDto request)
     {

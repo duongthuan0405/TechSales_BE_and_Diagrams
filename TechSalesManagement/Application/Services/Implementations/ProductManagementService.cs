@@ -120,7 +120,7 @@ public class ProductManagementService : IProductManagementService
         }
     }
 
-    public async Task UpdateInventoryAsync(Guid productId, int newQuantity, Guid staffId)
+    public async Task UpdateInventoryAsync(Guid productId, int value, StockAdjustmentType type, Guid staffId)
     {
         var inventory = await _inventoryRepository.GetByProductIdAsync(productId);
         if (inventory == null) throw new NotFoundException("Inventory record not found.");
@@ -130,10 +130,12 @@ public class ProductManagementService : IProductManagementService
             await _unitOfWork.BeginAsync();
 
             var oldQuantity = inventory.quantity;
+            int newQuantity = type == StockAdjustmentType.ADD ? oldQuantity + value : value;
+            
             inventory.UpdateStock(newQuantity);
             await _inventoryRepository.UpdateStockAsync(productId, newQuantity);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", $"Id: {productId}, Old: {oldQuantity}, New: {newQuantity}");
+            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", $"Id: {productId}, Type: {type}, Value: {value}, Old: {oldQuantity}, New: {newQuantity}");
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

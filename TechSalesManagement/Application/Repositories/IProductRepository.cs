@@ -9,7 +9,7 @@ namespace TechSalesManagement.Application.Repositories;
 
 public interface IProductRepository
 {
-    Task<List<Product>> GetProductsAsync(string? keyword, List<Guid>? categoryIds, SortOrder? sortOrder);
+    Task<List<Product>> GetProductsAsync(string? keyword, List<Guid>? categoryIds, SortOrder? sortOrder, ProductStatus? status);
     Task<Product?> GetByIdAsync(Guid id);
     Task MigrateProductsAsync(Guid oldCategoryId, Guid newCategoryId);
     Task AddAsync(Product product);

@@ -31,7 +31,7 @@ public class CategoryController : ControllerBase
         return Ok(new ApiSuccessResponse<List<Category>>(categories, "Categories retrieved successfully."));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost]
     public async Task<ActionResult<ApiSuccessResponse<object>>> CreateAsync([FromBody] CreateCategoryRequestDto request)
     {
@@ -43,7 +43,7 @@ public class CategoryController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG72));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> DeleteAsync([FromRoute] Guid id, [FromQuery] Guid replacementCategoryId)
     {

@@ -13,7 +13,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/content")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class ContentManagementController : ControllerBase
 {
     private readonly IContentManagementService _contentService;

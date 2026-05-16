@@ -16,7 +16,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/products")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class ProductManagementController : ControllerBase
 {
     private readonly IProductManagementService _productManagementService;
@@ -87,7 +87,7 @@ public class ProductManagementController : ControllerBase
 
         await _productManagementService.DiscontinueProductAsync(id, staffId.Value);
 
-        return Ok(new ApiSuccessResponse<object>(null, "Product status updated to discontinued."));
+        return Ok(new ApiSuccessResponse<object>(null, "Product status updated successfully."));
     }
 
     [HttpPatch("{id}/inventory")]
@@ -96,7 +96,7 @@ public class ProductManagementController : ControllerBase
         var staffId = User.GetUserId();
         if (staffId == null) return Unauthorized();
 
-        await _productManagementService.UpdateInventoryAsync(id, request.newQuantity, staffId.Value);
+        await _productManagementService.UpdateInventoryAsync(id, request.value, request.type, staffId.Value);
 
         return Ok(new ApiSuccessResponse<object>(null, "Inventory updated successfully."));
     }

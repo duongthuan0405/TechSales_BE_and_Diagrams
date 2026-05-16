@@ -543,6 +543,8 @@ public class OrderService : IOrderService
 
     public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
     {
-        return await _orderRepository.SearchOrdersAsync(parameters);
+        var result = await _orderRepository.SearchOrdersAsync(parameters);
+        var mappedList = result.orders.Select(x => (x.order, x.user)).ToList();
+        return (mappedList, result.totalCount);
     }
 }

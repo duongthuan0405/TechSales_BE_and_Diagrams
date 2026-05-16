@@ -102,9 +102,17 @@ public class OrderController : ControllerBase
             UserId = userId.Value
         };
 
-        var order = await _orderService.GetOrderDetailsAsync(parameters);
+        var result = await _orderService.GetOrderWithFullDetailsAsync(id);
+        
+        // Verify user owns the order
+        if (result.order.userId != userId.Value)
+        {
+            return Forbid();
+        }
 
-        var response = new OrderDetailResponseDto
+        var order = result.order;
+
+        var response = new OrderStaffDetailResponseDto
         {
             id = order.id,
             status = order.status,
@@ -124,10 +132,18 @@ public class OrderController : ControllerBase
                 productImageUrl = i.product?.images?.FirstOrDefault(img => img.isPrimary)?.imageUrl ?? i.product?.images?.FirstOrDefault()?.imageUrl,
                 price = i.price,
                 quantity = i.quantity
+            }).ToList(),
+            payments = result.payments.Select(x => new PaymentResponseDto
+            {
+                id = x.payment.id,
+                paymentMethodName = x.methodName,
+                status = x.payment.status,
+                amount = x.payment.amount,
+                transactionRef = x.payment.transactionRef
             }).ToList()
         };
 
-        return Ok(new ApiSuccessResponse<OrderDetailResponseDto>(response, "Order details retrieved successfully."));
+        return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, "Order details retrieved successfully."));
     }
 
     [HttpPost("{id}/cancel")]
@@ -148,7 +164,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG46));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("pending")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetPendingOrdersAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
@@ -183,7 +199,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, message));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("{id}/staff")]
     public async Task<ActionResult<ApiSuccessResponse<OrderStaffDetailResponseDto>>> GetOrderWithFullDetailsAsync([FromRoute] Guid id)
     {
@@ -226,7 +242,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, MessageConstants.MSG120));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/approve")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ApproveOrderAsync([FromRoute] Guid id)
     {
@@ -245,7 +261,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG55));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/ship")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ShipOrderAsync([FromRoute] Guid id)
     {
@@ -257,7 +273,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG121));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/confirm-delivery")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ConfirmDeliveryAsync([FromRoute] Guid id)
     {
@@ -269,7 +285,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG122));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/staff-cancel")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> StaffCancelOrderAsync([FromRoute] Guid id, [FromBody] OrderStaffCancelRequestDto request)
     {
@@ -281,7 +297,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG58));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/refund")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> InitiateRefundAsync([FromRoute] Guid id)
     {
@@ -293,7 +309,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG62));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("refund-requests")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetRefundRequestsAsync([FromQuery] GetPendingOrdersParams parameters)
     {
@@ -317,7 +333,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, "Refund requests retrieved successfully."));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("search")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> SearchOrdersAsync([FromQuery] OrderSearchRequestDto request)
     {

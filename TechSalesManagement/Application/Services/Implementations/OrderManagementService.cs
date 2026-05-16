@@ -37,7 +37,7 @@ public class OrderManagementService : IOrderManagementService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(List<(Order order, User? user)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
     {
         return await _orderRepository.SearchOrdersAsync(parameters);
     }
@@ -61,6 +61,16 @@ public class OrderManagementService : IOrderManagementService
             switch (nextStatus)
             {
                 case OrderStatus.APPROVED:
+                    // Check payment status for online orders
+                    var payments = result.Value.payments;
+                    foreach (var p in payments)
+                    {
+                        // If it's an online payment (not COD), it must be SUCCESS before approval
+                        if (p.methodName.ToUpper() != "COD" && p.payment.status != PaymentStatus.SUCCESS)
+                        {
+                            throw new BadRequestException("Cannot approve online orders that are not yet paid.");
+                        }
+                    }
                     order.Approve();
                     break;
                 case OrderStatus.SHIPPING:

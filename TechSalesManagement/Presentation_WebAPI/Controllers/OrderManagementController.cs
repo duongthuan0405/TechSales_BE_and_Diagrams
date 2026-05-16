@@ -16,7 +16,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/orders")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class OrderManagementController : ControllerBase
 {
     private readonly IOrderManagementService _orderManagementService;
@@ -31,14 +31,19 @@ public class OrderManagementController : ControllerBase
     {
         var (items, totalCount) = await _orderManagementService.SearchOrdersAsync(parameters);
         
-        var results = items.Select(i => new OrderAdminSummaryDto
-        {
-            orderId = i.order.id,
-            customerEmail = i.user?.email ?? "Unknown",
-            customerName = i.user?.profile?.fullName ?? "Unknown",
-            status = i.order.status,
-            totalAmount = i.order.totalAmount,
-            createdAt = i.order.createdAt
+        var results = items.Select(i => {
+            var firstPayment = i.payments.FirstOrDefault();
+            return new OrderAdminSummaryDto
+            {
+                orderId = i.order.id,
+                customerEmail = i.user?.email ?? "Unknown",
+                customerName = i.user?.profile?.fullName ?? "Unknown",
+                status = i.order.status,
+                totalAmount = i.order.totalAmount,
+                createdAt = i.order.createdAt,
+                paymentMethodName = firstPayment.methodName ?? "Unknown",
+                paymentStatus = firstPayment.payment?.status ?? PaymentStatus.PENDING
+            };
         }).ToList();
 
         var response = new PagedResponseDto<OrderAdminSummaryDto>
@@ -87,6 +92,8 @@ public class OrderAdminSummaryDto
     public OrderStatus status { get; set; }
     public decimal totalAmount { get; set; }
     public DateTimeOffset createdAt { get; set; }
+    public string paymentMethodName { get; set; } = string.Empty;
+    public PaymentStatus paymentStatus { get; set; }
 }
 
 public class UpdateOrderStatusRequestDto

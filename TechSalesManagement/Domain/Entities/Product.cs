@@ -19,6 +19,7 @@ public class Product
 
     public List<ProductImage> images { get; set; } = new();
     public Inventory? inventory { get; set; }
+    public double rating { get; set; }
 
     public Product(string name, decimal price, Guid categoryId)
     {

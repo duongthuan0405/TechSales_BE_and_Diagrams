@@ -195,19 +195,22 @@ public class AuthService : IAuthService
             // 1. Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
             if (user.status == UserStatus.BLOCKED)
             {
-                if (user.lockedUntil.HasValue && user.lockedUntil.Value > DateTimeOffset.UtcNow)
+                if (!user.lockedUntil.HasValue)
                 {
-                    // Vẫn đang trong thời gian bị khóa
+                    // Khóa thủ công bởi Admin (không có thời hạn)
                     throw new ForbiddenException(MessageConstants.MSG9);
                 }
-                else
+                
+                if (user.lockedUntil.Value > DateTimeOffset.UtcNow)
                 {
-                    // Đã hết thời gian khóa, tự động gỡ khóa và reset lượt đếm
-                    user.status = UserStatus.ACTIVE;
-                    user.failedLoginAttempts = 0;
-                    user.lockedUntil = null;
-                    // Sẽ được lưu xuống Database khi thực hiện flow bên dưới (dù mật khẩu sai hay đúng)
+                    // Vẫn đang trong thời gian bị khóa tự động
+                    throw new ForbiddenException(MessageConstants.MSG9);
                 }
+                
+                // Đã hết thời gian khóa tự động, tự động gỡ khóa
+                user.status = UserStatus.ACTIVE;
+                user.failedLoginAttempts = 0;
+                user.lockedUntil = null;
             }
 
             if(user.lastFailedAt.HasValue && DateTimeOffset.UtcNow > user.lastFailedAt.Value.AddMinutes(30))
@@ -254,9 +257,6 @@ public class AuthService : IAuthService
         catch (Exception) {
             await _unitOfWork.RollbackAsync();
             throw;
-        }
-        finally {
-            await _unitOfWork.FinishAsync();
         }
     }
 

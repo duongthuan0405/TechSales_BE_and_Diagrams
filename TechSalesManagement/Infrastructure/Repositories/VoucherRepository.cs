@@ -30,8 +30,8 @@ public class VoucherRepository : IVoucherRepository
             max_usage = voucher.maxUsage,
             used_count = 0,
             min_order_amount = voucher.minOrderAmount,
-            start_date = voucher.startDate,
-            end_date = voucher.endDate,
+            start_date = voucher.startDate?.ToUniversalTime(),
+            end_date = voucher.endDate?.ToUniversalTime(),
             is_active = true,
             created_at = DateTimeOffset.UtcNow,
             updated_at = DateTimeOffset.UtcNow

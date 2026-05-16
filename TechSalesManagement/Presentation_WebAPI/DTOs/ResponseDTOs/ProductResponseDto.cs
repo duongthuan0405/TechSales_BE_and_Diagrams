@@ -20,6 +20,10 @@ public class ProductResponseDto
     public string brand { get; set; } = string.Empty;
     public Guid categoryId { get; set; }
     public List<ProductImageResponseDto> images { get; set; } = new();
+    public StockStatus stockStatus { get; set; }
+    public int availableQuantity { get; set; }
+    public string status { get; set; } = string.Empty;
+    public double rating { get; set; }
 }
 
 public class ProductDetailResponseDto
@@ -33,4 +37,6 @@ public class ProductDetailResponseDto
     public List<ProductImageResponseDto> images { get; set; } = new();
     public StockStatus stockStatus { get; set; }
     public int availableQuantity { get; set; }
+    public string status { get; set; } = string.Empty;
+    public double rating { get; set; }
 }

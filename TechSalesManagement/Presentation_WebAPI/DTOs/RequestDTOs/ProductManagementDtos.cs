@@ -43,7 +43,9 @@ public class ProductImageRequestDto
 public class UpdateInventoryRequestDto
 {
     [Range(0, int.MaxValue)]
-    public int newQuantity { get; set; }
+    public int value { get; set; }
+    [Required]
+    public StockAdjustmentType type { get; set; }
 }
 
 public class AdminProductSearchRequestDto

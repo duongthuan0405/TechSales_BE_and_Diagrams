@@ -25,32 +25,49 @@ public class ProductController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiSuccessResponse<List<ProductResponseDto>>>> SearchProductsAsync(
         [FromQuery] string? keyword, 
-        [FromQuery] List<System.Guid>? categoryIds,
+        [FromQuery] string? categoryIds, // Nhận chuỗi để tự parse
         [FromQuery] SortOrder? sortOrder)
     {
+        List<Guid>? guidList = null;
+        if (!string.IsNullOrEmpty(categoryIds))
+        {
+            // Hỗ trợ cả dấu phẩy nếu có nhiều ID
+            guidList = categoryIds.Split(',')
+                .Select(s => Guid.TryParse(s.Trim(), out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty)
+                .ToList();
+        }
+
         var parameters = new SearchProductParams
         {
             Keyword = keyword,
-            CategoryIds = categoryIds,
+            CategoryIds = (guidList != null && guidList.Any()) ? guidList : null,
             SortOrder = sortOrder
         };
 
         var products = await _productService.SearchProductsAsync(parameters);
 
-        var responseDtos = products.Select(p => new ProductResponseDto
-        {
-            id = p.id,
-            name = p.name,
-            description = p.description,
-            price = p.price,
-            brand = p.brand,
-            categoryId = p.categoryId,
-            images = p.images.Select(img => new ProductImageResponseDto
+        var responseDtos = products.Select(p => {
+            var availableQty = p.inventory?.availableQuantity ?? 0;
+            return new ProductResponseDto
             {
-                id = img.id,
-                imageUrl = img.imageUrl,
-                isPrimary = img.isPrimary
-            }).ToList()
+                id = p.id,
+                name = p.name,
+                description = p.description,
+                price = p.price,
+                brand = p.brand,
+                categoryId = p.categoryId,
+                images = p.images.Select(img => new ProductImageResponseDto
+                {
+                    id = img.id,
+                    imageUrl = img.imageUrl,
+                    isPrimary = img.isPrimary
+                }).ToList(),
+                stockStatus = availableQty > 0 ? StockStatus.IN_STOCK : StockStatus.OUT_OF_STOCK,
+                availableQuantity = availableQty,
+                status = p.status.ToString(),
+                rating = p.rating
+            };
         }).ToList();
 
         if (!responseDtos.Any())
@@ -93,7 +110,9 @@ public class ProductController : ControllerBase
                 isPrimary = img.isPrimary
             }).ToList(),
             stockStatus = availableQty > 0 ? StockStatus.IN_STOCK : StockStatus.OUT_OF_STOCK,
-            availableQuantity = availableQty
+            availableQuantity = availableQty,
+            status = product.status.ToString(),
+            rating = product.rating
         };
 
         return Ok(new ApiSuccessResponse<ProductDetailResponseDto>(response));
