@@ -30,7 +30,7 @@ public class MomoPaymentStrategy : IPaymentStrategy
         var returnUrl = string.IsNullOrEmpty(_momoConfig.ReturnUrl) ? "http://localhost:3000/checkout/success" : _momoConfig.ReturnUrl;
         var notifyUrl = string.IsNullOrEmpty(_momoConfig.NotifyUrl) ? "https://your-domain.com/api/payment/momo-ipn" : _momoConfig.NotifyUrl;
 
-        var orderId = order.id.ToString();
+        var orderId = order.id.ToString() + "_" + Guid.NewGuid().ToString().Substring(0, 8);
         var requestId = Guid.NewGuid().ToString();
         var amountStr = ((long)order.totalAmount).ToString();
         var amountVal = (long)order.totalAmount;

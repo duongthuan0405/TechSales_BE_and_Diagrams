@@ -53,6 +53,24 @@ public class OrderManagementService : IOrderManagementService
         var oldStatus = order.status;
         if (oldStatus == nextStatus) return;
 
+        // Strict state transition validation
+        if (nextStatus == OrderStatus.APPROVED && oldStatus != OrderStatus.PENDING)
+        {
+            throw new BadRequestException($"Cannot approve an order that is currently in {oldStatus} status.");
+        }
+        if (nextStatus == OrderStatus.SHIPPING && oldStatus != OrderStatus.APPROVED)
+        {
+            throw new BadRequestException($"Cannot ship an order that is currently in {oldStatus} status. Order must be APPROVED first.");
+        }
+        if (nextStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.SHIPPING)
+        {
+            throw new BadRequestException($"Cannot deliver an order that is currently in {oldStatus} status. Order must be SHIPPING first.");
+        }
+        if (nextStatus == OrderStatus.CANCELLED && (oldStatus == OrderStatus.DELIVERED || oldStatus == OrderStatus.CANCELLED))
+        {
+            throw new BadRequestException($"Cannot cancel an order that is already in {oldStatus} status.");
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();

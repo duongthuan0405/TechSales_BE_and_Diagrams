@@ -31,6 +31,7 @@ public class OrderDetailResponseDto
     public string paymentMethodName { get; set; } = string.Empty;
     public bool? isPaymentFailed { get; set; }
     public List<OrderItemResponseDto> items { get; set; } = new();
+    public List<PaymentResponseDto> payments { get; set; } = new();
 }
 
 public class OrderItemResponseDto
@@ -54,7 +55,6 @@ public class OrderStaffDetailResponseDto : OrderDetailResponseDto
     public string customerEmail { get; set; } = string.Empty;
     public string customerPhone { get; set; } = string.Empty;
     public string customerFullName { get; set; } = string.Empty;
-    public List<PaymentResponseDto> payments { get; set; } = new();
 }
 
 public class PaymentResponseDto
@@ -64,4 +64,9 @@ public class PaymentResponseDto
     public PaymentStatus status { get; set; }
     public decimal amount { get; set; }
     public string? transactionRef { get; set; }
+}
+
+public class OrderRepayResponseDto
+{
+    public string? checkoutUrl { get; set; }
 }

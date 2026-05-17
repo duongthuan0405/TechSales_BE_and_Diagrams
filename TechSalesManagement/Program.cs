@@ -36,7 +36,7 @@ public class Program
         // Configure Repositories
         builder.Services.AddRepositories();
         // Configure External and Helper Services
-        builder.Services.AddExternalAndHelperServices();
+        builder.Services.AddExternalAndHelperServices(builder.Configuration);
         // Configure Application Services
         builder.Services.AddApplicationServices();
 

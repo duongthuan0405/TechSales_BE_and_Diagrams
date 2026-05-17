@@ -18,19 +18,22 @@ public class ProductManagementService : IProductManagementService
     private readonly IInventoryRepository _inventoryRepository;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
 
     public ProductManagementService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IInventoryRepository inventoryRepository,
         IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _inventoryRepository = inventoryRepository;
         _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<Product> CreateProductAsync(string name, string description, decimal price, string brand, Guid categoryId, int initialStock, List<ProductImage> images, Guid staffId)
@@ -54,6 +57,10 @@ public class ProductManagementService : IProductManagementService
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
+            
             return product;
         }
         catch
@@ -93,6 +100,9 @@ public class ProductManagementService : IProductManagementService
             }
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {
@@ -117,6 +127,9 @@ public class ProductManagementService : IProductManagementService
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {
@@ -149,6 +162,9 @@ public class ProductManagementService : IProductManagementService
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {

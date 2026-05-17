@@ -16,15 +16,18 @@ public class UserProfileService : IUserProfileService
     private readonly IUserProfileRepository _userProfileRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IImageService _imageService;
+    private readonly ICacheService _cacheService;
 
     public UserProfileService(
         IUserProfileRepository userProfileRepository, 
         IUnitOfWork unitOfWork,
-        IImageService imageService)
+        IImageService imageService,
+        ICacheService cacheService)
     {
         _userProfileRepository = userProfileRepository;
         _unitOfWork = unitOfWork;
         _imageService = imageService;
+        _cacheService = cacheService;
     }
 
     public async Task UpdateProfileAsync(UpdateProfileParams parameters)
@@ -83,6 +86,9 @@ public class UserProfileService : IUserProfileService
             await _userProfileRepository.UpdateAsync(profile);
 
             await _unitOfWork.FinishAsync();
+
+            // Invalidate the GetMe cache for this user
+            await _cacheService.RemoveAsync($"users:me:{parameters.UserId}");
         }
         catch
         {

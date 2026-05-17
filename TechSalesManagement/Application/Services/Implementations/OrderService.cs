@@ -446,6 +446,14 @@ public class OrderService : IOrderService
 
             await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.SHIPPING);
 
+            if (order.items != null && order.items.Any())
+            {
+                foreach (var item in order.items)
+                {
+                    await _inventoryRepository.DeductStockAsync(item.product_id, item.quantity);
+                }
+            }
+
             var auditLog = new AuditLog(
                 staffId,
                 "SHIP_ORDER",
@@ -539,7 +547,14 @@ public class OrderService : IOrderService
             {
                 foreach (var item in order.items)
                 {
-                    await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                    if (order.status == OrderStatus.SHIPPING)
+                    {
+                        await _inventoryRepository.RestorePhysicalStockAsync(item.product_id, item.quantity);
+                    }
+                    else
+                    {
+                        await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                    }
                 }
             }
 
@@ -641,5 +656,90 @@ public class OrderService : IOrderService
     {
         var result = await _orderRepository.SearchOrdersAsync(parameters);
         return result;
+    }
+
+    public async Task<string?> CreateRepaySessionAsync(Guid orderId, Guid userId, Guid? paymentMethodId = null)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+        if (order == null || order.userId != userId)
+        {
+            throw new NotFoundException("Order not found or access denied.");
+        }
+
+        if (order.status != OrderStatus.PENDING)
+        {
+            throw new BadRequestException("Only pending orders can be repaid.");
+        }
+
+        var fullDetails = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+        if (fullDetails == null)
+        {
+            throw new NotFoundException("Order details not found.");
+        }
+
+        var hasSuccessfulPayment = fullDetails.Value.payments.Any(p => p.payment.status == PaymentStatus.SUCCESS);
+        if (hasSuccessfulPayment)
+        {
+            throw new BadRequestException("This order has already been successfully paid.");
+        }
+
+        PaymentMethod? paymentMethod = null;
+        if (paymentMethodId.HasValue)
+        {
+            paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentMethodId.Value);
+        }
+        else
+        {
+            var lastPayment = fullDetails.Value.payments.OrderByDescending(p => p.payment.createdAt).FirstOrDefault();
+            if (lastPayment.payment != null)
+            {
+                paymentMethod = await _paymentMethodRepository.GetByIdAsync(lastPayment.payment.paymentMethodId);
+            }
+        }
+
+        if (paymentMethod == null)
+        {
+            throw new BadRequestException("Payment method not found.");
+        }
+
+        if (paymentMethod.type != PaymentMethodType.ONLINE)
+        {
+            throw new BadRequestException("Repayment is only supported for online payment methods.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var newPayment = new Payment
+            {
+                id = Guid.NewGuid(),
+                orderId = order.id,
+                paymentMethodId = paymentMethod.id,
+                status = PaymentStatus.PENDING,
+                amount = order.totalAmount,
+                createdAt = DateTimeOffset.UtcNow,
+                updatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _paymentRepository.AddPaymentAsync(newPayment);
+
+            var paymentStrategy = _paymentStrategyFactory.GetStrategy(paymentMethod.name);
+            var paymentResult = await paymentStrategy.ProcessPaymentAsync(order);
+
+            if (!paymentResult.IsSuccess)
+            {
+                throw new BadRequestException(paymentResult.Message ?? "Failed to initialize payment gateway.");
+            }
+
+            await _unitOfWork.FinishAsync();
+
+            return paymentResult.CheckoutUrl;
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 }

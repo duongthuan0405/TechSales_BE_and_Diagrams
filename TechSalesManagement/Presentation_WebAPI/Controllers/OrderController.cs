@@ -193,6 +193,22 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG46));
     }
 
+    [HttpPost("{id}/repay")]
+    public async Task<ActionResult<ApiSuccessResponse<OrderRepayResponseDto>>> CreateRepaySessionAsync([FromRoute] Guid id, [FromBody] OrderRepayRequestDto? request)
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var checkoutUrl = await _orderService.CreateRepaySessionAsync(id, userId.Value, request?.paymentMethodId);
+
+        var response = new OrderRepayResponseDto
+        {
+            checkoutUrl = checkoutUrl
+        };
+
+        return Ok(new ApiSuccessResponse<OrderRepayResponseDto>(response, "Repayment session created successfully."));
+    }
+
     [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("pending")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetPendingOrdersAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)

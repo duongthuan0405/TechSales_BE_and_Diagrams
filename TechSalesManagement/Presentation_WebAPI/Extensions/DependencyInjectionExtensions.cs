@@ -70,7 +70,7 @@ public static class DependencyInjectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddExternalAndHelperServices(this IServiceCollection services)
+    public static IServiceCollection AddExternalAndHelperServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IOtpService, OtpService>();
         services.AddScoped<IEmailService, EmailService>();
@@ -79,6 +79,14 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
         services.AddScoped<IImageService, ImageService>();
         services.AddHttpClient();
+
+        // Configure Redis Cloud
+        var redisConnectionString = configuration["Redis:ConnectionString"] ?? configuration["Redis__ConnectionString"] 
+            ?? "localhost:6379";
+        services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp => 
+            StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+        services.AddSingleton<ICacheService, RedisCacheService>();
+
         return services;
     }
 

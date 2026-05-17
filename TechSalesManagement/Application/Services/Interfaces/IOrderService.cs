@@ -25,4 +25,5 @@ public interface IOrderService
     Task InitiateRefundAsync(Guid orderId, Guid staffId);
     Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize);
     Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters);
+    Task<string?> CreateRepaySessionAsync(Guid orderId, Guid userId, Guid? paymentMethodId = null);
 }

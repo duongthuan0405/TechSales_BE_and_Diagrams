@@ -23,6 +23,7 @@ public class UserRepository : IUserRepository
         var dbModel = await _dbContext.Users
             .Include(u => u.user_roles)
                 .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
             .FirstOrDefaultAsync(u => u.id == id);
             
         return MapToEntity(dbModel);
@@ -33,6 +34,7 @@ public class UserRepository : IUserRepository
         var dbModel = await _dbContext.Users
             .Include(u => u.user_roles)
                 .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
             .FirstOrDefaultAsync(u => u.email == email);
             
         return MapToEntity(dbModel);
@@ -194,6 +196,21 @@ public class UserRepository : IUserRepository
                     name = ur.role.name,
                     description = ur.role.description
                 }).ToList();
+        }
+
+        // Map profile if loaded via Include
+        if (dbModel.user_profile != null)
+        {
+            user.profile = new UserProfile
+            {
+                userId = dbModel.user_profile.user_id,
+                fullName = dbModel.user_profile.full_name,
+                phone = dbModel.user_profile.phone,
+                avatarUrl = dbModel.user_profile.avatar_url,
+                dateOfBirth = dbModel.user_profile.date_of_birth,
+                createdAt = dbModel.user_profile.created_at,
+                updatedAt = dbModel.user_profile.updated_at
+            };
         }
 
         return user;

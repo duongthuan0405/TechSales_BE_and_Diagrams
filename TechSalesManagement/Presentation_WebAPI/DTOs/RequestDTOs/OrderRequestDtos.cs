@@ -13,3 +13,8 @@ public class PlaceOrderRequestDto
 
     public string? voucherCode { get; set; }
 }
+
+public class OrderRepayRequestDto
+{
+    public Guid? paymentMethodId { get; set; }
+}

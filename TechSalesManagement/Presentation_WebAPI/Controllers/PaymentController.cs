@@ -49,7 +49,13 @@ public class PaymentController : ControllerBase
         }
 
         // 2. Process
-        if (Guid.TryParse(request.orderId, out var orderGuid))
+        var orderIdStr = request.orderId;
+        if (orderIdStr.Contains("_"))
+        {
+            orderIdStr = orderIdStr.Split('_')[0];
+        }
+
+        if (Guid.TryParse(orderIdStr, out var orderGuid))
         {
             await _orderService.HandlePaymentIpnAsync(orderGuid, request.transId.ToString(), request.resultCode);
         }

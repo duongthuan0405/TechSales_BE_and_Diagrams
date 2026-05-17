@@ -57,4 +57,19 @@ public class PaymentRepository : IPaymentRepository
         }
         Console.WriteLine($"Payment {paymentId} updated to status {status} with transaction ref {transactionRef}");
     }
+
+    public async Task AddPaymentAsync(Payment payment)
+    {
+        await _context.Payments.AddAsync(new Persistence.Models.PaymentDbModel
+        {
+            id = payment.id,
+            order_id = payment.orderId,
+            payment_method_id = payment.paymentMethodId,
+            amount = payment.amount,
+            status = payment.status,
+            transaction_ref = payment.transactionRef,
+            created_at = payment.createdAt,
+            updated_at = payment.updatedAt ?? DateTimeOffset.UtcNow
+        });
+    }
 }

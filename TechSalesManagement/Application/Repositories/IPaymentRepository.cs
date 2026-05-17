@@ -9,4 +9,5 @@ public interface IPaymentRepository
 {
     Task<Payment?> GetPaymentByOrderIdAsync(Guid orderId);
     Task UpdatePaymentStatusAsync(Guid paymentId, PaymentStatus status, string? transactionRef = null);
+    Task AddPaymentAsync(Payment payment);
 }
