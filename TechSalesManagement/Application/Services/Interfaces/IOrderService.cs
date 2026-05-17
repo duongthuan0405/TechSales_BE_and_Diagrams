@@ -9,10 +9,11 @@ namespace TechSalesManagement.Application.Services.Interfaces;
 
 public interface IOrderService
 {
-    Task<Order> PlaceOrderAsync(PlaceOrderParams parameters);
+    Task<(Order order, string? checkoutUrl)> PlaceOrderAsync(PlaceOrderParams parameters);
     Task<(List<(Order order, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetOrderHistoryAsync(GetOrderHistoryParams parameters);
     Task<Order> GetOrderDetailsAsync(GetOrderDetailsParams parameters);
     Task CancelOrderAsync(CancelOrderParams parameters);
+    Task HandlePaymentIpnAsync(Guid orderId, string transactionRef, int resultCode);
 
     // Staff methods
     Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters);

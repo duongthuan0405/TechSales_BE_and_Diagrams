@@ -11,6 +11,7 @@ using TechSalesManagement.Infrastructure.Repositories;
 using TechSalesManagement.Infrastructure.Services;
 using TechSalesManagement.Application.VoucherStrategies;
 using TechSalesManagement.Application.Services.Strategies.Refund;
+using TechSalesManagement.Application.Services.Strategies.PaymentStrategies;
 
 
 namespace TechSalesManagement.Presentation_WebAPI.Extensions;
@@ -23,6 +24,7 @@ public static class DependencyInjectionExtensions
         services.Configure<MailSettingsCO>(configuration.GetSection("MAIL"));
         services.Configure<FrontendCO>(configuration.GetSection("FE"));
         services.Configure<JwtCO>(configuration.GetSection("JWT"));
+        services.Configure<MomoCO>(configuration.GetSection("Momo"));
         return services;
     }
 
@@ -58,6 +60,12 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IRefundStrategy, VnPayRefundStrategy>();
         services.AddScoped<IRefundStrategyFactory, RefundStrategyFactory>();
 
+        // Payment Strategies
+        services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();
+        services.AddScoped<IPaymentStrategy, MomoPaymentStrategy>();
+        services.AddScoped<IPaymentStrategy, VnPayPaymentStrategy>();
+        services.AddScoped<IPaymentStrategyFactory, PaymentStrategyFactory>();
+
         return services;
     }
 
@@ -68,6 +76,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+        services.AddHttpClient();
         return services;
     }
 
@@ -92,6 +101,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
         services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         return services;
     }
 }

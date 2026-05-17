@@ -13,6 +13,7 @@ using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.VoucherStrategies;
 using TechSalesManagement.Application.Services.Strategies.Refund;
+using TechSalesManagement.Application.Services.Strategies.PaymentStrategies;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -29,6 +30,9 @@ public class OrderService : IOrderService
     private readonly IDiscountStrategyFactory _discountStrategyFactory;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IRefundStrategyFactory _refundStrategyFactory;
+    private readonly IPaymentStrategyFactory _paymentStrategyFactory;
+    private readonly IPaymentMethodRepository _paymentMethodRepository;
+    private readonly IPaymentRepository _paymentRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -43,6 +47,9 @@ public class OrderService : IOrderService
         IDiscountStrategyFactory discountStrategyFactory,
         IAuditLogRepository auditLogRepository,
         IRefundStrategyFactory refundStrategyFactory,
+        IPaymentStrategyFactory paymentStrategyFactory,
+        IPaymentMethodRepository paymentMethodRepository,
+        IPaymentRepository paymentRepository,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -56,10 +63,13 @@ public class OrderService : IOrderService
         _discountStrategyFactory = discountStrategyFactory;
         _auditLogRepository = auditLogRepository;
         _refundStrategyFactory = refundStrategyFactory;
+        _paymentStrategyFactory = paymentStrategyFactory;
+        _paymentMethodRepository = paymentMethodRepository;
+        _paymentRepository = paymentRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Order> PlaceOrderAsync(PlaceOrderParams parameters)
+    public async Task<(Order order, string? checkoutUrl)> PlaceOrderAsync(PlaceOrderParams parameters)
     {
         if (parameters.ProductsWithQuantity == null || !parameters.ProductsWithQuantity.Any())
         {
@@ -74,6 +84,12 @@ public class OrderService : IOrderService
         if (parameters.PaymentMethodId == Guid.Empty)
         {
             throw new BadRequestException("Payment method is required.");
+        }
+
+        var paymentMethod = await _paymentMethodRepository.GetByIdAsync(parameters.PaymentMethodId);
+        if (paymentMethod == null)
+        {
+            throw new BadRequestException("Invalid payment method.");
         }
 
         try
@@ -196,6 +212,14 @@ public class OrderService : IOrderService
                 await _voucherRepository.UpdateVoucherAsync(appliedVoucher);
             }
 
+            var paymentStrategy = _paymentStrategyFactory.GetStrategy(paymentMethod.name);
+            var paymentResult = await paymentStrategy.ProcessPaymentAsync(newOrder);
+
+            if (!paymentResult.IsSuccess)
+            {
+                throw new BadRequestException(paymentResult.Message ?? "Failed to initialize payment gateway.");
+            }
+
             await _unitOfWork.FinishAsync();
 
             try
@@ -210,7 +234,56 @@ public class OrderService : IOrderService
             {
             }
 
-            return newOrder;
+            return (newOrder, paymentResult.CheckoutUrl);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task HandlePaymentIpnAsync(Guid orderId, string transactionRef, int resultCode)
+    {
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var payment = await _paymentRepository.GetPaymentByOrderIdAsync(orderId);
+            if (payment == null) return;
+
+            // If already processed
+            if (payment.status != PaymentStatus.PENDING) return;
+
+            if (resultCode == 0) // Success
+            {
+                await _paymentRepository.UpdatePaymentStatusAsync(payment.id, PaymentStatus.SUCCESS, transactionRef);
+                
+                var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+                if (order != null && order.status == OrderStatus.PENDING)
+                {
+                    await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.APPROVED);
+
+                    var auditLog = new AuditLog(
+                        order.userId,
+                        "APPROVE_ORDER",
+                        "Orders",
+                        order.id.ToString()
+                    )
+                    {
+                        oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.PENDING.ToString() }),
+                        newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                        affectedColumns = "status"
+                    };
+                    await _auditLogRepository.AddAsync(auditLog);
+                }
+            }
+            else
+            {
+                await _paymentRepository.UpdatePaymentStatusAsync(payment.id, PaymentStatus.FAILED, transactionRef);
+            }
+
+            await _unitOfWork.FinishAsync();
         }
         catch
         {

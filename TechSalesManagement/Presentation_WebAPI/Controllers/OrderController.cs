@@ -59,14 +59,15 @@ public class OrderController : ControllerBase
             VoucherCode = request.voucherCode
         };
 
-        var newOrder = await _orderService.PlaceOrderAsync(parameters);
+        var (newOrder, checkoutUrl) = await _orderService.PlaceOrderAsync(parameters);
 
         var response = new OrderResponseDto
         {
             id = newOrder.id,
             status = newOrder.status,
             totalAmount = newOrder.totalAmount,
-            createdAt = newOrder.createdAt
+            createdAt = newOrder.createdAt,
+            checkoutUrl = checkoutUrl
         };
 
         // BR91: Returns 200-OK with MSG37

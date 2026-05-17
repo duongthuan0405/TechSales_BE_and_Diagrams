@@ -12,6 +12,7 @@ public class OrderResponseDto
     public DateTimeOffset createdAt { get; set; }
     public string paymentMethodName { get; set; } = string.Empty;
     public bool? isPaymentFailed { get; set; }
+    public string? checkoutUrl { get; set; }
 }
 
 public class OrderDetailResponseDto
