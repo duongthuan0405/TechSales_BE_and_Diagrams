@@ -220,6 +220,17 @@ public class OrderService : IOrderService
                 throw new BadRequestException(paymentResult.Message ?? "Failed to initialize payment gateway.");
             }
 
+            var auditLog = new AuditLog(
+                parameters.UserId,
+                "PLACE_ORDER",
+                "Orders",
+                orderId.ToString()
+            )
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { totalAmount = totalAmount, paymentMethod = paymentMethod.name })
+            };
+            await _auditLogRepository.AddAsync(auditLog);
+
             await _unitOfWork.FinishAsync();
 
             try
@@ -277,10 +288,37 @@ public class OrderService : IOrderService
                     };
                     await _auditLogRepository.AddAsync(auditLog);
                 }
+
+                var paymentAuditLog = new AuditLog(
+                    order != null ? order.userId : (Guid?)null,
+                    "ONLINE_PAYMENT_SUCCESS",
+                    "Payments",
+                    payment.id.ToString()
+                )
+                {
+                    oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = PaymentStatus.PENDING.ToString() }),
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { status = PaymentStatus.SUCCESS.ToString(), transactionRef = transactionRef, amount = payment.amount }),
+                    affectedColumns = "status,transactionRef"
+                };
+                await _auditLogRepository.AddAsync(paymentAuditLog);
             }
             else
             {
                 await _paymentRepository.UpdatePaymentStatusAsync(payment.id, PaymentStatus.FAILED, transactionRef);
+
+                var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+                var paymentAuditLog = new AuditLog(
+                    order != null ? order.userId : (Guid?)null,
+                    "ONLINE_PAYMENT_FAILED",
+                    "Payments",
+                    payment.id.ToString()
+                )
+                {
+                    oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = PaymentStatus.PENDING.ToString() }),
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { status = PaymentStatus.FAILED.ToString(), transactionRef = transactionRef, resultCode = resultCode, amount = payment.amount }),
+                    affectedColumns = "status,transactionRef"
+                };
+                await _auditLogRepository.AddAsync(paymentAuditLog);
             }
 
             await _unitOfWork.FinishAsync();
@@ -353,6 +391,19 @@ public class OrderService : IOrderService
                     await _voucherRepository.UpdateVoucherAsync(voucher);
                 }
             }
+
+            var auditLog = new AuditLog(
+                parameters.UserId,
+                "CANCEL_ORDER",
+                "Orders",
+                order.id.ToString()
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.PENDING.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.CANCELLED.ToString() }),
+                affectedColumns = "status"
+            };
+            await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
         }
