@@ -25,6 +25,7 @@ public static class DependencyInjectionExtensions
         services.Configure<FrontendCO>(configuration.GetSection("FE"));
         services.Configure<JwtCO>(configuration.GetSection("JWT"));
         services.Configure<MomoCO>(configuration.GetSection("Momo"));
+        services.Configure<CloudinaryCO>(configuration.GetSection("Cloudinary"));
         return services;
     }
 
@@ -76,6 +77,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+        services.AddScoped<IImageService, ImageService>();
         services.AddHttpClient();
         return services;
     }

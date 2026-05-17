@@ -11,6 +11,7 @@ using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 using TechSalesManagement.Presentation_WebAPI.Extensions;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Common;
+using TechSalesManagement.Application.HelperServices;
 
 namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
@@ -20,10 +21,12 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 public class ProductManagementController : ControllerBase
 {
     private readonly IProductManagementService _productManagementService;
+    private readonly IImageService _imageService;
 
-    public ProductManagementController(IProductManagementService productManagementService)
+    public ProductManagementController(IProductManagementService productManagementService, IImageService imageService)
     {
         _productManagementService = productManagementService;
+        _imageService = imageService;
     }
 
     [HttpGet]
@@ -44,16 +47,30 @@ public class ProductManagementController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiSuccessResponse<Product>>> CreateAsync([FromBody] CreateProductRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<Product>>> CreateAsync([FromForm] CreateProductRequestDto request)
     {
         var staffId = User.GetUserId();
         if (staffId == null) return Unauthorized();
 
-        var images = request.images.Select(img => new ProductImage
+        var images = new List<ProductImage>();
+
+        if (request.imageFiles != null && request.imageFiles.Any())
         {
-            imageUrl = img.imageUrl,
-            isPrimary = img.isPrimary
-        }).ToList();
+            // Upload song song tất cả các ảnh cùng lúc thay vì tuần tự
+            var uploadTasks = request.imageFiles.Select(file => _imageService.UploadImageAsync(file));
+            var uploadedUrls = await Task.WhenAll(uploadTasks);
+
+            bool isFirst = true;
+            foreach (var url in uploadedUrls)
+            {
+                images.Add(new ProductImage
+                {
+                    imageUrl = url,
+                    isPrimary = isFirst
+                });
+                isFirst = false;
+            }
+        }
 
         var product = await _productManagementService.CreateProductAsync(
             request.name, request.description, request.price, request.brand, request.categoryId, request.initialStock, images, staffId.Value);

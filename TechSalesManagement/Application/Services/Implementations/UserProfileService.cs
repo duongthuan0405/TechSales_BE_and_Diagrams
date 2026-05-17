@@ -7,6 +7,7 @@ using TechSalesManagement.Application.Interfaces;
 using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Domain.Entities;
+using TechSalesManagement.Application.HelperServices;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -14,13 +15,16 @@ public class UserProfileService : IUserProfileService
 {
     private readonly IUserProfileRepository _userProfileRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IImageService _imageService;
 
     public UserProfileService(
         IUserProfileRepository userProfileRepository, 
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IImageService imageService)
     {
         _userProfileRepository = userProfileRepository;
         _unitOfWork = unitOfWork;
+        _imageService = imageService;
     }
 
     public async Task UpdateProfileAsync(UpdateProfileParams parameters)
@@ -65,9 +69,15 @@ public class UserProfileService : IUserProfileService
                 throw new BadRequestException(MessageConstants.MSG16);
             }
 
+            string? avatarUrl = parameters.AvatarUrl;
+            if (parameters.AvatarFile != null)
+            {
+                avatarUrl = await _imageService.UploadImageAsync(parameters.AvatarFile);
+            }
+
             profile.fullName = fullName;
             profile.phone = phone;            
-            if (parameters.AvatarUrl != null) profile.avatarUrl = parameters.AvatarUrl;
+            if (avatarUrl != null) profile.avatarUrl = avatarUrl;
             if (parameters.DateOfBirth != null) profile.dateOfBirth = parameters.DateOfBirth;
 
             await _userProfileRepository.UpdateAsync(profile);

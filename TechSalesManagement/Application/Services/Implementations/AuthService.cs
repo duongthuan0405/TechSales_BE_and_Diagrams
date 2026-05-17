@@ -153,7 +153,7 @@ public class AuthService : IAuthService
                 await _userTokenRepository.AddAsync(userToken);
             }
 
-            var verificationLink = $"{_frontendCO.url}/?email={userToReturn.email}&token={otpResult.otp}";
+            var verificationLink = $"{_frontendCO.url}/verify-email?email={userToReturn.email}&token={otpResult.otp}";
             await _emailService.SendVerificationEmailAsync(userToReturn.email, verificationLink);
 
             await _unitOfWork.FinishAsync();
