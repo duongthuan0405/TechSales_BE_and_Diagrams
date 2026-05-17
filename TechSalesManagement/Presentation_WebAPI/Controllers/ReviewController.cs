@@ -45,7 +45,16 @@ public class ReviewController : ControllerBase
                 {
                     fullName = r.profile?.fullName ?? "Anonymous",
                     avatarUrl = r.profile?.avatarUrl
-                }
+                },
+                responses = r.responses.Select(resp => new ReviewResponseItemDto
+                {
+                    id = resp.id,
+                    reviewId = resp.reviewId,
+                    userId = resp.userId,
+                    userName = resp.userName ?? "Staff Member",
+                    content = resp.content,
+                    createdAt = resp.createdAt
+                }).ToList()
             }).ToList(),
             totalCount = totalCount,
             pageNumber = pageNumber,
@@ -77,5 +86,73 @@ public class ReviewController : ControllerBase
         await _reviewService.HideReviewAsync(id, request.reason, staffId.Value);
 
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG69));
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpPost]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> AddReviewAsync([FromBody] CreateReviewRequestDto request)
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var parameters = new TechSalesManagement.Application.Services.Params.AddReviewParams
+        {
+            UserId = userId.Value,
+            OrderId = request.orderId,
+            ProductId = request.productId,
+            RatingStars = request.ratingStars,
+            ReviewComment = request.reviewComment
+        };
+
+        await _reviewService.AddReviewAsync(parameters);
+
+        return Ok(new ApiSuccessResponse<object>(null, "Review submitted successfully."));
+    }
+
+    [HttpGet("product/{productId:guid}")]
+    public async Task<ActionResult<ApiSuccessResponse<ProductReviewsResponseDto>>> GetProductReviewsAsync(
+        [FromRoute] Guid productId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var parameters = new TechSalesManagement.Application.Services.Params.GetProductReviewsParams
+        {
+            ProductId = productId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await _reviewService.GetProductReviewsAsync(parameters);
+
+        var response = new ProductReviewsResponseDto
+        {
+            averageRating = result.AverageRating,
+            totalCount = result.TotalCount,
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            items = result.Reviews.Select(r => new ReviewItemResponseDto
+            {
+                id = r.id,
+                rating = r.rating,
+                comment = r.comment,
+                createdAt = r.createdAt,
+                profile = new ProfileResponseDto
+                {
+                    fullName = r.profile?.fullName ?? "Anonymous",
+                    avatarUrl = r.profile?.avatarUrl
+                },
+                responses = r.responses.Select(resp => new ReviewResponseItemDto
+                {
+                    id = resp.id,
+                    reviewId = resp.reviewId,
+                    userId = resp.userId,
+                    userName = resp.userName ?? "Staff Member",
+                    content = resp.content,
+                    createdAt = resp.createdAt
+                }).ToList()
+            }).ToList()
+        };
+
+        return Ok(new ApiSuccessResponse<ProductReviewsResponseDto>(response, "Product reviews retrieved successfully."));
     }
 }

@@ -28,11 +28,22 @@ public class StatisticsService : IStatisticsService
             var point = rawData.FirstOrDefault(d => d.Date == date);
             result.Add(new RevenueChartDto
             {
-                Label = date.ToString("yyyy-MM-dd"),
-                Value = point?.Revenue ?? 0
+                Date = date.ToString("yyyy-MM-dd"),
+                TotalRevenue = point?.Revenue ?? 0,
+                OrderCount = point?.OrderCount ?? 0
             });
         }
 
         return result;
+    }
+
+    public async Task<List<CategoryDistributionDto>> GetCategoryDistributionAsync()
+    {
+        return await _statisticsRepository.GetCategoryDistributionAsync();
+    }
+
+    public async Task<ReportSummaryDto> GetReportSummaryAsync()
+    {
+        return await _statisticsRepository.GetReportSummaryAsync();
     }
 }

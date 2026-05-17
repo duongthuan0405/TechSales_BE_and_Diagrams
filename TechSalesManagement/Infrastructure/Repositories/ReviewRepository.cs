@@ -42,6 +42,9 @@ public class ReviewRepository : IReviewRepository
         var query = _dbContext.Reviews
             .Include(r => r.user)
                 .ThenInclude(u => u!.user_profile)
+            .Include(r => r.review_responses)
+                .ThenInclude(rr => rr.user)
+                    .ThenInclude(u => u!.user_profile)
             .Where(r => r.product_id == productId && r.status == ReviewStatus.VISIBLE);
 
         int totalCount = await query.CountAsync();
@@ -76,7 +79,14 @@ public class ReviewRepository : IReviewRepository
                 avatarUrl = db.user?.user_profile?.avatar_url,
                 phone = db.user?.user_profile?.phone ?? string.Empty,
                 dateOfBirth = db.user?.user_profile?.date_of_birth
-            }
+            },
+            responses = db.review_responses?.Select(rr => new ReviewResponse(rr.review_id, rr.user_id, rr.content ?? string.Empty)
+            {
+                id = rr.id,
+                createdAt = rr.created_at ?? DateTimeOffset.UtcNow,
+                updatedAt = rr.updated_at,
+                userName = rr.user?.user_profile?.full_name ?? rr.user?.email ?? "Staff Member"
+            }).ToList() ?? new List<ReviewResponse>()
         }).ToList();
 
         return (mappedReviews, totalCount, averageRating);
@@ -87,6 +97,9 @@ public class ReviewRepository : IReviewRepository
         var query = _dbContext.Reviews
             .Include(r => r.user)
                 .ThenInclude(u => u!.user_profile)
+            .Include(r => r.review_responses)
+                .ThenInclude(rr => rr.user)
+                    .ThenInclude(u => u!.user_profile)
             .Include(r => r.product);
 
         int totalCount = await query.CountAsync();
@@ -113,7 +126,14 @@ public class ReviewRepository : IReviewRepository
             {
                 fullName = db.user?.user_profile?.full_name ?? db.user?.email ?? "Anonymous",
                 avatarUrl = db.user?.user_profile?.avatar_url
-            }
+            },
+            responses = db.review_responses?.Select(rr => new ReviewResponse(rr.review_id, rr.user_id, rr.content ?? string.Empty)
+            {
+                id = rr.id,
+                createdAt = rr.created_at ?? DateTimeOffset.UtcNow,
+                updatedAt = rr.updated_at,
+                userName = rr.user?.user_profile?.full_name ?? rr.user?.email ?? "Staff Member"
+            }).ToList() ?? new List<ReviewResponse>()
         }).ToList();
 
         return (mappedReviews, totalCount);

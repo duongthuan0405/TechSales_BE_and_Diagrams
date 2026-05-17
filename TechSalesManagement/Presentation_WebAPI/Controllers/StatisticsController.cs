@@ -30,4 +30,20 @@ public class StatisticsController : ControllerBase
 
         return Ok(new ApiSuccessResponse<List<RevenueChartDto>>(data, "Revenue statistics retrieved successfully."));
     }
+
+    [HttpGet("categories")]
+    public async Task<ActionResult<ApiSuccessResponse<List<CategoryDistributionDto>>>> GetCategoryDistributionAsync()
+    {
+        var data = await _statisticsService.GetCategoryDistributionAsync();
+
+        return Ok(new ApiSuccessResponse<List<CategoryDistributionDto>>(data, "Category statistics retrieved successfully."));
+    }
+
+    [HttpGet("reports")]
+    public async Task<ActionResult<ApiSuccessResponse<ReportSummaryDto>>> GetReportSummaryAsync()
+    {
+        var data = await _statisticsService.GetReportSummaryAsync();
+
+        return Ok(new ApiSuccessResponse<ReportSummaryDto>(data, "Report statistics retrieved successfully."));
+    }
 }

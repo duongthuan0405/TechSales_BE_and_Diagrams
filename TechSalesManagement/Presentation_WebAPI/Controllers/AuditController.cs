@@ -12,7 +12,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/audit-logs")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Technical Admin")]
 public class AuditController : ControllerBase
 {
     private readonly IAuditService _auditService;
