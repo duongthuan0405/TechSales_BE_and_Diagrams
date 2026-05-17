@@ -311,12 +311,16 @@ public class OrderRepository : IOrderRepository
                 case OrderStatus.DELIVERED:
                     dbOrder.delivered_at = DateTimeOffset.UtcNow;
                     var pendingPayments = await _dbContext.Payments
+                        .Include(p => p.payment_method)
                         .Where(p => p.order_id == orderId && p.status == PaymentStatus.PENDING)
                         .ToListAsync();
                     foreach (var payment in pendingPayments)
                     {
-                        payment.status = PaymentStatus.SUCCESS;
-                        payment.updated_at = DateTimeOffset.UtcNow;
+                        if (payment.payment_method?.type == PaymentMethodType.CASH)
+                        {
+                            payment.status = PaymentStatus.SUCCESS;
+                            payment.updated_at = DateTimeOffset.UtcNow;
+                        }
                     }
                     break;
             }
