@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 
+public class ReviewResponseItemDto
+{
+    public Guid id { get; set; }
+    public Guid reviewId { get; set; }
+    public Guid userId { get; set; }
+    public string userName { get; set; } = string.Empty;
+    public string content { get; set; } = string.Empty;
+    public DateTimeOffset createdAt { get; set; }
+}
+
 public class ReviewItemResponseDto
 {
     public Guid id { get; set; }
@@ -10,6 +20,7 @@ public class ReviewItemResponseDto
     public string? comment { get; set; }
     public ProfileResponseDto profile { get; set; } = null!;
     public DateTimeOffset createdAt { get; set; }
+    public List<ReviewResponseItemDto> responses { get; set; } = new();
 }
 
 public class ProductReviewsResponseDto

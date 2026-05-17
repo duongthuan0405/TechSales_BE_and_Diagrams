@@ -12,6 +12,7 @@ public class ReviewResponse
     public Guid reviewId { get; set; }
     public Guid userId { get; set; }
     public string content { get; set; } = string.Empty;
+    public string? userName { get; set; }
 
     public ReviewResponse(Guid reviewId, Guid userId, string content)
     {
