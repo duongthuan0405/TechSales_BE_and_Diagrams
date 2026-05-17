@@ -128,4 +128,19 @@ public class AuthController : ControllerBase
         
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG20));
     }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> LogoutAsync()
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        var token = authHeader.Replace("Bearer ", "").Trim();
+        
+        if (!string.IsNullOrEmpty(token))
+        {
+            await _authService.LogoutAsync(token);
+        }
+
+        return Ok(new ApiSuccessResponse<object>(null, "Logged out successfully. Token has been blacklisted."));
+    }
 }

@@ -27,6 +27,8 @@ public class AuthService : IAuthService
     private readonly IRoleRepository _roleRepository;
     private readonly IUserProfileRepository _userProfileRepository;
     private readonly FrontendCO _frontendCO;
+    private readonly ICacheService _cacheService;
+    private readonly JwtCO _jwtCO;
 
     public AuthService(
         IUserRepository userRepository,
@@ -38,7 +40,9 @@ public class AuthService : IAuthService
         IUserTokenRepository userTokenRepository,
         IRoleRepository roleRepository,
         IUserProfileRepository userProfileRepository,
-        IOptions<FrontendCO> frontendOptions)
+        IOptions<FrontendCO> frontendOptions,
+        ICacheService cacheService,
+        IOptions<JwtCO> jwtOptions)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -50,6 +54,8 @@ public class AuthService : IAuthService
         _roleRepository = roleRepository;
         _userProfileRepository = userProfileRepository;
         _frontendCO = frontendOptions.Value;
+        _cacheService = cacheService;
+        _jwtCO = jwtOptions.Value;
     }
 
     public async Task<User> RegisterAsync(RegisterParams parameters)
@@ -488,5 +494,14 @@ public class AuthService : IAuthService
             await _unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task LogoutAsync(string token)
+    {
+        if (string.IsNullOrEmpty(token)) return;
+
+        var cacheKey = $"blacklist:token:{token}";
+        // Blacklist the token in Redis for the exact configured JWT lifetime
+        await _cacheService.SetAsync(cacheKey, true, TimeSpan.FromMinutes(_jwtCO.durationInMinutes));
     }
 }
