@@ -37,7 +37,7 @@ public class OrderManagementService : IOrderManagementService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
     {
         return await _orderRepository.SearchOrdersAsync(parameters);
     }
@@ -75,16 +75,28 @@ public class OrderManagementService : IOrderManagementService
                     break;
                 case OrderStatus.SHIPPING:
                     order.Ship();
+                    foreach (var item in order.items)
+                    {
+                        await _inventoryRepository.DeductStockAsync(item.product_id, item.quantity);
+                    }
                     break;
                 case OrderStatus.DELIVERED:
                     order.Deliver();
                     break;
                 case OrderStatus.CANCELLED:
+                    var wasShipped = (oldStatus == OrderStatus.SHIPPING);
                     order.Cancel();
                     // Restock logic
                     foreach (var item in order.items)
                     {
-                        await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                        if (wasShipped) 
+                        {
+                            await _inventoryRepository.RestorePhysicalStockAsync(item.product_id, item.quantity);
+                        } 
+                        else 
+                        {
+                            await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                        }
                     }
                     break;
                 default:
@@ -93,7 +105,12 @@ public class OrderManagementService : IOrderManagementService
 
             await _orderRepository.UpdateOrderAsync(order);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_ORDER_STATUS", "Orders", $"OrderId: {orderId}, From: {oldStatus}, To: {nextStatus}");
+            var auditLog = new AuditLog(staffId, "UPDATE_ORDER_STATUS", "Orders", orderId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = oldStatus.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = nextStatus.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -116,7 +133,7 @@ public class OrderManagementService : IOrderManagementService
         }
     }
 
-    public async Task<(Order? order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderDetailsAsync(Guid orderId)
+    public async Task<(Order? order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> GetOrderDetailsAsync(Guid orderId)
     {
         var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
         if (result == null) throw new NotFoundException("Order not found.");

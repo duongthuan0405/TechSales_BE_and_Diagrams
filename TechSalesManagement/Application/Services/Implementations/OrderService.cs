@@ -219,7 +219,7 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<(List<Order> orders, int totalCount)> GetOrderHistoryAsync(GetOrderHistoryParams parameters)
+    public async Task<(List<(Order order, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetOrderHistoryAsync(GetOrderHistoryParams parameters)
     {
         if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
         if (parameters.PageSize <= 0) parameters.PageSize = 10;
@@ -291,7 +291,7 @@ public class OrderService : IOrderService
     }
 
     // Staff methods
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
     {
         if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
         if (parameters.PageSize <= 0) parameters.PageSize = 20;
@@ -299,7 +299,7 @@ public class OrderService : IOrderService
         return await _orderRepository.GetOrdersByStatusAsync(OrderStatus.PENDING, parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<(Order order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
+    public async Task<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
     {
         var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
 
@@ -336,7 +336,12 @@ public class OrderService : IOrderService
                 "APPROVE_ORDER",
                 "Orders",
                 parameters.OrderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.PENDING.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -373,7 +378,12 @@ public class OrderService : IOrderService
                 "SHIP_ORDER",
                 "Orders",
                 orderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.SHIPPING.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -410,7 +420,12 @@ public class OrderService : IOrderService
                 "DELIVER_ORDER",
                 "Orders",
                 orderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.SHIPPING.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.DELIVERED.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -459,8 +474,13 @@ public class OrderService : IOrderService
                 staffId,
                 "CANCEL_ORDER",
                 "Orders",
-                $"{orderId} - Reason: {reason}"
-            );
+                orderId.ToString()
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = order.status.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.CANCELLED.ToString(), reason = reason }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -515,8 +535,11 @@ public class OrderService : IOrderService
                     staffId,
                     "INITIATE_REFUND",
                     "Orders",
-                    $"{orderId} - Amount: {successfulPayment.payment.amount}"
-                );
+                    orderId.ToString()
+                )
+                {
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { amount = successfulPayment.payment.amount })
+                };
                 await _auditLogRepository.AddAsync(auditLog);
 
                 await _unitOfWork.FinishAsync();
@@ -533,7 +556,7 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
     {
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 20;
@@ -541,10 +564,9 @@ public class OrderService : IOrderService
         return await _orderRepository.GetRefundableOrdersAsync(pageNumber, pageSize);
     }
 
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
     {
         var result = await _orderRepository.SearchOrdersAsync(parameters);
-        var mappedList = result.orders.Select(x => (x.order, x.user)).ToList();
-        return (mappedList, result.totalCount);
+        return result;
     }
 }

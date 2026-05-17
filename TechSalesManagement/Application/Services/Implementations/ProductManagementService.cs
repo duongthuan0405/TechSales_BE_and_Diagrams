@@ -83,7 +83,12 @@ public class ProductManagementService : IProductManagementService
 
             if (oldPrice != price)
             {
-                var auditLog = new AuditLog(staffId, "UPDATE_PRICE", "Products", $"Id: {productId}, Old: {oldPrice}, New: {price}");
+                var auditLog = new AuditLog(staffId, "UPDATE_PRICE", "Products", productId.ToString())
+                {
+                    oldValues = System.Text.Json.JsonSerializer.Serialize(new { price = oldPrice }),
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { price = price }),
+                    affectedColumns = "price"
+                };
                 await _auditLogRepository.AddAsync(auditLog);
             }
 
@@ -135,7 +140,12 @@ public class ProductManagementService : IProductManagementService
             inventory.UpdateStock(newQuantity);
             await _inventoryRepository.UpdateStockAsync(productId, newQuantity);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", $"Id: {productId}, Type: {type}, Value: {value}, Old: {oldQuantity}, New: {newQuantity}");
+            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", productId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { quantity = oldQuantity }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { quantity = newQuantity }),
+                affectedColumns = "quantity"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

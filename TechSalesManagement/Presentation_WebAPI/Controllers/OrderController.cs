@@ -25,6 +25,25 @@ public class OrderController : ControllerBase
         _orderService = orderService;
     }
 
+    private (string paymentMethodName, bool? isPaymentFailed) GetPaymentInfo(System.Collections.Generic.List<(TechSalesManagement.Domain.Entities.Payment payment, string methodName, TechSalesManagement.Domain.Enums.PaymentMethodType type)> payments)
+    {
+        if (payments == null || !payments.Any())
+            return (string.Empty, null);
+
+        var successPaymentTuple = payments.FirstOrDefault(p => p.payment.status == TechSalesManagement.Domain.Enums.PaymentStatus.SUCCESS);
+        var latestPaymentTuple = payments.OrderByDescending(p => p.payment.createdAt).FirstOrDefault();
+
+        var paymentTuple = successPaymentTuple.payment != null ? successPaymentTuple : latestPaymentTuple;
+
+        bool? isFailed = null;
+        if (paymentTuple.type == TechSalesManagement.Domain.Enums.PaymentMethodType.ONLINE)
+        {
+            isFailed = successPaymentTuple.payment == null && latestPaymentTuple.payment?.status == TechSalesManagement.Domain.Enums.PaymentStatus.FAILED;
+        }
+
+        return (paymentTuple.methodName ?? string.Empty, isFailed);
+    }
+
     [HttpPost]
     public async Task<ActionResult<ApiSuccessResponse<OrderResponseDto>>> PlaceOrderAsync([FromBody] PlaceOrderRequestDto request)
     {
@@ -69,12 +88,17 @@ public class OrderController : ControllerBase
 
         var (orders, totalCount) = await _orderService.GetOrderHistoryAsync(parameters);
 
-        var items = orders.Select(o => new OrderResponseDto
-        {
-            id = o.id,
-            status = o.status,
-            totalAmount = o.totalAmount,
-            createdAt = o.createdAt
+        var items = orders.Select(o => {
+            var paymentInfo = GetPaymentInfo(o.payments);
+            return new OrderResponseDto
+            {
+                id = o.order.id,
+                status = o.order.status,
+                totalAmount = o.order.totalAmount,
+                createdAt = o.order.createdAt,
+                paymentMethodName = paymentInfo.paymentMethodName,
+                isPaymentFailed = paymentInfo.isPaymentFailed
+            };
         }).ToList();
 
         var response = new  PagedResponseDto<OrderResponseDto>
@@ -112,6 +136,8 @@ public class OrderController : ControllerBase
 
         var order = result.order;
 
+        var paymentInfo = GetPaymentInfo(result.payments);
+
         var response = new OrderStaffDetailResponseDto
         {
             id = order.id,
@@ -125,6 +151,8 @@ public class OrderController : ControllerBase
             approvedAt = order.approvedAt,
             shippedAt = order.shippedAt,
             deliveredAt = order.deliveredAt,
+            paymentMethodName = paymentInfo.paymentMethodName,
+            isPaymentFailed = paymentInfo.isPaymentFailed,
             items = order.items.Select(i => new OrderItemResponseDto
             {
                 productId = i.product_id,
@@ -176,14 +204,19 @@ public class OrderController : ControllerBase
 
         var (orders, totalCount) = await _orderService.GetPendingOrdersAsync(parameters);
 
-        var items = orders.Select(x => new OrderStaffResponseDto
-        {
-            id = x.order.id,
-            status = x.order.status,
-            totalAmount = x.order.totalAmount,
-            createdAt = x.order.createdAt,
-            customerName = x.user?.profile?.fullName ?? "Unknown",
-            customerPhone = x.user?.profile?.phone ?? "N/A"
+        var items = orders.Select(x => {
+            var paymentInfo = GetPaymentInfo(x.payments);
+            return new OrderStaffResponseDto
+            {
+                id = x.order.id,
+                status = x.order.status,
+                totalAmount = x.order.totalAmount,
+                createdAt = x.order.createdAt,
+                customerName = x.user?.profile?.fullName ?? "Unknown",
+                customerPhone = x.user?.profile?.phone ?? "N/A",
+                paymentMethodName = paymentInfo.paymentMethodName,
+                isPaymentFailed = paymentInfo.isPaymentFailed
+            };
         }).ToList();
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
@@ -205,6 +238,8 @@ public class OrderController : ControllerBase
     {
         var (order, user, payments) = await _orderService.GetOrderWithFullDetailsAsync(id);
 
+        var paymentInfo = GetPaymentInfo(payments);
+
         var response = new OrderStaffDetailResponseDto
         {
             id = order.id,
@@ -221,6 +256,8 @@ public class OrderController : ControllerBase
             customerEmail = user?.email ?? string.Empty,
             customerFullName = user?.profile?.fullName ?? string.Empty,
             customerPhone = user?.profile?.phone ?? string.Empty,
+            paymentMethodName = paymentInfo.paymentMethodName,
+            isPaymentFailed = paymentInfo.isPaymentFailed,
             items = order.items.Select(i => new OrderItemResponseDto
             {
                 productId = i.product_id,
@@ -317,13 +354,18 @@ public class OrderController : ControllerBase
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
         {
-            items = orders.Select(o => new OrderStaffResponseDto
-            {
-                id = o.order.id,
-                customerName = o.user?.profile?.fullName ?? "Unknown",
-                totalAmount = o.order.totalAmount,
-                status = o.order.status,
-                createdAt = o.order.createdAt
+            items = orders.Select(o => {
+                var paymentInfo = GetPaymentInfo(o.payments);
+                return new OrderStaffResponseDto
+                {
+                    id = o.order.id,
+                    customerName = o.user?.profile?.fullName ?? "Unknown",
+                    totalAmount = o.order.totalAmount,
+                    status = o.order.status,
+                    createdAt = o.order.createdAt,
+                    paymentMethodName = paymentInfo.paymentMethodName,
+                    isPaymentFailed = paymentInfo.isPaymentFailed
+                };
             }).ToList(),
             totalCount = totalCount,
             pageNumber = parameters.PageNumber,
@@ -352,13 +394,18 @@ public class OrderController : ControllerBase
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
         {
-            items = orders.Select(o => new OrderStaffResponseDto
-            {
-                id = o.order.id,
-                customerName = o.user?.profile?.fullName ?? "Unknown",
-                totalAmount = o.order.totalAmount,
-                status = o.order.status,
-                createdAt = o.order.createdAt
+            items = orders.Select(o => {
+                var paymentInfo = GetPaymentInfo(o.payments);
+                return new OrderStaffResponseDto
+                {
+                    id = o.order.id,
+                    customerName = o.user?.profile?.fullName ?? "Unknown",
+                    totalAmount = o.order.totalAmount,
+                    status = o.order.status,
+                    createdAt = o.order.createdAt,
+                    paymentMethodName = paymentInfo.paymentMethodName,
+                    isPaymentFailed = paymentInfo.isPaymentFailed
+                };
             }).ToList(),
             totalCount = totalCount,
             pageNumber = request.pageNumber,

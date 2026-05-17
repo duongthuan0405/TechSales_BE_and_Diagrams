@@ -80,9 +80,11 @@ public class OrderRepository : IOrderRepository
         });
     }
 
-    public async Task<(List<Order> orders, int totalCount)> GetOrdersByUserIdAsync(Guid userId, int pageNumber, int pageSize)
+    public async Task<(List<(Order order, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetOrdersByUserIdAsync(Guid userId, int pageNumber, int pageSize)
     {
         var query = _dbContext.Orders
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
             .Where(o => o.user_id == userId);
 
         int totalCount = await query.CountAsync();
@@ -93,7 +95,17 @@ public class OrderRepository : IOrderRepository
             .Take(pageSize)
             .ToListAsync();
 
-        var entities = dbModels.Select(m => MapToEntity(m)!).ToList();
+        var entities = dbModels.Select(m => (MapToEntity(m)!, m.payments.Select(p => (new Payment
+        {
+            id = p.id,
+            orderId = p.order_id,
+            paymentMethodId = p.payment_method_id,
+            status = p.status,
+            amount = p.amount,
+            transactionRef = p.transaction_ref,
+            createdAt = p.created_at,
+            updatedAt = p.updated_at
+        }, p.payment_method?.name ?? "Unknown", p.payment_method?.type ?? PaymentMethodType.CASH)).ToList())).ToList();
 
         return (entities, totalCount);
     }
@@ -111,11 +123,13 @@ public class OrderRepository : IOrderRepository
         return MapToEntity(dbModel);
     }
 
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetOrdersByStatusAsync(OrderStatus status, int pageNumber, int pageSize)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetOrdersByStatusAsync(OrderStatus status, int pageNumber, int pageSize)
     {
         var query = _dbContext.Orders
             .Include(o => o.user)
                 .ThenInclude(u => u.user_profile)
+            .Include(o => o.payments)
+                .ThenInclude(p => p.payment_method)
             .Where(o => o.status == status);
 
         int totalCount = await query.CountAsync();
@@ -126,12 +140,22 @@ public class OrderRepository : IOrderRepository
             .Take(pageSize)
             .ToListAsync();
 
-        var results = dbModels.Select(m => (MapToEntity(m)!, MapUserToEntity(m.user))).ToList();
+        var results = dbModels.Select(m => (MapToEntity(m)!, MapUserToEntity(m.user), m.payments.Select(p => (new Payment
+        {
+            id = p.id,
+            orderId = p.order_id,
+            paymentMethodId = p.payment_method_id,
+            status = p.status,
+            amount = p.amount,
+            transactionRef = p.transaction_ref,
+            createdAt = p.created_at,
+            updatedAt = p.updated_at
+        }, p.payment_method?.name ?? "Unknown", p.payment_method?.type ?? PaymentMethodType.CASH)).ToList())).ToList();
 
         return (results, totalCount);
     }
 
-    public async Task<(Order? order, User? user, List<(Payment payment, string methodName)> payments)?> GetOrderWithFullDetailsByIdAsync(Guid orderId)
+    public async Task<(Order? order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)?> GetOrderWithFullDetailsByIdAsync(Guid orderId)
     {
         var dbModel = await _dbContext.Orders
             .Include(o => o.user)
@@ -159,7 +183,7 @@ public class OrderRepository : IOrderRepository
             transactionRef = p.transaction_ref,
             createdAt = p.created_at,
             updatedAt = p.updated_at
-        }, p.payment_method?.name ?? "Unknown")).ToList();
+        }, p.payment_method?.name ?? "Unknown", p.payment_method?.type ?? PaymentMethodType.CASH)).ToList();
 
         return (order, user, payments);
     }
@@ -301,7 +325,7 @@ public class OrderRepository : IOrderRepository
         }
     }
 
-    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundableOrdersAsync(int pageNumber, int pageSize)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetRefundableOrdersAsync(int pageNumber, int pageSize)
     {
         var query = _dbContext.Orders
             .Include(o => o.user)
@@ -321,7 +345,7 @@ public class OrderRepository : IOrderRepository
         var results = dbModels.Select(m => (
             MapToEntity(m)!,
             MapUserToEntity(m.user),
-            m.payments.Select(p => new Payment
+            m.payments.Select(p => (new Payment
             {
                 id = p.id,
                 orderId = p.order_id,
@@ -331,13 +355,13 @@ public class OrderRepository : IOrderRepository
                 transactionRef = p.transaction_ref,
                 createdAt = p.created_at,
                 updatedAt = p.updated_at
-            }).ToList()
+            }, p.payment_method?.name ?? "Unknown", p.payment_method?.type ?? PaymentMethodType.CASH)).ToList()
         )).ToList();
 
         return (results, totalCount);
     }
 
-    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
     {
         var query = _dbContext.Orders
             .Include(o => o.user)
@@ -369,7 +393,7 @@ public class OrderRepository : IOrderRepository
                 transactionRef = p.transaction_ref,
                 createdAt = p.created_at,
                 updatedAt = p.updated_at
-            }, p.payment_method?.name ?? "Unknown")).ToList()
+            }, p.payment_method?.name ?? "Unknown", p.payment_method?.type ?? PaymentMethodType.CASH)).ToList()
         )).ToList();
 
         return (results, totalCount);

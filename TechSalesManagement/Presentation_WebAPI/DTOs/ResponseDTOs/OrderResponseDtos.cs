@@ -10,6 +10,8 @@ public class OrderResponseDto
     public OrderStatus status { get; set; }
     public decimal totalAmount { get; set; }
     public DateTimeOffset createdAt { get; set; }
+    public string paymentMethodName { get; set; } = string.Empty;
+    public bool? isPaymentFailed { get; set; }
 }
 
 public class OrderDetailResponseDto
@@ -25,6 +27,8 @@ public class OrderDetailResponseDto
     public DateTimeOffset? approvedAt { get; set; }
     public DateTimeOffset? shippedAt { get; set; }
     public DateTimeOffset? deliveredAt { get; set; }
+    public string paymentMethodName { get; set; } = string.Empty;
+    public bool? isPaymentFailed { get; set; }
     public List<OrderItemResponseDto> items { get; set; } = new();
 }
 

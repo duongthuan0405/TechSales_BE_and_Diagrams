@@ -50,7 +50,10 @@ public class CategoryService : ICategoryService
             var category = new Category(name);
             await _categoryRepository.AddAsync(category);
 
-            var auditLog = new AuditLog(staffId, "CREATE_CATEGORY", "Categories", name);
+            var auditLog = new AuditLog(staffId, "CREATE_CATEGORY", "Categories", category.id.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { name = category.name })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -93,7 +96,12 @@ public class CategoryService : ICategoryService
             // Delete the old category
             await _categoryRepository.DeleteAsync(id);
 
-            var auditLog = new AuditLog(staffId, "DELETE_CATEGORY", "Categories", $"{categoryToDelete.name} -> Migrated to ID: {replacementCategoryId}");
+            var auditLog = new AuditLog(staffId, "DELETE_CATEGORY", "Categories", id.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { name = categoryToDelete.name }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { migratedTo = replacementCategoryId }),
+                affectedColumns = "ALL"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

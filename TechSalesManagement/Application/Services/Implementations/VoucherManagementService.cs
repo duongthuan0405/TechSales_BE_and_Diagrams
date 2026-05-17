@@ -77,7 +77,12 @@ public class VoucherManagementService : IVoucherManagementService
             voucher.isActive = false;
             await _voucherRepository.UpdateVoucherAsync(voucher);
 
-            var auditLog = new AuditLog(staffId, "DEACTIVATE_VOUCHER", "Vouchers", voucher.code);
+            var auditLog = new AuditLog(staffId, "DEACTIVATE_VOUCHER", "Vouchers", voucher.code)
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { isActive = true }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { isActive = false }),
+                affectedColumns = "isActive"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

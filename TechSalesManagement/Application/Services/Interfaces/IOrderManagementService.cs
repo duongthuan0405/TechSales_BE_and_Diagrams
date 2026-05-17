@@ -9,7 +9,7 @@ namespace TechSalesManagement.Application.Services.Interfaces;
 
 public interface IOrderManagementService
 {
-    Task<(List<(Order order, User? user, List<(Payment payment, string methodName)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters);
+    Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters);
     Task UpdateOrderStatusAsync(Guid orderId, OrderStatus nextStatus, Guid staffId);
-    Task<(Order? order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderDetailsAsync(Guid orderId);
+    Task<(Order? order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> GetOrderDetailsAsync(Guid orderId);
 }

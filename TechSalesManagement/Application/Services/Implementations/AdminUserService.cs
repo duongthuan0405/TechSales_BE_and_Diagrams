@@ -117,7 +117,10 @@ public class AdminUserService : IAdminUserService
             };
             await _userProfileRepository.AddAsync(profile);
 
-            var auditLog = new AuditLog(requesterId, "CREATE_USER", "Users", $"Id: {user.id}, Roles: {string.Join(",", user.roles.Select(r => r.name))}");
+            var auditLog = new AuditLog(requesterId, "CREATE_USER", "Users", user.id.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { email = user.email, roles = user.roles.Select(r => r.name) })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -169,7 +172,12 @@ public class AdminUserService : IAdminUserService
             user.LockAccount(until);
             await _userRepository.UpdateStatusAsync(userId, UserStatus.BLOCKED, until);
 
-            var auditLog = new AuditLog(staffId, "LOCK_USER", "Users", $"UserId: {userId}, Until: {until}");
+            var auditLog = new AuditLog(staffId, "LOCK_USER", "Users", userId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = UserStatus.ACTIVE.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = UserStatus.BLOCKED.ToString(), lockedUntil = until }),
+                affectedColumns = "status,lockedUntil"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -205,7 +213,12 @@ public class AdminUserService : IAdminUserService
             user.UnlockAccount();
             await _userRepository.UpdateStatusAsync(userId, UserStatus.ACTIVE, null);
 
-            var auditLog = new AuditLog(staffId, "UNLOCK_USER", "Users", userId.ToString());
+            var auditLog = new AuditLog(staffId, "UNLOCK_USER", "Users", userId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = UserStatus.BLOCKED.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = UserStatus.ACTIVE.ToString() }),
+                affectedColumns = "status,lockedUntil"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

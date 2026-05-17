@@ -49,7 +49,10 @@ public class ContentManagementService : IContentManagementService
 
             await _articleRepository.AddAsync(article);
 
-            var auditLog = new AuditLog(authorId, "CREATE_ARTICLE", "Articles", article.id.ToString());
+            var auditLog = new AuditLog(authorId, "CREATE_ARTICLE", "Articles", article.id.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { title = article.title })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -71,12 +74,18 @@ public class ContentManagementService : IContentManagementService
         {
             await _unitOfWork.BeginAsync();
 
+            var oldTitle = article.title;
             var newSlug = GenerateSlug(title);
             article.UpdateContent(title, content, newSlug, thumbnailUrl);
 
             await _articleRepository.UpdateAsync(article);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_ARTICLE", "Articles", id.ToString());
+            var auditLog = new AuditLog(staffId, "UPDATE_ARTICLE", "Articles", id.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { title = oldTitle }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { title = title }),
+                affectedColumns = "title,content,slug,thumbnailUrl"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -99,7 +108,10 @@ public class ContentManagementService : IContentManagementService
 
             await _articleRepository.DeleteAsync(id);
 
-            var auditLog = new AuditLog(staffId, "DELETE_ARTICLE", "Articles", id.ToString());
+            var auditLog = new AuditLog(staffId, "DELETE_ARTICLE", "Articles", id.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { title = article.title })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -123,7 +135,12 @@ public class ContentManagementService : IContentManagementService
             article.Publish();
             await _articleRepository.UpdateAsync(article);
 
-            var auditLog = new AuditLog(staffId, "PUBLISH_ARTICLE", "Articles", id.ToString());
+            var auditLog = new AuditLog(staffId, "PUBLISH_ARTICLE", "Articles", id.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = ArticleStatus.DRAFT.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = ArticleStatus.PUBLISHED.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
