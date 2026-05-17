@@ -141,4 +141,48 @@ public class ShippingAddressService : IShippingAddressService
             throw;
         }
     }
+    public async Task<System.Collections.Generic.List<ShippingAddress>> GetAddressesByUserIdAsync(Guid userId)
+    {
+        return await _addressRepository.GetAddressesByUserIdAsync(userId);
+    }
+    public async Task DeleteAddressAsync(DeleteAddressParams parameters)
+    {
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var address = await _addressRepository.GetByIdAsync(parameters.AddressId);
+            if (address == null)
+            {
+                throw new NotFoundException("Address not found.");
+            }
+
+            if (address.userId != parameters.UserId)
+            {
+                throw new ForbiddenException("Access denied to this address.");
+            }
+
+            address.deletedAt = DateTimeOffset.UtcNow;
+            await _addressRepository.UpdateAsync(address);
+
+            // Nếu xóa địa chỉ mặc định, cố gắng đặt một địa chỉ khác làm mặc định
+            if (address.isDefault)
+            {
+                var remaining = await _addressRepository.GetAddressesByUserIdAsync(parameters.UserId);
+                if (remaining.Any())
+                {
+                    var nextDefault = remaining.First();
+                    nextDefault.isDefault = true;
+                    await _addressRepository.UpdateAsync(nextDefault);
+                }
+            }
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
 }

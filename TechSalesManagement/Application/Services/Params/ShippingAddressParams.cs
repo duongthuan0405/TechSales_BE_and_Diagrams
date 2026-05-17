@@ -24,3 +24,9 @@ public class SetDefaultAddressParams
     public required Guid AddressId { get; set; }
     public required Guid UserId { get; set; }
 }
+
+public class DeleteAddressParams
+{
+    public required Guid AddressId { get; set; }
+    public required Guid UserId { get; set; }
+}

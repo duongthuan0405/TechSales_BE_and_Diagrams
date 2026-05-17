@@ -37,7 +37,7 @@ public class OrderManagementService : IOrderManagementService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(List<(Order order, User? user)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> items, int totalCount)> SearchOrdersAsync(OrderSearchParameters parameters)
     {
         return await _orderRepository.SearchOrdersAsync(parameters);
     }
@@ -53,6 +53,24 @@ public class OrderManagementService : IOrderManagementService
         var oldStatus = order.status;
         if (oldStatus == nextStatus) return;
 
+        // Strict state transition validation
+        if (nextStatus == OrderStatus.APPROVED && oldStatus != OrderStatus.PENDING)
+        {
+            throw new BadRequestException($"Cannot approve an order that is currently in {oldStatus} status.");
+        }
+        if (nextStatus == OrderStatus.SHIPPING && oldStatus != OrderStatus.APPROVED)
+        {
+            throw new BadRequestException($"Cannot ship an order that is currently in {oldStatus} status. Order must be APPROVED first.");
+        }
+        if (nextStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.SHIPPING)
+        {
+            throw new BadRequestException($"Cannot deliver an order that is currently in {oldStatus} status. Order must be SHIPPING first.");
+        }
+        if (nextStatus == OrderStatus.CANCELLED && (oldStatus == OrderStatus.DELIVERED || oldStatus == OrderStatus.CANCELLED))
+        {
+            throw new BadRequestException($"Cannot cancel an order that is already in {oldStatus} status.");
+        }
+
         try
         {
             await _unitOfWork.BeginAsync();
@@ -61,20 +79,42 @@ public class OrderManagementService : IOrderManagementService
             switch (nextStatus)
             {
                 case OrderStatus.APPROVED:
+                    // Check payment status for online orders
+                    var payments = result.Value.payments;
+                    foreach (var p in payments)
+                    {
+                        // If it's an online payment (not COD), it must be SUCCESS before approval
+                        if (p.methodName.ToUpper() != "COD" && p.payment.status != PaymentStatus.SUCCESS)
+                        {
+                            throw new BadRequestException("Cannot approve online orders that are not yet paid.");
+                        }
+                    }
                     order.Approve();
                     break;
                 case OrderStatus.SHIPPING:
                     order.Ship();
+                    foreach (var item in order.items)
+                    {
+                        await _inventoryRepository.DeductStockAsync(item.product_id, item.quantity);
+                    }
                     break;
                 case OrderStatus.DELIVERED:
                     order.Deliver();
                     break;
                 case OrderStatus.CANCELLED:
+                    var wasShipped = (oldStatus == OrderStatus.SHIPPING);
                     order.Cancel();
                     // Restock logic
                     foreach (var item in order.items)
                     {
-                        await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                        if (wasShipped) 
+                        {
+                            await _inventoryRepository.RestorePhysicalStockAsync(item.product_id, item.quantity);
+                        } 
+                        else 
+                        {
+                            await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                        }
                     }
                     break;
                 default:
@@ -83,7 +123,12 @@ public class OrderManagementService : IOrderManagementService
 
             await _orderRepository.UpdateOrderAsync(order);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_ORDER_STATUS", "Orders", $"OrderId: {orderId}, From: {oldStatus}, To: {nextStatus}");
+            var auditLog = new AuditLog(staffId, "UPDATE_ORDER_STATUS", "Orders", orderId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = oldStatus.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = nextStatus.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -106,7 +151,7 @@ public class OrderManagementService : IOrderManagementService
         }
     }
 
-    public async Task<(Order? order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderDetailsAsync(Guid orderId)
+    public async Task<(Order? order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> GetOrderDetailsAsync(Guid orderId)
     {
         var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
         if (result == null) throw new NotFoundException("Order not found.");

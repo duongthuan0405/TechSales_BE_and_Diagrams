@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using TechSalesManagement.Application.Exceptions;
 using TechSalesManagement.Application.Interfaces;
 using TechSalesManagement.Application.Repositories;
@@ -16,17 +17,23 @@ public class CategoryService : ICategoryService
     private readonly IProductRepository _productRepository;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<CategoryService> _logger;
 
     public CategoryService(
         ICategoryRepository categoryRepository,
         IProductRepository productRepository,
         IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService,
+        ILogger<CategoryService> logger)
     {
         _categoryRepository = categoryRepository;
         _productRepository = productRepository;
         _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
+        _logger = logger;
     }
 
     public async Task<Category> CreateCategoryAsync(string name, Guid staffId)
@@ -50,10 +57,16 @@ public class CategoryService : ICategoryService
             var category = new Category(name);
             await _categoryRepository.AddAsync(category);
 
-            var auditLog = new AuditLog(staffId, "CREATE_CATEGORY", "Categories", name);
+            var auditLog = new AuditLog(staffId, "CREATE_CATEGORY", "Categories", category.id.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { name = category.name })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveAsync("categories:all");
             
             return category;
         }
@@ -93,10 +106,18 @@ public class CategoryService : ICategoryService
             // Delete the old category
             await _categoryRepository.DeleteAsync(id);
 
-            var auditLog = new AuditLog(staffId, "DELETE_CATEGORY", "Categories", $"{categoryToDelete.name} -> Migrated to ID: {replacementCategoryId}");
+            var auditLog = new AuditLog(staffId, "DELETE_CATEGORY", "Categories", id.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { name = categoryToDelete.name }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { migratedTo = replacementCategoryId }),
+                affectedColumns = "ALL"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+
+            // Invalidate cache
+            await _cacheService.RemoveAsync("categories:all");
         }
         catch
         {
@@ -107,6 +128,17 @@ public class CategoryService : ICategoryService
 
     public async Task<List<Category>> GetAllCategoriesAsync()
     {
-        return await _categoryRepository.GetAllAsync();
+        var cacheKey = "categories:all";
+        var cached = await _cacheService.GetAsync<List<Category>>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogInformation("--> Redis Cache Hit for GetAllCategoriesAsync");
+            return cached;
+        }
+
+        _logger.LogInformation("--> Redis Cache Miss for GetAllCategoriesAsync, loading from DB");
+        var categories = await _categoryRepository.GetAllAsync();
+        await _cacheService.SetAsync(cacheKey, categories);
+        return categories;
     }
 }

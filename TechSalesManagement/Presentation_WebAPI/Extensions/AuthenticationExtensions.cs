@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using TechSalesManagement.Application.Services.Interfaces;
 
 namespace TechSalesManagement.Presentation_WebAPI.Extensions;
 
@@ -36,6 +37,24 @@ public static class AuthenticationExtensions
                 ValidAudience = audience,
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                 ClockSkew = TimeSpan.Zero
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var cacheService = context.HttpContext.RequestServices.GetRequiredService<ICacheService>();
+                    var authHeader = context.Request.Headers["Authorization"].ToString();
+                    var token = authHeader.Replace("Bearer ", "").Trim();
+                    
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        var isBlacklisted = await cacheService.GetAsync<bool>($"blacklist:token:{token}");
+                        if (isBlacklisted)
+                        {
+                            context.Fail("This token is no longer valid (logged out).");
+                        }
+                    }
+                }
             };
         });
 

@@ -7,6 +7,7 @@ using TechSalesManagement.Application.Services.Interfaces;
 using TechSalesManagement.Application.Services.Params;
 using TechSalesManagement.Presentation_WebAPI.DTOs.Common;
 using TechSalesManagement.Presentation_WebAPI.DTOs.RequestDTOs;
+using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 using TechSalesManagement.Presentation_WebAPI.Extensions;
 
 namespace TechSalesManagement.Presentation_WebAPI.Controllers;
@@ -21,6 +22,26 @@ public class ShippingAddressController : ControllerBase
     public ShippingAddressController(IShippingAddressService addressService)
     {
         _addressService = addressService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<ApiSuccessResponse<System.Collections.Generic.List<AddressResponseDto>>>> GetAddressesAsync()
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var addresses = await _addressService.GetAddressesByUserIdAsync(userId.Value);
+
+        var responseDtos = System.Linq.Enumerable.ToList(System.Linq.Enumerable.Select(addresses, a => new AddressResponseDto
+        {
+            id = a.id,
+            province = a.province,
+            ward = a.ward,
+            detail = a.detail,
+            isDefault = a.isDefault
+        }));
+
+        return Ok(new ApiSuccessResponse<System.Collections.Generic.List<AddressResponseDto>>(responseDtos));
     }
 
     [HttpPost]
@@ -77,5 +98,22 @@ public class ShippingAddressController : ControllerBase
         await _addressService.SetDefaultAddressAsync(parameters);
 
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG21));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<ApiSuccessResponse<object>>> DeleteAddressAsync(Guid id)
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var parameters = new DeleteAddressParams
+        {
+            AddressId = id,
+            UserId = userId.Value
+        };
+
+        await _addressService.DeleteAddressAsync(parameters);
+
+        return Ok(new ApiSuccessResponse<object>(null, "Address deleted successfully."));
     }
 }

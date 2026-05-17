@@ -21,11 +21,18 @@ public class ProductRepository : IProductRepository
         _dbContext = dbContext;
     }
 
-    public async Task<List<Product>> GetProductsAsync(string? keyword, List<Guid>? categoryIds, SortOrder? sortOrder)
+    public async Task<List<Product>> GetProductsAsync(string? keyword, List<Guid>? categoryIds, SortOrder? sortOrder, ProductStatus? status)
     {
         var query = _dbContext.Products
             .Include(p => p.product_images)
-            .Where(p => p.status == ProductStatus.ACTIVE);
+            .Include(p => p.inventory)
+            .Include(p => p.reviews)
+            .AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.status == status.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -61,7 +68,8 @@ public class ProductRepository : IProductRepository
         var dbModel = await _dbContext.Products
             .Include(p => p.product_images)
             .Include(p => p.inventory)
-            .FirstOrDefaultAsync(p => p.id == id && p.status == ProductStatus.ACTIVE);
+            .Include(p => p.reviews)
+            .FirstOrDefaultAsync(p => p.id == id);
 
         return MapToEntity(dbModel);
     }
@@ -125,17 +133,21 @@ public class ProductRepository : IProductRepository
             dbModel.status = product.status;
             dbModel.updated_at = DateTimeOffset.UtcNow;
 
-            // Sync images (simplified: replace all)
-            _dbContext.ProductImages.RemoveRange(dbModel.product_images);
-            dbModel.product_images = product.images.Select(img => new ProductImageDbModel
+            // Update images only if they have changed or to be safe
+            // Remove existing images
+            var existingImages = await _dbContext.ProductImages.Where(img => img.product_id == product.id).ToListAsync();
+            _dbContext.ProductImages.RemoveRange(existingImages);
+            
+            // Add new images
+            var newImages = product.images.Select(img => new ProductImageDbModel
             {
                 id = Guid.NewGuid(),
                 product_id = product.id,
                 image_url = img.imageUrl,
                 is_primary = img.isPrimary
             }).ToList();
-
-            _dbContext.Products.Update(dbModel);
+            
+            await _dbContext.ProductImages.AddRangeAsync(newImages);
         }
     }
 
@@ -144,6 +156,7 @@ public class ProductRepository : IProductRepository
         var query = _dbContext.Products
             .Include(p => p.product_images)
             .Include(p => p.inventory)
+            .Include(p => p.reviews)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(keyword))
@@ -182,7 +195,10 @@ public class ProductRepository : IProductRepository
             brand = dbModel.brand,
             categoryId = dbModel.category_id,
             createdAt = dbModel.created_at,
-            updatedAt = dbModel.updated_at
+            updatedAt = dbModel.updated_at,
+            rating = dbModel.reviews != null && dbModel.reviews.Any() 
+                     ? Math.Round(dbModel.reviews.Average(r => r.rating), 1) 
+                     : 0
         };
 
         if (dbModel.product_images != null && dbModel.product_images.Any())

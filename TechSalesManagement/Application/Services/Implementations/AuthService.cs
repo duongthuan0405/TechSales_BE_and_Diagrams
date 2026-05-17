@@ -27,6 +27,8 @@ public class AuthService : IAuthService
     private readonly IRoleRepository _roleRepository;
     private readonly IUserProfileRepository _userProfileRepository;
     private readonly FrontendCO _frontendCO;
+    private readonly ICacheService _cacheService;
+    private readonly JwtCO _jwtCO;
 
     public AuthService(
         IUserRepository userRepository,
@@ -38,7 +40,9 @@ public class AuthService : IAuthService
         IUserTokenRepository userTokenRepository,
         IRoleRepository roleRepository,
         IUserProfileRepository userProfileRepository,
-        IOptions<FrontendCO> frontendOptions)
+        IOptions<FrontendCO> frontendOptions,
+        ICacheService cacheService,
+        IOptions<JwtCO> jwtOptions)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -50,6 +54,8 @@ public class AuthService : IAuthService
         _roleRepository = roleRepository;
         _userProfileRepository = userProfileRepository;
         _frontendCO = frontendOptions.Value;
+        _cacheService = cacheService;
+        _jwtCO = jwtOptions.Value;
     }
 
     public async Task<User> RegisterAsync(RegisterParams parameters)
@@ -153,7 +159,7 @@ public class AuthService : IAuthService
                 await _userTokenRepository.AddAsync(userToken);
             }
 
-            var verificationLink = $"{_frontendCO.url}/?email={userToReturn.email}&token={otpResult.otp}";
+            var verificationLink = $"{_frontendCO.url}/verify-email?email={userToReturn.email}&token={otpResult.otp}";
             await _emailService.SendVerificationEmailAsync(userToReturn.email, verificationLink);
 
             await _unitOfWork.FinishAsync();
@@ -195,19 +201,22 @@ public class AuthService : IAuthService
             // 1. Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
             if (user.status == UserStatus.BLOCKED)
             {
-                if (user.lockedUntil.HasValue && user.lockedUntil.Value > DateTimeOffset.UtcNow)
+                if (!user.lockedUntil.HasValue)
                 {
-                    // Vẫn đang trong thời gian bị khóa
+                    // Khóa thủ công bởi Admin (không có thời hạn)
                     throw new ForbiddenException(MessageConstants.MSG9);
                 }
-                else
+                
+                if (user.lockedUntil.Value > DateTimeOffset.UtcNow)
                 {
-                    // Đã hết thời gian khóa, tự động gỡ khóa và reset lượt đếm
-                    user.status = UserStatus.ACTIVE;
-                    user.failedLoginAttempts = 0;
-                    user.lockedUntil = null;
-                    // Sẽ được lưu xuống Database khi thực hiện flow bên dưới (dù mật khẩu sai hay đúng)
+                    // Vẫn đang trong thời gian bị khóa tự động
+                    throw new ForbiddenException(MessageConstants.MSG9);
                 }
+                
+                // Đã hết thời gian khóa tự động, tự động gỡ khóa
+                user.status = UserStatus.ACTIVE;
+                user.failedLoginAttempts = 0;
+                user.lockedUntil = null;
             }
 
             if(user.lastFailedAt.HasValue && DateTimeOffset.UtcNow > user.lastFailedAt.Value.AddMinutes(30))
@@ -254,9 +263,6 @@ public class AuthService : IAuthService
         catch (Exception) {
             await _unitOfWork.RollbackAsync();
             throw;
-        }
-        finally {
-            await _unitOfWork.FinishAsync();
         }
     }
 
@@ -488,5 +494,14 @@ public class AuthService : IAuthService
             await _unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task LogoutAsync(string token)
+    {
+        if (string.IsNullOrEmpty(token)) return;
+
+        var cacheKey = $"blacklist:token:{token}";
+        // Blacklist the token in Redis for the exact configured JWT lifetime
+        await _cacheService.SetAsync(cacheKey, true, TimeSpan.FromMinutes(_jwtCO.durationInMinutes));
     }
 }

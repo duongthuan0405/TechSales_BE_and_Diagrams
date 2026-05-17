@@ -52,7 +52,10 @@ public class RbacService : IRbacService
 
             await _roleRepository.UpdatePermissionsAsync(roleId, permissionIds);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_ROLE_PERMISSIONS", "RolePermissions", $"RoleId: {roleId}, PermCount: {permissionIds.Count}");
+            var auditLog = new AuditLog(staffId, "UPDATE_ROLE_PERMISSIONS", "RolePermissions", roleId.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { permissionIds = permissionIds })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -72,7 +75,10 @@ public class RbacService : IRbacService
 
             await _roleRepository.AssignUserRolesAsync(userId, roleIds);
 
-            var auditLog = new AuditLog(staffId, "ASSIGN_USER_ROLES", "UserRoles", $"UserId: {userId}, RoleCount: {roleIds.Count}");
+            var auditLog = new AuditLog(staffId, "ASSIGN_USER_ROLES", "UserRoles", userId.ToString())
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { roleIds = roleIds })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

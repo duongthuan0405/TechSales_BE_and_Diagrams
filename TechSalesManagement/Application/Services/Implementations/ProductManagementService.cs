@@ -18,19 +18,22 @@ public class ProductManagementService : IProductManagementService
     private readonly IInventoryRepository _inventoryRepository;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
 
     public ProductManagementService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IInventoryRepository inventoryRepository,
         IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _inventoryRepository = inventoryRepository;
         _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<Product> CreateProductAsync(string name, string description, decimal price, string brand, Guid categoryId, int initialStock, List<ProductImage> images, Guid staffId)
@@ -54,6 +57,10 @@ public class ProductManagementService : IProductManagementService
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
+            
             return product;
         }
         catch
@@ -83,11 +90,19 @@ public class ProductManagementService : IProductManagementService
 
             if (oldPrice != price)
             {
-                var auditLog = new AuditLog(staffId, "UPDATE_PRICE", "Products", $"Id: {productId}, Old: {oldPrice}, New: {price}");
+                var auditLog = new AuditLog(staffId, "UPDATE_PRICE", "Products", productId.ToString())
+                {
+                    oldValues = System.Text.Json.JsonSerializer.Serialize(new { price = oldPrice }),
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { price = price }),
+                    affectedColumns = "price"
+                };
                 await _auditLogRepository.AddAsync(auditLog);
             }
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {
@@ -112,6 +127,9 @@ public class ProductManagementService : IProductManagementService
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {
@@ -120,7 +138,7 @@ public class ProductManagementService : IProductManagementService
         }
     }
 
-    public async Task UpdateInventoryAsync(Guid productId, int newQuantity, Guid staffId)
+    public async Task UpdateInventoryAsync(Guid productId, int value, StockAdjustmentType type, Guid staffId)
     {
         var inventory = await _inventoryRepository.GetByProductIdAsync(productId);
         if (inventory == null) throw new NotFoundException("Inventory record not found.");
@@ -130,13 +148,23 @@ public class ProductManagementService : IProductManagementService
             await _unitOfWork.BeginAsync();
 
             var oldQuantity = inventory.quantity;
+            int newQuantity = type == StockAdjustmentType.ADD ? oldQuantity + value : value;
+            
             inventory.UpdateStock(newQuantity);
             await _inventoryRepository.UpdateStockAsync(productId, newQuantity);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", $"Id: {productId}, Old: {oldQuantity}, New: {newQuantity}");
+            var auditLog = new AuditLog(staffId, "UPDATE_STOCK", "Inventory", productId.ToString())
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { quantity = oldQuantity }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { quantity = newQuantity }),
+                affectedColumns = "quantity"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
+            
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("products:");
         }
         catch
         {

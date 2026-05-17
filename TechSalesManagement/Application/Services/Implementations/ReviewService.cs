@@ -148,8 +148,11 @@ public class ReviewService : IReviewService
                 staffId,
                 "REPLY_REVIEW",
                 "Reviews",
-                $"ReviewId: {reviewId}"
-            );
+                reviewId.ToString()
+            )
+            {
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { replyContent = replyContent })
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -187,8 +190,13 @@ public class ReviewService : IReviewService
                 staffId,
                 "HIDE_REVIEW",
                 "Reviews",
-                $"ReviewId: {reviewId} - Reason: {reason}"
-            );
+                reviewId.ToString()
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = ReviewStatus.VISIBLE.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = ReviewStatus.HIDDEN.ToString(), violationReason = reason }),
+                affectedColumns = "status,violationReason"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

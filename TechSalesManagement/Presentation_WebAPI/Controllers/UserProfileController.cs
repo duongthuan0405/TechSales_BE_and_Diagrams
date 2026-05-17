@@ -24,7 +24,7 @@ public class UserProfileController : ControllerBase
 
     [Authorize]
     [HttpPut]
-    public async Task<ActionResult<ApiSuccessResponse<object>>> UpdateProfileAsync([FromBody] UpdateProfileRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<object>>> UpdateProfileAsync([FromForm] UpdateProfileRequestDto request)
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
@@ -35,6 +35,7 @@ public class UserProfileController : ControllerBase
             FullName = request.fullName,
             Phone = request.phone,
             AvatarUrl = request.avatarUrl,
+            AvatarFile = request.avatarFile,
             DateOfBirth = request.dateOfBirth
         };
 

@@ -25,6 +25,25 @@ public class OrderController : ControllerBase
         _orderService = orderService;
     }
 
+    private (string paymentMethodName, bool? isPaymentFailed) GetPaymentInfo(System.Collections.Generic.List<(TechSalesManagement.Domain.Entities.Payment payment, string methodName, TechSalesManagement.Domain.Enums.PaymentMethodType type)> payments)
+    {
+        if (payments == null || !payments.Any())
+            return (string.Empty, null);
+
+        var successPaymentTuple = payments.FirstOrDefault(p => p.payment.status == TechSalesManagement.Domain.Enums.PaymentStatus.SUCCESS);
+        var latestPaymentTuple = payments.OrderByDescending(p => p.payment.createdAt).FirstOrDefault();
+
+        var paymentTuple = successPaymentTuple.payment != null ? successPaymentTuple : latestPaymentTuple;
+
+        bool? isFailed = null;
+        if (paymentTuple.type == TechSalesManagement.Domain.Enums.PaymentMethodType.ONLINE)
+        {
+            isFailed = successPaymentTuple.payment == null && latestPaymentTuple.payment?.status == TechSalesManagement.Domain.Enums.PaymentStatus.FAILED;
+        }
+
+        return (paymentTuple.methodName ?? string.Empty, isFailed);
+    }
+
     [HttpPost]
     public async Task<ActionResult<ApiSuccessResponse<OrderResponseDto>>> PlaceOrderAsync([FromBody] PlaceOrderRequestDto request)
     {
@@ -40,14 +59,15 @@ public class OrderController : ControllerBase
             VoucherCode = request.voucherCode
         };
 
-        var newOrder = await _orderService.PlaceOrderAsync(parameters);
+        var (newOrder, checkoutUrl) = await _orderService.PlaceOrderAsync(parameters);
 
         var response = new OrderResponseDto
         {
             id = newOrder.id,
             status = newOrder.status,
             totalAmount = newOrder.totalAmount,
-            createdAt = newOrder.createdAt
+            createdAt = newOrder.createdAt,
+            checkoutUrl = checkoutUrl
         };
 
         // BR91: Returns 200-OK with MSG37
@@ -69,12 +89,17 @@ public class OrderController : ControllerBase
 
         var (orders, totalCount) = await _orderService.GetOrderHistoryAsync(parameters);
 
-        var items = orders.Select(o => new OrderResponseDto
-        {
-            id = o.id,
-            status = o.status,
-            totalAmount = o.totalAmount,
-            createdAt = o.createdAt
+        var items = orders.Select(o => {
+            var paymentInfo = GetPaymentInfo(o.payments);
+            return new OrderResponseDto
+            {
+                id = o.order.id,
+                status = o.order.status,
+                totalAmount = o.order.totalAmount,
+                createdAt = o.order.createdAt,
+                paymentMethodName = paymentInfo.paymentMethodName,
+                isPaymentFailed = paymentInfo.isPaymentFailed
+            };
         }).ToList();
 
         var response = new  PagedResponseDto<OrderResponseDto>
@@ -102,9 +127,19 @@ public class OrderController : ControllerBase
             UserId = userId.Value
         };
 
-        var order = await _orderService.GetOrderDetailsAsync(parameters);
+        var result = await _orderService.GetOrderWithFullDetailsAsync(id);
+        
+        // Verify user owns the order
+        if (result.order.userId != userId.Value)
+        {
+            return Forbid();
+        }
 
-        var response = new OrderDetailResponseDto
+        var order = result.order;
+
+        var paymentInfo = GetPaymentInfo(result.payments);
+
+        var response = new OrderStaffDetailResponseDto
         {
             id = order.id,
             status = order.status,
@@ -117,6 +152,8 @@ public class OrderController : ControllerBase
             approvedAt = order.approvedAt,
             shippedAt = order.shippedAt,
             deliveredAt = order.deliveredAt,
+            paymentMethodName = paymentInfo.paymentMethodName,
+            isPaymentFailed = paymentInfo.isPaymentFailed,
             items = order.items.Select(i => new OrderItemResponseDto
             {
                 productId = i.product_id,
@@ -124,10 +161,18 @@ public class OrderController : ControllerBase
                 productImageUrl = i.product?.images?.FirstOrDefault(img => img.isPrimary)?.imageUrl ?? i.product?.images?.FirstOrDefault()?.imageUrl,
                 price = i.price,
                 quantity = i.quantity
+            }).ToList(),
+            payments = result.payments.Select(x => new PaymentResponseDto
+            {
+                id = x.payment.id,
+                paymentMethodName = x.methodName,
+                status = x.payment.status,
+                amount = x.payment.amount,
+                transactionRef = x.payment.transactionRef
             }).ToList()
         };
 
-        return Ok(new ApiSuccessResponse<OrderDetailResponseDto>(response, "Order details retrieved successfully."));
+        return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, "Order details retrieved successfully."));
     }
 
     [HttpPost("{id}/cancel")]
@@ -148,7 +193,23 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG46));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id}/repay")]
+    public async Task<ActionResult<ApiSuccessResponse<OrderRepayResponseDto>>> CreateRepaySessionAsync([FromRoute] Guid id, [FromBody] OrderRepayRequestDto? request)
+    {
+        var userId = User.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var checkoutUrl = await _orderService.CreateRepaySessionAsync(id, userId.Value, request?.paymentMethodId);
+
+        var response = new OrderRepayResponseDto
+        {
+            checkoutUrl = checkoutUrl
+        };
+
+        return Ok(new ApiSuccessResponse<OrderRepayResponseDto>(response, "Repayment session created successfully."));
+    }
+
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("pending")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetPendingOrdersAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
@@ -160,14 +221,19 @@ public class OrderController : ControllerBase
 
         var (orders, totalCount) = await _orderService.GetPendingOrdersAsync(parameters);
 
-        var items = orders.Select(x => new OrderStaffResponseDto
-        {
-            id = x.order.id,
-            status = x.order.status,
-            totalAmount = x.order.totalAmount,
-            createdAt = x.order.createdAt,
-            customerName = x.user?.profile?.fullName ?? "Unknown",
-            customerPhone = x.user?.profile?.phone ?? "N/A"
+        var items = orders.Select(x => {
+            var paymentInfo = GetPaymentInfo(x.payments);
+            return new OrderStaffResponseDto
+            {
+                id = x.order.id,
+                status = x.order.status,
+                totalAmount = x.order.totalAmount,
+                createdAt = x.order.createdAt,
+                customerName = x.user?.profile?.fullName ?? "Unknown",
+                customerPhone = x.user?.profile?.phone ?? "N/A",
+                paymentMethodName = paymentInfo.paymentMethodName,
+                isPaymentFailed = paymentInfo.isPaymentFailed
+            };
         }).ToList();
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
@@ -183,11 +249,13 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, message));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("{id}/staff")]
     public async Task<ActionResult<ApiSuccessResponse<OrderStaffDetailResponseDto>>> GetOrderWithFullDetailsAsync([FromRoute] Guid id)
     {
         var (order, user, payments) = await _orderService.GetOrderWithFullDetailsAsync(id);
+
+        var paymentInfo = GetPaymentInfo(payments);
 
         var response = new OrderStaffDetailResponseDto
         {
@@ -205,6 +273,8 @@ public class OrderController : ControllerBase
             customerEmail = user?.email ?? string.Empty,
             customerFullName = user?.profile?.fullName ?? string.Empty,
             customerPhone = user?.profile?.phone ?? string.Empty,
+            paymentMethodName = paymentInfo.paymentMethodName,
+            isPaymentFailed = paymentInfo.isPaymentFailed,
             items = order.items.Select(i => new OrderItemResponseDto
             {
                 productId = i.product_id,
@@ -226,7 +296,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<OrderStaffDetailResponseDto>(response, MessageConstants.MSG120));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/approve")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ApproveOrderAsync([FromRoute] Guid id)
     {
@@ -245,7 +315,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG55));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/ship")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ShipOrderAsync([FromRoute] Guid id)
     {
@@ -257,7 +327,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG121));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/confirm-delivery")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> ConfirmDeliveryAsync([FromRoute] Guid id)
     {
@@ -269,7 +339,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG122));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/staff-cancel")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> StaffCancelOrderAsync([FromRoute] Guid id, [FromBody] OrderStaffCancelRequestDto request)
     {
@@ -281,7 +351,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG58));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpPost("{id}/refund")]
     public async Task<ActionResult<ApiSuccessResponse<object>>> InitiateRefundAsync([FromRoute] Guid id)
     {
@@ -293,7 +363,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<object>(null, MessageConstants.MSG62));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("refund-requests")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> GetRefundRequestsAsync([FromQuery] GetPendingOrdersParams parameters)
     {
@@ -301,13 +371,18 @@ public class OrderController : ControllerBase
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
         {
-            items = orders.Select(o => new OrderStaffResponseDto
-            {
-                id = o.order.id,
-                customerName = o.user?.profile?.fullName ?? "Unknown",
-                totalAmount = o.order.totalAmount,
-                status = o.order.status,
-                createdAt = o.order.createdAt
+            items = orders.Select(o => {
+                var paymentInfo = GetPaymentInfo(o.payments);
+                return new OrderStaffResponseDto
+                {
+                    id = o.order.id,
+                    customerName = o.user?.profile?.fullName ?? "Unknown",
+                    totalAmount = o.order.totalAmount,
+                    status = o.order.status,
+                    createdAt = o.order.createdAt,
+                    paymentMethodName = paymentInfo.paymentMethodName,
+                    isPaymentFailed = paymentInfo.isPaymentFailed
+                };
             }).ToList(),
             totalCount = totalCount,
             pageNumber = parameters.PageNumber,
@@ -317,7 +392,7 @@ public class OrderController : ControllerBase
         return Ok(new ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>(response, "Refund requests retrieved successfully."));
     }
 
-    [Authorize(Roles = "Staff,Admin")]
+    [Authorize(Roles = "Staff,Business Admin,Technical Admin")]
     [HttpGet("search")]
     public async Task<ActionResult<ApiSuccessResponse<PagedResponseDto<OrderStaffResponseDto>>>> SearchOrdersAsync([FromQuery] OrderSearchRequestDto request)
     {
@@ -336,13 +411,18 @@ public class OrderController : ControllerBase
 
         var response = new PagedResponseDto<OrderStaffResponseDto>
         {
-            items = orders.Select(o => new OrderStaffResponseDto
-            {
-                id = o.order.id,
-                customerName = o.user?.profile?.fullName ?? "Unknown",
-                totalAmount = o.order.totalAmount,
-                status = o.order.status,
-                createdAt = o.order.createdAt
+            items = orders.Select(o => {
+                var paymentInfo = GetPaymentInfo(o.payments);
+                return new OrderStaffResponseDto
+                {
+                    id = o.order.id,
+                    customerName = o.user?.profile?.fullName ?? "Unknown",
+                    totalAmount = o.order.totalAmount,
+                    status = o.order.status,
+                    createdAt = o.order.createdAt,
+                    paymentMethodName = paymentInfo.paymentMethodName,
+                    isPaymentFailed = paymentInfo.isPaymentFailed
+                };
             }).ToList(),
             totalCount = totalCount,
             pageNumber = request.pageNumber,

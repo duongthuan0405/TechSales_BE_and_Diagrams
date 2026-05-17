@@ -8,21 +8,37 @@ public static class MiddlewareExtensions
     {
         services.AddTransient<GlobalExceptionMiddleware>();
         services.AddTransient<RequestLoggingMiddleware>();
+
+        // CORS: Allow FE (Vite dev server) to call BE
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("http://localhost:5173")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
+
         return services;
     }
 
     public static IApplicationBuilder UseMiddlewares(this IApplicationBuilder app, IWebHostEnvironment env)
     {
-        // 1. Exception Handling should always be first to catch all subsequent errors
+        // 1. CORS — MUST be first to handle preflight OPTIONS requests
+        //    before any other middleware can reject them with 405
+        app.UseCors();
+
+        // 2. Exception Handling to catch all subsequent errors
         app.UseMiddleware<GlobalExceptionMiddleware>();
 
-        // 2. Request Logging to monitor traffic and performance
+        // 3. Request Logging to monitor traffic and performance
         app.UseMiddleware<RequestLoggingMiddleware>();
 
-        // 3. Swagger (Dev environment only)
+        // 4. Swagger (Dev environment only)
         app.UseSwaggerConfiguration(env);
 
-        // 4. Security & Auth
+        // 5. Security & Auth
         app.UseAuthentication();
         app.UseAuthorization();
 

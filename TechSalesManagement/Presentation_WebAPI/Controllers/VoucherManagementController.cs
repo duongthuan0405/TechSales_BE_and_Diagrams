@@ -17,7 +17,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/vouchers")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class VoucherManagementController : ControllerBase
 {
     private readonly IVoucherManagementService _voucherService;

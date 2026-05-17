@@ -1,4 +1,5 @@
 using System;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TechSalesManagement.Domain.Enums;
@@ -17,7 +18,7 @@ public class CreateProductRequestDto
     public Guid categoryId { get; set; }
     [Range(0, int.MaxValue)]
     public int initialStock { get; set; }
-    public List<ProductImageRequestDto> images { get; set; } = new();
+    public List<IFormFile>? imageFiles { get; set; }
 }
 
 public class UpdateProductRequestDto
@@ -43,7 +44,9 @@ public class ProductImageRequestDto
 public class UpdateInventoryRequestDto
 {
     [Range(0, int.MaxValue)]
-    public int newQuantity { get; set; }
+    public int value { get; set; }
+    [Required]
+    public StockAdjustmentType type { get; set; }
 }
 
 public class AdminProductSearchRequestDto

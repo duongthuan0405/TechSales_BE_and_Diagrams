@@ -23,6 +23,7 @@ public class UserRepository : IUserRepository
         var dbModel = await _dbContext.Users
             .Include(u => u.user_roles)
                 .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
             .FirstOrDefaultAsync(u => u.id == id);
             
         return MapToEntity(dbModel);
@@ -33,6 +34,7 @@ public class UserRepository : IUserRepository
         var dbModel = await _dbContext.Users
             .Include(u => u.user_roles)
                 .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
             .FirstOrDefaultAsync(u => u.email == email);
             
         return MapToEntity(dbModel);
@@ -124,6 +126,27 @@ public class UserRepository : IUserRepository
         return (items, totalCount);
     }
 
+    public async Task<(System.Collections.Generic.List<User> items, int totalCount)> GetPagedUsersByRolesAsync(string[] roleNames, int pageNumber, int pageSize)
+    {
+        var query = _dbContext.Users
+            .Include(u => u.user_roles)
+                .ThenInclude(ur => ur.role)
+            .Include(u => u.user_profile)
+            .Where(u => u.user_roles.Any(ur => roleNames.Contains(ur.role.name)));
+
+        int totalCount = await query.CountAsync();
+
+        var dbModels = await query
+            .OrderByDescending(u => u.created_at)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var items = dbModels.Select(m => MapToEntity(m)!).ToList();
+
+        return (items, totalCount);
+    }
+
     public async Task UpdateStatusAsync(Guid userId, TechSalesManagement.Domain.Enums.UserStatus status, DateTimeOffset? lockedUntil)
     {
         var dbModel = await _dbContext.Users.FindAsync(userId);
@@ -133,6 +156,15 @@ public class UserRepository : IUserRepository
             dbModel.locked_until = lockedUntil;
             dbModel.updated_at = DateTimeOffset.UtcNow;
             _dbContext.Users.Update(dbModel);
+        }
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var dbModel = await _dbContext.Users.FindAsync(id);
+        if (dbModel != null)
+        {
+            _dbContext.Users.Remove(dbModel);
         }
     }
 
@@ -164,6 +196,21 @@ public class UserRepository : IUserRepository
                     name = ur.role.name,
                     description = ur.role.description
                 }).ToList();
+        }
+
+        // Map profile if loaded via Include
+        if (dbModel.user_profile != null)
+        {
+            user.profile = new UserProfile
+            {
+                userId = dbModel.user_profile.user_id,
+                fullName = dbModel.user_profile.full_name,
+                phone = dbModel.user_profile.phone,
+                avatarUrl = dbModel.user_profile.avatar_url,
+                dateOfBirth = dbModel.user_profile.date_of_birth,
+                createdAt = dbModel.user_profile.created_at,
+                updatedAt = dbModel.user_profile.updated_at
+            };
         }
 
         return user;

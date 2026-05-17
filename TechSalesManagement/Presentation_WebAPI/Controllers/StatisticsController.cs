@@ -10,7 +10,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/statistics")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class StatisticsController : ControllerBase
 {
     private readonly IStatisticsService _statisticsService;

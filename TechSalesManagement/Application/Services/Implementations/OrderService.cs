@@ -13,6 +13,7 @@ using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
 using TechSalesManagement.Application.VoucherStrategies;
 using TechSalesManagement.Application.Services.Strategies.Refund;
+using TechSalesManagement.Application.Services.Strategies.PaymentStrategies;
 
 namespace TechSalesManagement.Application.Services.Implementations;
 
@@ -29,6 +30,9 @@ public class OrderService : IOrderService
     private readonly IDiscountStrategyFactory _discountStrategyFactory;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IRefundStrategyFactory _refundStrategyFactory;
+    private readonly IPaymentStrategyFactory _paymentStrategyFactory;
+    private readonly IPaymentMethodRepository _paymentMethodRepository;
+    private readonly IPaymentRepository _paymentRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public OrderService(
@@ -43,6 +47,9 @@ public class OrderService : IOrderService
         IDiscountStrategyFactory discountStrategyFactory,
         IAuditLogRepository auditLogRepository,
         IRefundStrategyFactory refundStrategyFactory,
+        IPaymentStrategyFactory paymentStrategyFactory,
+        IPaymentMethodRepository paymentMethodRepository,
+        IPaymentRepository paymentRepository,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
@@ -56,10 +63,13 @@ public class OrderService : IOrderService
         _discountStrategyFactory = discountStrategyFactory;
         _auditLogRepository = auditLogRepository;
         _refundStrategyFactory = refundStrategyFactory;
+        _paymentStrategyFactory = paymentStrategyFactory;
+        _paymentMethodRepository = paymentMethodRepository;
+        _paymentRepository = paymentRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Order> PlaceOrderAsync(PlaceOrderParams parameters)
+    public async Task<(Order order, string? checkoutUrl)> PlaceOrderAsync(PlaceOrderParams parameters)
     {
         if (parameters.ProductsWithQuantity == null || !parameters.ProductsWithQuantity.Any())
         {
@@ -74,6 +84,12 @@ public class OrderService : IOrderService
         if (parameters.PaymentMethodId == Guid.Empty)
         {
             throw new BadRequestException("Payment method is required.");
+        }
+
+        var paymentMethod = await _paymentMethodRepository.GetByIdAsync(parameters.PaymentMethodId);
+        if (paymentMethod == null)
+        {
+            throw new BadRequestException("Invalid payment method.");
         }
 
         try
@@ -196,6 +212,14 @@ public class OrderService : IOrderService
                 await _voucherRepository.UpdateVoucherAsync(appliedVoucher);
             }
 
+            var paymentStrategy = _paymentStrategyFactory.GetStrategy(paymentMethod.name);
+            var paymentResult = await paymentStrategy.ProcessPaymentAsync(newOrder);
+
+            if (!paymentResult.IsSuccess)
+            {
+                throw new BadRequestException(paymentResult.Message ?? "Failed to initialize payment gateway.");
+            }
+
             await _unitOfWork.FinishAsync();
 
             try
@@ -210,7 +234,7 @@ public class OrderService : IOrderService
             {
             }
 
-            return newOrder;
+            return (newOrder, paymentResult.CheckoutUrl);
         }
         catch
         {
@@ -219,7 +243,56 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<(List<Order> orders, int totalCount)> GetOrderHistoryAsync(GetOrderHistoryParams parameters)
+    public async Task HandlePaymentIpnAsync(Guid orderId, string transactionRef, int resultCode)
+    {
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var payment = await _paymentRepository.GetPaymentByOrderIdAsync(orderId);
+            if (payment == null) return;
+
+            // If already processed
+            if (payment.status != PaymentStatus.PENDING) return;
+
+            if (resultCode == 0) // Success
+            {
+                await _paymentRepository.UpdatePaymentStatusAsync(payment.id, PaymentStatus.SUCCESS, transactionRef);
+                
+                var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+                if (order != null && order.status == OrderStatus.PENDING)
+                {
+                    await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.APPROVED);
+
+                    var auditLog = new AuditLog(
+                        order.userId,
+                        "APPROVE_ORDER",
+                        "Orders",
+                        order.id.ToString()
+                    )
+                    {
+                        oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.PENDING.ToString() }),
+                        newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                        affectedColumns = "status"
+                    };
+                    await _auditLogRepository.AddAsync(auditLog);
+                }
+            }
+            else
+            {
+                await _paymentRepository.UpdatePaymentStatusAsync(payment.id, PaymentStatus.FAILED, transactionRef);
+            }
+
+            await _unitOfWork.FinishAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<(List<(Order order, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetOrderHistoryAsync(GetOrderHistoryParams parameters)
     {
         if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
         if (parameters.PageSize <= 0) parameters.PageSize = 10;
@@ -291,7 +364,7 @@ public class OrderService : IOrderService
     }
 
     // Staff methods
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetPendingOrdersAsync(GetPendingOrdersParams parameters)
     {
         if (parameters.PageNumber <= 0) parameters.PageNumber = 1;
         if (parameters.PageSize <= 0) parameters.PageSize = 20;
@@ -299,7 +372,7 @@ public class OrderService : IOrderService
         return await _orderRepository.GetOrdersByStatusAsync(OrderStatus.PENDING, parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<(Order order, User? user, List<(Payment payment, string methodName)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
+    public async Task<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> GetOrderWithFullDetailsAsync(Guid orderId)
     {
         var result = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
 
@@ -336,7 +409,12 @@ public class OrderService : IOrderService
                 "APPROVE_ORDER",
                 "Orders",
                 parameters.OrderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.PENDING.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -368,12 +446,25 @@ public class OrderService : IOrderService
 
             await _orderRepository.UpdateStatusAsync(orderId, OrderStatus.SHIPPING);
 
+            if (order.items != null && order.items.Any())
+            {
+                foreach (var item in order.items)
+                {
+                    await _inventoryRepository.DeductStockAsync(item.product_id, item.quantity);
+                }
+            }
+
             var auditLog = new AuditLog(
                 staffId,
                 "SHIP_ORDER",
                 "Orders",
                 orderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.APPROVED.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.SHIPPING.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -410,7 +501,12 @@ public class OrderService : IOrderService
                 "DELIVER_ORDER",
                 "Orders",
                 orderId.ToString()
-            );
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.SHIPPING.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.DELIVERED.ToString() }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -451,7 +547,14 @@ public class OrderService : IOrderService
             {
                 foreach (var item in order.items)
                 {
-                    await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                    if (order.status == OrderStatus.SHIPPING)
+                    {
+                        await _inventoryRepository.RestorePhysicalStockAsync(item.product_id, item.quantity);
+                    }
+                    else
+                    {
+                        await _inventoryRepository.ReleaseStockAsync(item.product_id, item.quantity);
+                    }
                 }
             }
 
@@ -459,8 +562,13 @@ public class OrderService : IOrderService
                 staffId,
                 "CANCEL_ORDER",
                 "Orders",
-                $"{orderId} - Reason: {reason}"
-            );
+                orderId.ToString()
+            )
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { status = order.status.ToString() }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { status = OrderStatus.CANCELLED.ToString(), reason = reason }),
+                affectedColumns = "status"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -515,8 +623,11 @@ public class OrderService : IOrderService
                     staffId,
                     "INITIATE_REFUND",
                     "Orders",
-                    $"{orderId} - Amount: {successfulPayment.payment.amount}"
-                );
+                    orderId.ToString()
+                )
+                {
+                    newValues = System.Text.Json.JsonSerializer.Serialize(new { amount = successfulPayment.payment.amount })
+                };
                 await _auditLogRepository.AddAsync(auditLog);
 
                 await _unitOfWork.FinishAsync();
@@ -533,7 +644,7 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<(List<(Order order, User? user, List<Payment> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> GetRefundRequestsAsync(int pageNumber, int pageSize)
     {
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 20;
@@ -541,8 +652,94 @@ public class OrderService : IOrderService
         return await _orderRepository.GetRefundableOrdersAsync(pageNumber, pageSize);
     }
 
-    public async Task<(List<(Order order, User? user)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
+    public async Task<(List<(Order order, User? user, List<(Payment payment, string methodName, PaymentMethodType type)> payments)> orders, int totalCount)> SearchOrdersAsync(TechSalesManagement.Domain.Specifications.OrderSearchParameters parameters)
     {
-        return await _orderRepository.SearchOrdersAsync(parameters);
+        var result = await _orderRepository.SearchOrdersAsync(parameters);
+        return result;
+    }
+
+    public async Task<string?> CreateRepaySessionAsync(Guid orderId, Guid userId, Guid? paymentMethodId = null)
+    {
+        var order = await _orderRepository.GetOrderDetailsByIdAsync(orderId);
+        if (order == null || order.userId != userId)
+        {
+            throw new NotFoundException("Order not found or access denied.");
+        }
+
+        if (order.status != OrderStatus.PENDING)
+        {
+            throw new BadRequestException("Only pending orders can be repaid.");
+        }
+
+        var fullDetails = await _orderRepository.GetOrderWithFullDetailsByIdAsync(orderId);
+        if (fullDetails == null)
+        {
+            throw new NotFoundException("Order details not found.");
+        }
+
+        var hasSuccessfulPayment = fullDetails.Value.payments.Any(p => p.payment.status == PaymentStatus.SUCCESS);
+        if (hasSuccessfulPayment)
+        {
+            throw new BadRequestException("This order has already been successfully paid.");
+        }
+
+        PaymentMethod? paymentMethod = null;
+        if (paymentMethodId.HasValue)
+        {
+            paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentMethodId.Value);
+        }
+        else
+        {
+            var lastPayment = fullDetails.Value.payments.OrderByDescending(p => p.payment.createdAt).FirstOrDefault();
+            if (lastPayment.payment != null)
+            {
+                paymentMethod = await _paymentMethodRepository.GetByIdAsync(lastPayment.payment.paymentMethodId);
+            }
+        }
+
+        if (paymentMethod == null)
+        {
+            throw new BadRequestException("Payment method not found.");
+        }
+
+        if (paymentMethod.type != PaymentMethodType.ONLINE)
+        {
+            throw new BadRequestException("Repayment is only supported for online payment methods.");
+        }
+
+        try
+        {
+            await _unitOfWork.BeginAsync();
+
+            var newPayment = new Payment
+            {
+                id = Guid.NewGuid(),
+                orderId = order.id,
+                paymentMethodId = paymentMethod.id,
+                status = PaymentStatus.PENDING,
+                amount = order.totalAmount,
+                createdAt = DateTimeOffset.UtcNow,
+                updatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _paymentRepository.AddPaymentAsync(newPayment);
+
+            var paymentStrategy = _paymentStrategyFactory.GetStrategy(paymentMethod.name);
+            var paymentResult = await paymentStrategy.ProcessPaymentAsync(order);
+
+            if (!paymentResult.IsSuccess)
+            {
+                throw new BadRequestException(paymentResult.Message ?? "Failed to initialize payment gateway.");
+            }
+
+            await _unitOfWork.FinishAsync();
+
+            return paymentResult.CheckoutUrl;
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 }

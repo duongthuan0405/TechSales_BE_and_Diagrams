@@ -5,7 +5,7 @@ namespace TechSalesManagement;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         // Load environment variables from .env.development
         DotNetEnv.Env.Load(".env.development");
@@ -36,7 +36,7 @@ public class Program
         // Configure Repositories
         builder.Services.AddRepositories();
         // Configure External and Helper Services
-        builder.Services.AddExternalAndHelperServices();
+        builder.Services.AddExternalAndHelperServices(builder.Configuration);
         // Configure Application Services
         builder.Services.AddApplicationServices();
 
@@ -49,6 +49,7 @@ public class Program
         app.UseMiddlewares(app.Environment);
 
         app.MapControllers();
-        app.Run();
+
+        await app.RunAsync();
     }
 }

@@ -74,9 +74,15 @@ public class VoucherManagementService : IVoucherManagementService
         {
             await _unitOfWork.BeginAsync();
 
-            await _voucherRepository.DeleteAsync(id);
+            voucher.isActive = false;
+            await _voucherRepository.UpdateVoucherAsync(voucher);
 
-            var auditLog = new AuditLog(staffId, "DELETE_VOUCHER", "Vouchers", voucher.code);
+            var auditLog = new AuditLog(staffId, "DEACTIVATE_VOUCHER", "Vouchers", voucher.code)
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { isActive = true }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { isActive = false }),
+                affectedColumns = "isActive"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();
@@ -91,5 +97,21 @@ public class VoucherManagementService : IVoucherManagementService
     public async Task<(List<Voucher> items, int totalCount)> GetAllVouchersAsync(int pageNumber, int pageSize)
     {
         return await _voucherRepository.GetAllPagedAsync(pageNumber, pageSize);
+    }
+
+    public async Task<Voucher> ValidateVoucherAsync(string code, decimal orderAmount)
+    {
+        var voucher = await _voucherRepository.GetByCodeAsync(code);
+        if (voucher == null) throw new BadRequestException(MessageConstants.MSG33);
+
+        if (!voucher.isActive) throw new BadRequestException(MessageConstants.MSG33);
+        if (voucher.usedCount >= voucher.maxUsage) throw new BadRequestException(MessageConstants.MSG33);
+        if (orderAmount < voucher.minOrderAmount) throw new BadRequestException(MessageConstants.MSG33);
+
+        var now = DateTimeOffset.UtcNow;
+        if (voucher.startDate.HasValue && voucher.startDate.Value > now) throw new BadRequestException(MessageConstants.MSG33);
+        if (voucher.endDate.HasValue && voucher.endDate.Value < now) throw new BadRequestException(MessageConstants.MSG33);
+
+        return voucher;
     }
 }

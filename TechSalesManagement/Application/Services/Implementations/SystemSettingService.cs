@@ -26,6 +26,8 @@ public class SystemSettingService : ISystemSettingService
 
     public async Task UpdateSettingAsync(string key, string value, string? description, Guid staffId)
     {
+        var oldValue = await GetValueAsync(key);
+
         try
         {
             await _unitOfWork.BeginAsync();
@@ -33,7 +35,12 @@ public class SystemSettingService : ISystemSettingService
             var setting = new SystemSetting(key, value, description);
             await _settingRepository.UpsertAsync(setting);
 
-            var auditLog = new AuditLog(staffId, "UPDATE_SETTING", "SystemSettings", $"{key}: {value}");
+            var auditLog = new AuditLog(staffId, "UPDATE_SETTING", "SystemSettings", key)
+            {
+                oldValues = System.Text.Json.JsonSerializer.Serialize(new { value = oldValue }),
+                newValues = System.Text.Json.JsonSerializer.Serialize(new { value = value }),
+                affectedColumns = "value"
+            };
             await _auditLogRepository.AddAsync(auditLog);
 
             await _unitOfWork.FinishAsync();

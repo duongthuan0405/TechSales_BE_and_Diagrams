@@ -11,19 +11,22 @@ using TechSalesManagement.Presentation_WebAPI.DTOs.ResponseDTOs;
 using TechSalesManagement.Presentation_WebAPI.Extensions;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Common;
+using TechSalesManagement.Application.HelperServices;
 
 namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/products")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class ProductManagementController : ControllerBase
 {
     private readonly IProductManagementService _productManagementService;
+    private readonly IImageService _imageService;
 
-    public ProductManagementController(IProductManagementService productManagementService)
+    public ProductManagementController(IProductManagementService productManagementService, IImageService imageService)
     {
         _productManagementService = productManagementService;
+        _imageService = imageService;
     }
 
     [HttpGet]
@@ -44,16 +47,30 @@ public class ProductManagementController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiSuccessResponse<Product>>> CreateAsync([FromBody] CreateProductRequestDto request)
+    public async Task<ActionResult<ApiSuccessResponse<Product>>> CreateAsync([FromForm] CreateProductRequestDto request)
     {
         var staffId = User.GetUserId();
         if (staffId == null) return Unauthorized();
 
-        var images = request.images.Select(img => new ProductImage
+        var images = new List<ProductImage>();
+
+        if (request.imageFiles != null && request.imageFiles.Any())
         {
-            imageUrl = img.imageUrl,
-            isPrimary = img.isPrimary
-        }).ToList();
+            // Upload song song tất cả các ảnh cùng lúc thay vì tuần tự
+            var uploadTasks = request.imageFiles.Select(file => _imageService.UploadImageAsync(file));
+            var uploadedUrls = await Task.WhenAll(uploadTasks);
+
+            bool isFirst = true;
+            foreach (var url in uploadedUrls)
+            {
+                images.Add(new ProductImage
+                {
+                    imageUrl = url,
+                    isPrimary = isFirst
+                });
+                isFirst = false;
+            }
+        }
 
         var product = await _productManagementService.CreateProductAsync(
             request.name, request.description, request.price, request.brand, request.categoryId, request.initialStock, images, staffId.Value);
@@ -87,7 +104,7 @@ public class ProductManagementController : ControllerBase
 
         await _productManagementService.DiscontinueProductAsync(id, staffId.Value);
 
-        return Ok(new ApiSuccessResponse<object>(null, "Product status updated to discontinued."));
+        return Ok(new ApiSuccessResponse<object>(null, "Product status updated successfully."));
     }
 
     [HttpPatch("{id}/inventory")]
@@ -96,7 +113,7 @@ public class ProductManagementController : ControllerBase
         var staffId = User.GetUserId();
         if (staffId == null) return Unauthorized();
 
-        await _productManagementService.UpdateInventoryAsync(id, request.newQuantity, staffId.Value);
+        await _productManagementService.UpdateInventoryAsync(id, request.value, request.type, staffId.Value);
 
         return Ok(new ApiSuccessResponse<object>(null, "Inventory updated successfully."));
     }

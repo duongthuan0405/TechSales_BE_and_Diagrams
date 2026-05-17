@@ -39,6 +39,31 @@ public class InventoryRepository : IInventoryRepository
         }
     }
 
+    public async Task DeductStockAsync(Guid productId, int quantityToDeduct)
+    {
+        var dbModel = await _dbContext.Inventories
+            .FirstOrDefaultAsync(i => i.product_id == productId);
+
+        if (dbModel != null)
+        {
+            dbModel.quantity = Math.Max(0, dbModel.quantity - quantityToDeduct);
+            dbModel.reserved_quantity = Math.Max(0, dbModel.reserved_quantity - quantityToDeduct);
+            _dbContext.Inventories.Update(dbModel);
+        }
+    }
+
+    public async Task RestorePhysicalStockAsync(Guid productId, int quantityToRestore)
+    {
+        var dbModel = await _dbContext.Inventories
+            .FirstOrDefaultAsync(i => i.product_id == productId);
+
+        if (dbModel != null)
+        {
+            dbModel.quantity += quantityToRestore;
+            _dbContext.Inventories.Update(dbModel);
+        }
+    }
+
     public async Task<TechSalesManagement.Domain.Entities.Inventory?> GetByProductIdAsync(Guid productId)
     {
         var dbModel = await _dbContext.Inventories

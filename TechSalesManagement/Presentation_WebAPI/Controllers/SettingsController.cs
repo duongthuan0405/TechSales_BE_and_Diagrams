@@ -12,7 +12,7 @@ namespace TechSalesManagement.Presentation_WebAPI.Controllers;
 
 [ApiController]
 [Route("api/admin/settings")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff,Business Admin,Technical Admin")]
 public class SettingsController : ControllerBase
 {
     private readonly ISystemSettingService _settingService;
