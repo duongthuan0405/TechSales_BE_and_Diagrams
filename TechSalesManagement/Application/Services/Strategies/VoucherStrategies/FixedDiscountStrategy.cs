@@ -1,6 +1,7 @@
 using System;
 
-namespace TechSalesManagement.Application.VoucherStrategies;
+namespace TechSalesManagement.Application.Services.Strategies.VoucherStrategies;
+
 
 public class FixedDiscountStrategy : IDiscountStrategy
 {

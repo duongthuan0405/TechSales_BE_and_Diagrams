@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using TechSalesManagement.Domain.Enums;
 
-namespace TechSalesManagement.Application.VoucherStrategies;
+namespace TechSalesManagement.Application.Services.Strategies.VoucherStrategies;
+
 
 public class DiscountStrategyFactory : IDiscountStrategyFactory
 {
