@@ -9,7 +9,7 @@ using TechSalesManagement.Infrastructure.HelperServices;
 using TechSalesManagement.Application.Repositories;
 using TechSalesManagement.Infrastructure.Repositories;
 using TechSalesManagement.Infrastructure.Services;
-using TechSalesManagement.Application.VoucherStrategies;
+using TechSalesManagement.Application.Services.Strategies.VoucherStrategies;
 using TechSalesManagement.Application.Services.Strategies.Refund;
 using TechSalesManagement.Application.Services.Strategies.PaymentStrategies;
 

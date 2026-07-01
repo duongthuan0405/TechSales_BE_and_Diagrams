@@ -11,7 +11,7 @@ using TechSalesManagement.Common;
 using TechSalesManagement.Domain.Entities;
 using TechSalesManagement.Domain.Enums;
 using TechSalesManagement.Application.HelperServices;
-using TechSalesManagement.Application.VoucherStrategies;
+using TechSalesManagement.Application.Services.Strategies.VoucherStrategies;
 using TechSalesManagement.Application.Services.Strategies.Refund;
 using TechSalesManagement.Application.Services.Strategies.PaymentStrategies;
 
