@@ -12,7 +12,7 @@ Hệ thống Backend (Web API) quản lý bán hàng công nghệ (Tech Sales Ma
 *   **Authentication & Authorization:** **JWT (JSON Web Token)** với cơ chế Role-Based Access Control (RBAC) chi tiết đến từng Quyền (Permission)
 *   **Bảo mật mật khẩu:** `BCrypt.Net-Next`
 *   **File/Image Storage:** **Cloudinary** (`CloudinaryDotNet`)
-*   **Thanh toán trực tuyến:** Tích hợp ví điện tử **MoMo**, **VnPay** và hình thức COD
+*   **Thanh toán trực tuyến:** Tích hợp ví điện tử **MoMo** và hình thức COD
 *   **Gửi Email:** **MailKit / MimeKit** (để gửi OTP kích hoạt, khôi phục mật khẩu)
 *   **Validation:** **FluentValidation** tự động xác thực dữ liệu đầu vào
 *   **Logging:** **Serilog** ghi log ra cả Console và File
@@ -45,8 +45,7 @@ TechSalesManagement/
 │       ├── Interfaces/               # Các Interface định nghĩa Services tương ứng
 │       ├── Params/                   # Các DTO làm tham số đầu vào cho API/Service
 │       └── Strategies/               # Các Strategy Pattern phục vụ nghiệp vụ
-│           ├── Payment/              # Thanh toán: CodPayment, MomoPayment, VnPayPayment...
-│           ├── Refund/               # Hoàn tiền: CodRefund, VnPayRefund...
+│           ├── Payment/              # Thanh toán: CodPayment, MomoPayment...
 │           └── VoucherStrategies/    # Xử lý chiến lược tính giảm giá (Fixed, Percent,...)
 │
 ├── Infrastructure/                   # Tầng tích hợp dịch vụ ngoài và lưu trữ dữ liệu
@@ -84,8 +83,7 @@ TechSalesManagement/
 4.  **Hệ thống Giảm giá (Voucher & Discount Strategies):**
     *   Áp dụng **Strategy Pattern** cho việc tính giảm giá theo số tiền cố định (Fixed) hoặc phần trăm (Percent).
 5.  **Cổng thanh toán (Payment Integrations):**
-    *   Thanh toán bằng **MoMo**, **VnPay** hoặc **COD (Thanh toán khi nhận hàng)**.
-    *   Hỗ trợ hoàn tiền (Refund Strategy) tùy theo phương thức đã thanh toán ban đầu.
+    *   Thanh toán bằng **MoMo** hoặc **COD (Thanh toán khi nhận hàng)**.
 6.  **Đánh giá & Phản hồi (Reviews & Engagement):**
     *   Khách hàng đánh giá sản phẩm.
     *   Quản trị viên phản hồi lại đánh giá của khách hàng.
