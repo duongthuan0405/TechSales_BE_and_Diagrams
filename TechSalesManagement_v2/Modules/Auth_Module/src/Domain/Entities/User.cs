@@ -7,7 +7,6 @@ namespace Auth_Module.src.Domain.Entities
     {
         public Guid id { get; set; }
         private string email = string.Empty;
-        private string username = string.Empty;
         private string password = string.Empty;
         private UserStatus status = UserStatus.PENDING;
         private int failedLoginAttempts = 0; 
@@ -25,18 +24,6 @@ namespace Auth_Module.src.Domain.Entities
                 if (string.IsNullOrWhiteSpace(value) || !value.Contains("@"))
                     throw new ArgumentException();
                 email = value;
-        
-            }
-        }
-
-        public string Username
-        {
-            get => username;
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value) || value.Length < 6)
-                    throw new ArgumentException(DomainErrors.User.UsernameInvalid);
-                username = value;
         
             }
         }
@@ -81,11 +68,10 @@ namespace Auth_Module.src.Domain.Entities
             set => deletedAt = value; 
         }
 
-        public User(string email, string username, string password)
+        public User(string email, string password)
         {
             this.Email = email;
             this.Password = password;
-            this.Username = username;
             this.Status = UserStatus.PENDING;
             this.FailedLoginAttempts = 0;
         }
