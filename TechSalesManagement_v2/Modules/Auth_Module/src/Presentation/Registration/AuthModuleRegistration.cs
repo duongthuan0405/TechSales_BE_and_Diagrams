@@ -13,11 +13,10 @@ namespace Auth_Module.src.Presentation.Registration
             {
                 config.RegisterServicesFromAssembly(typeof(AuthController).Assembly);
             });
-
             services.AddServices();
             services.AddRepositories();
-
             services.AddControllers();
+        
             return services;
         }
     }
