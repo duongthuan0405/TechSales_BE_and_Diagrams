@@ -9,6 +9,6 @@ namespace Common_Module.src.Presentation.ApiResponseModels
     {
         public abstract bool Success { get; }
         public string Message { get; set; } = string.Empty;
-        public T? Data;
+        public T? Data {get; set;} = default(T);
     }
 }
