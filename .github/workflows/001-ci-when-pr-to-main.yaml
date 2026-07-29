@@ -3,7 +3,7 @@ name: CI when a PULL REQUEST to main created
 on:
   pull_request:
     branches: 
-      - v2/main
+      - main
 
 jobs:
   build-and-test:

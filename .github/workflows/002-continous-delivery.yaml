@@ -2,9 +2,7 @@ name: Continous Delivery
 
 on:  
   workflow_dispatch:
-    inputs:
-      imageTag: 
-        required: true
+  
 jobs:
   build-and-test:
     name: "Build and test project"
