@@ -38,7 +38,7 @@ jobs:
     - name: Build and push Docker Image
       uses: docker/build-push-action@v6
       with:
-        context: .
+        context: ./TechSalesManagement_v2
         file: ./TechSalesManagement_v2/Docker/Dockerfile
         push: true
         tags: |
