@@ -16,10 +16,10 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
-      working-directory: ./WebAPI
+      working-directory: ./TechSalesManagement_v2/WebAPI
       run: dotnet restore
     - name: Build
-      working-directory: ./WebAPI
+      working-directory: ./TechSalesManagement_v2/WebAPI
       run: dotnet build --no-restore
     - name: Test
       run: echo "Testing ..."
@@ -39,7 +39,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./Docker/Dockerfile
+        file: ./TechSalesManagement_v2/Docker/Dockerfile
         push: true
         tags: |
           ${{secrets.DOCKER_HUB_USERNAME}}/${{secrets.REPO_NAME}}:latest
