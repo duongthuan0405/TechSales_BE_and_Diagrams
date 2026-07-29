@@ -1,0 +1,27 @@
+name: CI when a PULL REQUEST to main created
+
+on:
+  pull_request:
+    branches: 
+      - v2/main
+
+jobs:
+  build-and-test:
+    name: "Build and test project"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Restore dependencies
+      working-directory: ./TechSalesManagement_v2/WebAPI
+      run: dotnet restore
+    - name: Build
+      working-directory: ./TechSalesManagement_v2/WebAPI
+      run: dotnet build --no-restore
+    - name: Test
+      run: echo "Testing is processing ..."        
+
+
