@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace Auth_Module.src.Application.Services
 {
-    public interface IUnitOfWork
+    public interface IExecuteAtomically
     {
-        Task BeginAsync();
-        Task FinishAsync();
-        Task RollbackAsync();
+        Task<T> ExecuteAtomically<T>(Func<Task<T>> action);
     }
 }
