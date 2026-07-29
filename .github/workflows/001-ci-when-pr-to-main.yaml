@@ -22,6 +22,6 @@ jobs:
       working-directory: ./TechSalesManagement_v2/WebAPI
       run: dotnet build --no-restore
     - name: Test
-      run: echo "Testing ..."        
+      run: echo "Testing is processing ..."        
 
 
