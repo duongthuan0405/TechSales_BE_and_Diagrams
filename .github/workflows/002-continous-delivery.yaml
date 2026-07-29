@@ -1,7 +1,12 @@
 name: Continous Delivery
 
-on:
-  workflow_dispatch
+on:  
+  workflow_dispatch:
+
+  push:
+      branches: 
+        - v2/main 
+
 
 jobs:
   build-and-test:
