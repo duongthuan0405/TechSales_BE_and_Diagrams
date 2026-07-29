@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="NSwag.AspNetCore" Version="14.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Common_Module\Common_Module.csproj" />
+    <ProjectReference Include="..\Modules\Test_Module\Test_Module.csproj" />
+     <ProjectReference Include="..\Modules\Auth_Module\Auth_Module.csproj" />
+  </ItemGroup>
+
+</Project>
