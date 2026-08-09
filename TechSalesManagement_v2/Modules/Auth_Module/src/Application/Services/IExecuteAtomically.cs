@@ -7,6 +7,6 @@ namespace Auth_Module.src.Application.Services
 {
     public interface IExecuteAtomically
     {
-        Task<T> ExecuteAtomically<T>(Func<Task<T>> action);
+        public Task<T> ExecuteAtomicallyAsync<T>(Func<Task<T>> mainTask, CancellationToken cancellationToken = default);
     }
 }
