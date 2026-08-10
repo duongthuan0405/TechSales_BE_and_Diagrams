@@ -1,4 +1,5 @@
 using Test_Module.src.Presentation.Registration;
+using WebAPI.Extensions.ConfigurationManagerExtensions;
 using WebAPI.Extensions.ServiceProviderExtensions;
 using WebAPI.Extensions.ServiceProviderExtensions.Middlewares;
 
@@ -10,8 +11,10 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddAuthorization();
+        if(builder.Environment.IsDevelopment())
+        {
+            builder.Configuration.LoadEnvironmentVariables("./Environments");  
+        }
 
         // Register all modules
         builder.Services.RegisterModules(builder.Configuration);

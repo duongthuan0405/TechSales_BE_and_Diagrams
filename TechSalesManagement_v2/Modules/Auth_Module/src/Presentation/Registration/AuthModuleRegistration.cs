@@ -16,6 +16,7 @@ namespace Auth_Module.src.Presentation.Registration
             services.AddServices();
             services.AddRepositories();
             services.AddControllers();
+            services.AddAuthN(configuration);
             services.AddAuthZ();
         
             return services;

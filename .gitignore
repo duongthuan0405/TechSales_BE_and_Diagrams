@@ -88,10 +88,10 @@ secrets.json
 
 # Environment files
 .env
-.env.testing
-.env.development
-.env.local
-.env.*.local
+.env.*
+
+!.env.example.*
+!.env.example
 
 # SQL Server files
 *.mdf
