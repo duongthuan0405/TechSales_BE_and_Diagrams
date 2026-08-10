@@ -18,7 +18,7 @@ namespace Auth_Module.src.Presentation.Registration
             services.AddControllers();
             services.AddAuthN(configuration);
             services.AddAuthZ();
-        
+            
             return services;
         }
     }

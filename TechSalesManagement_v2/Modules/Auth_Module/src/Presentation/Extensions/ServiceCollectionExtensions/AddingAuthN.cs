@@ -14,7 +14,7 @@ public static partial class  ServiceCollectionExtensions
         var secretKey = configuration["AUTH:JWT:SecretKey"] ?? throw new InvalidOperationException("JWT Secret Key not found in configuration.");
         var issuer = configuration["AUTH:JWT:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not found in configuration.");
         var audience = configuration["AUTH:JWT:Audience"] ?? throw new InvalidOperationException("JWT Audience not found in configuration.");
-
+        
         var keyBytes = Convert.FromBase64String(secretKey);
 
         services.AddAuthentication(options =>
@@ -24,7 +24,7 @@ public static partial class  ServiceCollectionExtensions
         })
         .AddJwtBearer(options =>
         {
-            options.RequireHttpsMetadata = false; // Set true in production if needed
+            options.RequireHttpsMetadata = false; 
             options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
