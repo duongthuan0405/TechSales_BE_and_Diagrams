@@ -1,18 +1,13 @@
-using Auth_Module.src.Presentation.Controllers;
-using Auth_Module.src.Presentation.Extensions.ServiceCollectionExtensions;
+using Auth_Module.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Auth_Module.src.Presentation.Registration
+namespace Auth_Module.Presentation.Registration
 {
     public static partial class ServiceCollectionExtension
     {
         public static IServiceCollection RegisterAuthModule(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddMediatR(config =>
-            {
-                config.RegisterServicesFromAssembly(typeof(AuthController).Assembly);
-            });
             services.AddServices();
             services.AddRepositories();
             services.AddControllers();

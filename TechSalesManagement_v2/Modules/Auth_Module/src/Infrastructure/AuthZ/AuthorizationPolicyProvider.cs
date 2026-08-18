@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace Auth_Module.src.Infrastructure.AuthZ;
+namespace Auth_Module.Infrastructure.AuthZ;
 
 public class AuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
 {

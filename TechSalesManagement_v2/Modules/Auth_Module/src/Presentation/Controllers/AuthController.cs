@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Auth_Module.src.Presentation.Controllers
+namespace Auth_Module.Presentation.Controllers
 {
     [ApiController]
     [Route("api/auth")]

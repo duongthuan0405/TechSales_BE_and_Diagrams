@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Auth_Module.src.Domain.ErrorMessages
+namespace Auth_Module.Domain.ErrorMessages
 {
     public static partial class DomainErrors
     {

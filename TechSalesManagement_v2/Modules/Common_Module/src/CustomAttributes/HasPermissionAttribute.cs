@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Common_Module.src.CustomAttributes;
+namespace Common_Module.CustomAttributes;
 
 public class HasPermissionAttribute : AuthorizeAttribute
 {

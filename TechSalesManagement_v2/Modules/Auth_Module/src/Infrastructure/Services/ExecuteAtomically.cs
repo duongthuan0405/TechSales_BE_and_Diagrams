@@ -1,10 +1,10 @@
-﻿using Auth_Module.src.Application.Services;
+﻿using Auth_Module.Application.Services;
 
-namespace Auth_Module.src.Infrastructure.Services;
+namespace Auth_Module.Infrastructure.Services;
 
 public class ExecuteAtomically : IExecuteAtomically
 {
-    public async Task<T> ExecuteAtomicallyAsync<T>(Func<Task<T>> mainTask, CancellationToken cancellationToken)
+    public async Task<T> ExecuteAtomicallyAsync<T>(Func<Task<T>> mainTask)
     {
         try
         {
@@ -12,7 +12,6 @@ public class ExecuteAtomically : IExecuteAtomically
         }
         catch (Exception ex)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             throw;
         }
     }

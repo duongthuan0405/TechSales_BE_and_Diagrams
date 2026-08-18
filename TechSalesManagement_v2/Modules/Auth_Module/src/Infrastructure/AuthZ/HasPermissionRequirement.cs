@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Auth_Module.src.Infrastructure.AuthZ;
+namespace Auth_Module.Infrastructure.AuthZ;
 
 public class HasPermissionRequirement : IAuthorizationRequirement
 {

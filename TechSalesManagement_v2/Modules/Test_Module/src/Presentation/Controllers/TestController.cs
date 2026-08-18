@@ -1,25 +1,30 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using Common_Module.src.BusinessExceptions;
-using Common_Module.src.CustomAttributes;
-using Common_Module.src.Presentation.ApiResponseModels;
+using Common_Module.BusinessExceptions;
+using Common_Module.CustomAttributes;
+using Common_Module.Presentation.ApiResponseModels;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Test_Module.src.Presentation.Controllers
+namespace Test_Module.Presentation.Controllers
 {
     [ApiController]
     [Route("api/test")]
     public class TestController : ControllerBase
     {
+        public class Haha : IRequest<string>
+        {
+            
+        }
+        public TestController()
+        {
+        }
         [HttpGet]
         public async Task<ActionResult<string>> GetTest()
         {
+            
             await Task.Delay(0);
-            return StatusCode(StatusCodes.Status200OK, new ApiSuccessResponse<string>("It's OK data"));
+            return StatusCode(StatusCodes.Status200OK, new ApiSuccessResponse<string>("hi"));
         }
 
         [HttpGet("400")]
@@ -33,6 +38,7 @@ namespace Test_Module.src.Presentation.Controllers
                {"ErrorC", new List<string>() {"ErrorC1", "ErrorC2"}} 
             });
         }
+
 
         [HttpGet("test-authZ")]
         [HasPermission("TestAuthZ")]
