@@ -1,6 +1,6 @@
-using Test_Module.src.Presentation.Registration;
-using WebAPI.Extensions.ServiceProviderExtensions;
-using WebAPI.Extensions.ServiceProviderExtensions.Middlewares;
+using MediatR;
+using WebAPI.Extension;
+using WebAPI.Middlewares;
 
 namespace WebAPI;
 
@@ -10,16 +10,23 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddAuthorization();
+        string environmentVariablesPath = builder.Configuration["PATHS:EnvironmentVariables"] ?? "./src/EnvironmentVariables_fake";
+
+        if(builder.Environment.IsDevelopment())
+        {
+            builder.Configuration.LoadEnvironmentVariables(environmentVariablesPath);  
+        }
 
         // Register all modules
         builder.Services.RegisterModules(builder.Configuration);
-
+       
         // Swagger
         builder.Services.GenerateSwaggerDocument();
 
+        builder.Services.AddScoped<GlobalExceptionCatchingMiddleware>();
+
         var app = builder.Build();
+
 
         app.UseMiddlewares();
 

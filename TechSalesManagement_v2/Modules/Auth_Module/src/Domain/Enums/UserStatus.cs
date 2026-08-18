@@ -1,4 +1,4 @@
-namespace Auth_Module.src.Domain.Enums
+namespace Auth_Module.Domain.Enums
 {
     public enum UserStatus
     {

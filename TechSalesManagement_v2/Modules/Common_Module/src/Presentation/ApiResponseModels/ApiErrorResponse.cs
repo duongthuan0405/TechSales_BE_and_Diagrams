@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Common_Module.src.Presentation.ApiResponseModels
+namespace Common_Module.Presentation.ApiResponseModels
 {
     public class ApiErrorResponse : ApiResponse<Dictionary<string, List<string>>>
     {
