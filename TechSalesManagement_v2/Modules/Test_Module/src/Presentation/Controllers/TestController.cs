@@ -1,10 +1,13 @@
 using Common_Module.BusinessExceptions;
 using Common_Module.CustomAttributes;
+using Common_Module.Mediator.Command.Abstract;
+using Common_Module.Mediator.Event.Abstract;
 using Common_Module.Presentation.ApiResponseModels;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Test_Module.Test.Command;
 
 namespace Test_Module.Presentation.Controllers
 {
@@ -12,18 +15,26 @@ namespace Test_Module.Presentation.Controllers
     [Route("api/test")]
     public class TestController : ControllerBase
     {
-        public class Haha : IRequest<string>
+        private readonly ICommandExecutor _commandExecutor;
+        private readonly IEventPublisher _eventPublisher;
+        public TestController(ICommandExecutor commandExecutor, IEventPublisher eventPublisher)
         {
-            
+            _commandExecutor = commandExecutor;
+            _eventPublisher = eventPublisher;
         }
-        public TestController()
-        {
-        }
+        
         [HttpGet]
         public async Task<ActionResult<string>> GetTest()
         {
-            
             await Task.Delay(0);
+            TestEvent e = new TestEvent()
+            {
+                Name = "Test 1"
+            };
+
+            await _eventPublisher.Publish(e);
+
+
             return StatusCode(StatusCodes.Status200OK, new ApiSuccessResponse<string>("hi"));
         }
 
